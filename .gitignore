@@ -1,4 +1,5 @@
 # Ignore everything in this directory
 .DS_Store
+.classpath
+.project
 /bin/
-/lib/

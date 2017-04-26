@@ -98,8 +98,8 @@ public class Mascot extends StructuredTreeDistribution {
         linProbs = new double[0];// initialize the tree and rates interval counter
         int treeInterval = 0, ratesInterval = 0;        
         double nextEventTime = 0.0;
-        migrationRates = structuredRateIntervals.get().getBackwardsMigration(ratesInterval);
 		coalescentRates = structuredRateIntervals.get().getCoalescentRate(ratesInterval);  
+        migrationRates = structuredRateIntervals.get().getBackwardsMigration(ratesInterval);
         // Time to the next rate shift or event on the tree
         double nextTreeEvent = treeIntervalsInput.get().getInterval(treeInterval);
         double nextRateShift = structuredRateIntervals.get().getInterval(ratesInterval);
@@ -127,8 +127,8 @@ public class Mascot extends StructuredTreeDistribution {
 		    			if (treeIntervalsInput.get().intervalIsDirty(treeInterval)){
 		    				// if the interval is dirty, restore from last coalescent event
 		    				ratesInterval = restoreNode(treeInterval-1);
-		    		        migrationRates = structuredRateIntervals.get().getBackwardsMigration(ratesInterval);
 		    				coalescentRates = structuredRateIntervals.get().getCoalescentRate(ratesInterval);  
+		    		        migrationRates = structuredRateIntervals.get().getBackwardsMigration(ratesInterval);
 		     	       		nrLineages = activeLineages.size();
 		    				break;
 		    			}
@@ -142,8 +142,8 @@ public class Mascot extends StructuredTreeDistribution {
 			    			ratesInterval = lastRatesInterval;
 		    				// restore from last (gene) coalescent event
 		    				restoreNode(treeInterval);
-		    		        migrationRates = structuredRateIntervals.get().getBackwardsMigration(ratesInterval);
 		    				coalescentRates = structuredRateIntervals.get().getCoalescentRate(ratesInterval);  
+		    		        migrationRates = structuredRateIntervals.get().getBackwardsMigration(ratesInterval);
 		     	       		
 		     	       		nrLineages = activeLineages.size();
 		    				break;
@@ -186,7 +186,7 @@ public class Mascot extends StructuredTreeDistribution {
                 		linProbs[i] = linProbs_for_ode[i];  
         	}
         	
-        	if (nextTreeEvent < nextRateShift){
+        	if (nextTreeEvent <= nextRateShift){
  	        	if (treeIntervalsInput.get().getIntervalType(treeInterval) == IntervalType.COALESCENT) {
  	        		nrLineages--;													// coalescent event reduces the number of lineages by one
 	        		logP += normalizeLineages();									// normalize all lineages before event		
@@ -209,8 +209,8 @@ public class Mascot extends StructuredTreeDistribution {
         		}
         	}else{
         		ratesInterval++;
-                migrationRates = structuredRateIntervals.get().getBackwardsMigration(ratesInterval);
         		coalescentRates = structuredRateIntervals.get().getCoalescentRate(ratesInterval);  
+                migrationRates = structuredRateIntervals.get().getBackwardsMigration(ratesInterval);
         		nextTreeEvent -= nextRateShift;
  	       		nextRateShift = structuredRateIntervals.get().getInterval(ratesInterval);
         	}

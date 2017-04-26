@@ -1,94 +1,89 @@
 package beast.mascot.dynamics;
 
-import java.util.Arrays;
-
-import beast.core.CalculationNode;
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.Input.Validate;
 import beast.core.parameter.RealParameter;
+import beast.mascot.distribution.StructuredTreeIntervals;
 
 @Description("Calculate Ne's and backwards in time migration rates for an exponential growth model")
 public class Exponential extends Dynamics {
 	
     public Input<RealParameter> presentDayNeInput = new Input<>("presentNe", "input of effective population sizes", Validate.REQUIRED);    
-    public Input<RealParameter> growthRates = new Input<>("Ne", "input of effective population sizes", Validate.REQUIRED);    
-    public Input<RealParameter> rateShifts = new Input<>("Ne", "input of effective population sizes", Validate.REQUIRED);    
-    public Input<RealParameter> forwardMigration = new Input<>("Ne", "input of effective population sizes", Validate.REQUIRED);    
+    public Input<RealParameter> growthRatesInput = new Input<>("growthRate", "input of effective population sizes", Validate.REQUIRED);    
+    public Input<RealParameter> forwardMigrationInput = new Input<>("forwardMigration", "input of effective population sizes", Validate.REQUIRED);    
+    public Input<StructuredTreeIntervals> treeIntervalsInput = new Input<StructuredTreeIntervals>("structuredTreeIntervals",
+    		"Structured Intervals for a phylogenetic beast tree", Validate.REQUIRED);
 	
+    // used to temporarly store the calculated mean coalescent rates in an interval
+    private double[] coalRate;
 	
 	@Override
-	public void initAndValidate() {
-		
+	public void initAndValidate() {		
 	}	
 	
 	@Override
 	public void recalculate() {
-		
-		double[] timePoints = new double[rateShifts.getDimension()];
-		if (relativeTreeHeight)
-			for (int i = 0; i < timePoints.length; i++)
-				timePoints[i] = rateShifts.getArrayValue(i) * treeHeight;
-		else
-			for (int i = 0; i < timePoints.length; i++)
-				timePoints[i] = rateShifts.getArrayValue(i);
-		
-		// calculate the Ne's and backwards migration rates for every interval
-		Ne = new double[(timePoints.length+1)*dimension];
-		backwardsMigration = new double[(timePoints.length+1)*dimension*dimension];
-		
-		double currentTime = 0.0;
-		
-		// calculate the mean Ne's for each interval
-		for (int j = 0; j > 0; j++){
-			for (int i = 0; i < dimension; i++){
-				Ne[j*dimension+i] = endNe.getArrayValue(i)/((currentTime - timePoints[j])*growthRates.getArrayValue(i))
-					*(Math.exp(-growthRates.getArrayValue(i)*currentTime) - Math.exp(-growthRates.getArrayValue(i)*timePoints[j]));
-			}
-			currentTime = timePoints[j];
-		}
-		
-		// calculate the backwards migration rates for each interval
-		for (int j = 0; j > 0; j++){
-			for (int a = 0; a < dimension; a++){
-				for (int b = 0; b < dimension; b++){
-					if(a!=b){
-						backwardsMigration[j*(dimension*(dimension-1)) + a*(dimension-1) + b] 
-								= forwardMigration.getArrayValue(a*(dimension-1) + b) 
-									* Ne[j*dimension+b]/Ne[j*dimension+a];			
-					}
-				}//b
-			}//a
-		}//j
 	}
-
-
 	
 	@Override
 	public double getInterval(int i) {
-		// TODO Auto-generated method stub
-		return 0;
+		return treeIntervalsInput.get().getInterval(i);
 	}
-
 
 	@Override
 	public boolean intervalIsDirty(int i) {
-		// TODO Auto-generated method stub
-		return false;
+		boolean intervalIsDirty = false;
+		for (int j = 0; j < dimensionInput.get(); j++)
+			if (presentDayNeInput.get().isDirty(j))
+				intervalIsDirty = true;
+		for (int j = 0; j < dimensionInput.get(); j++)
+			if (growthRatesInput.get().isDirty(j))
+				intervalIsDirty = true;
+		for (int j = 0; j < forwardMigrationInput.get().getDimension(); j++)
+			if (forwardMigrationInput.get().isDirty(j))
+				intervalIsDirty = true;
+
+
+		return intervalIsDirty;
 	}
 
-
 	@Override
-	public double[] getNe(int i) {
-		// TODO Auto-generated method stub
+	public double[][] getBackwardsMigration(int interval) {
+		double[][] migrationRate = new double[dimensionInput.get()][dimensionInput.get()];
+		
+		for (int a = 0; a < dimensionInput.get(); a++){
+			for (int b = 0; b < dimensionInput.get(); b++){
+				if (a!=b){
+					migrationRate[a][b] 
+							= forwardMigrationInput.get().getArrayValue(a*(dimensionInput.get()-1) + b) 
+								* coalRate[a]/coalRate[b];
+				}	
+			}
+		}
+
 		return null;
 	}
 
-
 	@Override
-	public double[][] getBackwardsMigration(int i) {
-		// TODO Auto-generated method stub
-		return null;
+	public double[] getCoalescentRate(int interval) {
+		coalRate = new double[dimensionInput.get()];
+		double currentTime = 0.0;
+		
+		if (interval>0)
+			currentTime = treeIntervalsInput.get().getInterval(interval-1);
+		
+		double nextTime = treeIntervalsInput.get().getInterval(interval);
+		
+		// calculate the mean Ne's for each interval
+		for (int i = 0; i < dimensionInput.get(); i++){
+			coalRate[i] = 1/(presentDayNeInput.get().getArrayValue(i)
+					/((currentTime - nextTime)
+							*growthRatesInput.get().getArrayValue(i))
+								*(Math.exp(-growthRatesInput.get().getArrayValue(i)*currentTime) 
+										- Math.exp(-growthRatesInput.get().getArrayValue(i)*nextTime)));
+		}
+		return coalRate;
 	}
 	
 

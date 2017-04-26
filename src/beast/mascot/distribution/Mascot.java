@@ -13,6 +13,7 @@ import beast.core.Description;
 import beast.core.Input;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.coalescent.IntervalType;
+import beast.mascot.dynamics.Dynamics;
 import beast.mascot.ode.MascotODE;
 
 
@@ -23,7 +24,7 @@ import beast.mascot.ode.MascotODE;
 @Description("Calculates the probability of a beast.tree using under the framework of Mueller (2017).")
 public class Mascot extends StructuredTreeDistribution {
 	
-	public Input<StructuredRateIntervals> structuredRateIntervals = new Input<>("rates", "Input of rates", Input.Validate.REQUIRED);
+	public Input<Dynamics> structuredRateIntervals = new Input<>("rates", "Input of rates", Input.Validate.REQUIRED);
 //    public Input<RatesAndTraits> ratesAndTraitsInput = new Input<>("ratesAndTraits", "particle model for input");          
 	
     
@@ -97,8 +98,8 @@ public class Mascot extends StructuredTreeDistribution {
         linProbs = new double[0];// initialize the tree and rates interval counter
         int treeInterval = 0, ratesInterval = 0;        
         double nextEventTime = 0.0;
-        migrationRates = structuredRateIntervals.get().getIntervalMigRate(ratesInterval);
-		coalescentRates = structuredRateIntervals.get().getIntervalCoalRate(ratesInterval);  
+        migrationRates = structuredRateIntervals.get().getBackwardsMigration(ratesInterval);
+		coalescentRates = structuredRateIntervals.get().getCoalescentRate(ratesInterval);  
         // Time to the next rate shift or event on the tree
         double nextTreeEvent = treeIntervalsInput.get().getInterval(treeInterval);
         double nextRateShift = structuredRateIntervals.get().getInterval(ratesInterval);
@@ -126,8 +127,8 @@ public class Mascot extends StructuredTreeDistribution {
 		    			if (treeIntervalsInput.get().intervalIsDirty(treeInterval)){
 		    				// if the interval is dirty, restore from last coalescent event
 		    				ratesInterval = restoreNode(treeInterval-1);
-		     	       		migrationRates = structuredRateIntervals.get().getIntervalMigRate(ratesInterval);
-		     	       		coalescentRates = structuredRateIntervals.get().getIntervalCoalRate(ratesInterval);        
+		    		        migrationRates = structuredRateIntervals.get().getBackwardsMigration(ratesInterval);
+		    				coalescentRates = structuredRateIntervals.get().getCoalescentRate(ratesInterval);  
 		     	       		nrLineages = activeLineages.size();
 		    				break;
 		    			}
@@ -141,8 +142,8 @@ public class Mascot extends StructuredTreeDistribution {
 			    			ratesInterval = lastRatesInterval;
 		    				// restore from last (gene) coalescent event
 		    				restoreNode(treeInterval);
-		     	       		migrationRates = structuredRateIntervals.get().getIntervalMigRate(ratesInterval);
-		     	       		coalescentRates = structuredRateIntervals.get().getIntervalCoalRate(ratesInterval);
+		    		        migrationRates = structuredRateIntervals.get().getBackwardsMigration(ratesInterval);
+		    				coalescentRates = structuredRateIntervals.get().getCoalescentRate(ratesInterval);  
 		     	       		
 		     	       		nrLineages = activeLineages.size();
 		    				break;
@@ -208,8 +209,8 @@ public class Mascot extends StructuredTreeDistribution {
         		}
         	}else{
         		ratesInterval++;
- 	       		migrationRates = structuredRateIntervals.get().getIntervalMigRate(ratesInterval);
- 	       		coalescentRates = structuredRateIntervals.get().getIntervalCoalRate(ratesInterval);        		
+                migrationRates = structuredRateIntervals.get().getBackwardsMigration(ratesInterval);
+        		coalescentRates = structuredRateIntervals.get().getCoalescentRate(ratesInterval);  
         		nextTreeEvent -= nextRateShift;
  	       		nextRateShift = structuredRateIntervals.get().getInterval(ratesInterval);
         	}

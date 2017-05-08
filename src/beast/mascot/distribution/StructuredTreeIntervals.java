@@ -63,13 +63,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
     protected double[] intervals;
     protected double[] storedIntervals;
     
-    /**
-     * keeps track of the coalescent times to see if an interval changed
-     * event when the nodes aren't marked dirty
-     */
-//    private double[] oldTimes;
-//    private double[] storedOldTimes;
-    
+   
     /**
      * If interval was changed 
      */
@@ -622,6 +616,20 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         return true;
     }
 
+    public double[] getIntervalStartEnd(int i){
+    	double[] times = new double[2];
+    	if (i == 0){
+    		times[0] = 0.0;
+    	}else{
+    		List<Node> addedNodes = getLineagesAdded(i-1);
+    		times[0] = addedNodes.get(0).getHeight();
+    	}
+		List<Node> addedNodes = getLineagesAdded(i);
+		times[1] = addedNodes.get(0).getHeight();
+		
+		return times;   	
+    }
+    
     /**
      * Added Function
      */

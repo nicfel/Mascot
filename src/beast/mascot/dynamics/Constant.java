@@ -1,6 +1,8 @@
 package beast.mascot.dynamics;
 
 
+import java.util.Arrays;
+
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.Input.Validate;
@@ -13,7 +15,7 @@ public class Constant extends Dynamics  {
 
     public Input<RealParameter> NeInput = new Input<>("Ne", "input of effective population sizes", Validate.REQUIRED);    
     public Input<RealParameter> b_mInput = new Input<>("backwardsMigration", "input of backwards in time migration rates");    
-    public Input<RealParameter> f_mInput = new Input<>("backwardsMigration", "input of backwards in time migration rates", Validate.XOR, b_mInput);    
+    public Input<RealParameter> f_mInput = new Input<>("forwardsMigration", "input of backwards in time migration rates", Validate.XOR, b_mInput);    
 
 	private boolean isBackwardsMigration;
     
@@ -55,14 +57,13 @@ public class Constant extends Dynamics  {
  
 	@Override
     public double[] getCoalescentRate(int i){
-    	double[] Ne = new double[dimensionInput.get()];
+    	double[] coal = new double[dimensionInput.get()];
     	int c = 0;
     	for (int j = 0; j < dimensionInput.get(); j++){
-    		Ne[c] = 1/NeInput.get().getArrayValue(j);
+    		coal[c] = 1/(2*NeInput.get().getArrayValue(j));
     		c++;
     	}
-    	
-    	return Ne;
+    	return coal;
 
     }
     
@@ -96,7 +97,6 @@ public class Constant extends Dynamics  {
     	
     	return m;  	
     }    
-
 
 	@Override
 	public void recalculate() {

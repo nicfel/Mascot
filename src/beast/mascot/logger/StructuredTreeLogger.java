@@ -24,8 +24,8 @@ import beast.evolution.tree.Node;
 import beast.evolution.tree.TraitSet;
 import beast.evolution.tree.Tree;
 import beast.evolution.tree.coalescent.IntervalType;
-import beast.mascot.distribution.StructuredRateIntervals;
 import beast.mascot.distribution.StructuredTreeIntervals;
+import beast.mascot.dynamics.Dynamics;
 import beast.mascot.dynamicsAndTraits.variableTrait;
 import beast.mascot.ode.MascotODEUpDown;
 
@@ -36,7 +36,7 @@ import beast.mascot.ode.MascotODEUpDown;
 public class StructuredTreeLogger extends Tree implements Loggable {
 	
 	
-	public Input<StructuredRateIntervals> structuredRateIntervals = new Input<>("rates", "Input of rates", Input.Validate.REQUIRED);
+	public Input<Dynamics> dynamicsInput = new Input<>("dynamics", "Input of rates", Input.Validate.REQUIRED);
     public Input<Tree> treeInput = new Input<>("tree", "tree to be logged", Validate.REQUIRED);
     
     
@@ -111,7 +111,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         
         	
            	
-    	states = structuredRateIntervals.get().getDimension();
+    	states = dynamicsInput.get().getDimension();
     	
         // make sure we get the current version of the inputs
         Tree tree = (Tree) treeInput.get().getCurrent();
@@ -302,11 +302,11 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         
         int treeInterval = 0, ratesInterval = 0;        
         double nextEventTime = 0.0;
-        migrationRates = structuredRateIntervals.get().getIntervalMigRate(ratesInterval);
-		coalescentRates = structuredRateIntervals.get().getIntervalCoalRate(ratesInterval);  
+		coalescentRates = dynamicsInput.get().getCoalescentRate(ratesInterval);  
+        migrationRates = dynamicsInput.get().getBackwardsMigration(ratesInterval);
         // Time to the next rate shift or event on the tree
         double nextTreeEvent = sti.getInterval(treeInterval);
-        double nextRateShift = structuredRateIntervals.get().getInterval(ratesInterval);
+        double nextRateShift = dynamicsInput.get().getInterval(ratesInterval);
 
              
 
@@ -318,8 +318,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         	if (nextEventTime > 0) {													// if true, calculate the interval contribution        		
                 if(recalculateLogP){
     				System.err.println("ode calculation stuck, reducing tolerance, new tolerance= " + maxTolerance);
-    				maxTolerance *=0.9;
-    				System.exit(0);
+    				maxTolerance *=0.1;
                 	CalculateNodeStates(tree);
                 	return;
                 }
@@ -331,10 +330,9 @@ public class StructuredTreeLogger extends Tree implements Loggable {
                 for (int i = linProbs.length; i < transitionProbs.length; i++)
                 	oldLinProbs[i] = transitionProbs[i-linProbs.length];  
 	        	
-	        	
                 FirstOrderIntegrator integrator = new DormandPrince853Integrator(1e-32, 1e10, maxTolerance, 1e-100);
                 // set the maximal number of evaluations
-                integrator.setMaxEvaluations((int) 1e10);
+                integrator.setMaxEvaluations((int) 1e3);
                 // set the odes
                 FirstOrderDifferentialEquations ode = new MascotODEUpDown(migrationRates, coalescentRates, nrLineages , coalescentRates.length);
 
@@ -344,6 +342,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
                 }catch(Exception e){
                 	System.out.println(e);
                 	System.out.println("expection");
+                	System.exit(0);
                 	recalculateLogP = true;    				
                 }        		       	
 	           
@@ -353,7 +352,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
             		transitionProbs[i-linProbs.length] = probs_for_ode[i];  
     		}
         	
-        	if (nextTreeEvent < nextRateShift){
+        	if (nextTreeEvent <= nextRateShift){
  	        	if (sti.getIntervalType(treeInterval) == IntervalType.COALESCENT) {
  	        		nrLineages--;													// coalescent event reduces the number of lineages by one
 	        		normalizeLineages();									// normalize all lineages before event		
@@ -376,10 +375,10 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         		}
         	}else{
         		ratesInterval++;
- 	       		migrationRates = structuredRateIntervals.get().getIntervalMigRate(ratesInterval);
- 	       		coalescentRates = structuredRateIntervals.get().getIntervalCoalRate(ratesInterval);        		
+        		coalescentRates = dynamicsInput.get().getCoalescentRate(ratesInterval);  
+                migrationRates = dynamicsInput.get().getBackwardsMigration(ratesInterval);
         		nextTreeEvent -= nextRateShift;
- 	       		nextRateShift = structuredRateIntervals.get().getInterval(ratesInterval);
+ 	       		nextRateShift = dynamicsInput.get().getInterval(ratesInterval);
         	}
         	
         }while(nextTreeEvent <= Double.POSITIVE_INFINITY);
@@ -525,7 +524,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 			if (!Double.isNaN(pairCoalRate)){
 				lambda.put(k, pairCoalRate);
 			}else{
-	    		System.exit(0);
+//	    		System.exit(0);
 			}
         }
         

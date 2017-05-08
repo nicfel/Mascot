@@ -62,11 +62,12 @@ public class MascotODEUpDown implements FirstOrderDifferentialEquations {
     	
     	// Caluclate the change in the lineage state probabilities for every lineage in every state
     	pDot = getCoalescence(p, p_norm, pDot, sumStates, dTdt);
+//    	System.out.println(Arrays.toString(pDot));
     	
 		pDot = getMigrationTransition(p, pDot);
     	
     	// Calculate the transition probabilities due to coalescence
-    	pDot = getCoalescenceTransition(p, p_norm, pDot, sumStates, dTdt);   	
+    	pDot = getCoalescenceTransition(p, p_norm, pDot, sumStates, dTdt);   
     }
     
     private double[] normalizeLineages(double[] p_in){

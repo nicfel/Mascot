@@ -107,7 +107,7 @@ public class Skyline extends Dynamics  {
     	}
     	
     	return m;  	
-    }    
+    }  	
 
 	@Override
 	public void recalculate() {

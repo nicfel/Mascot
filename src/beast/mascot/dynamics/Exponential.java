@@ -73,7 +73,7 @@ public class Exponential extends Dynamics {
 		coalRate = new double[dimensionInput.get()];
 		
 		double[] times = treeIntervalsInput.get().getIntervalStartEnd(interval);
-		System.out.println("times " + Arrays.toString(times));
+//		System.out.println("times " + Arrays.toString(times));
 		
 		// calculate the mean Ne's for each interval
 		for (int i = 0; i < dimensionInput.get(); i++){
@@ -83,7 +83,7 @@ public class Exponential extends Dynamics {
 								*(Math.exp(-growthRatesInput.get().getArrayValue(i)*times[0]) 
 										- Math.exp(-growthRatesInput.get().getArrayValue(i)*times[1])));
 		}
-		System.out.println("coalRate " + Arrays.toString(coalRate));
+//		System.out.println("coalRate " + Arrays.toString(coalRate));
 		return coalRate;
 	}
 	

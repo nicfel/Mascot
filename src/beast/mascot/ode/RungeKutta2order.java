@@ -25,7 +25,7 @@ public class RungeKutta2order extends MascotSeperatedDifferentialEquation {
 				computeDerivatives(p_new, k2);
 			}
 			
-			updateP(p, k1, k2, timeStep);			
+//			updateP(p, k1, k2, timeStep);			
 		}
 	}
 	

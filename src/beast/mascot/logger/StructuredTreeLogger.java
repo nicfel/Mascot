@@ -26,7 +26,6 @@ import beast.evolution.tree.Tree;
 import beast.evolution.tree.coalescent.IntervalType;
 import beast.mascot.distribution.StructuredTreeIntervals;
 import beast.mascot.dynamics.Dynamics;
-import beast.mascot.dynamicsAndTraits.variableTrait;
 import beast.mascot.ode.MascotODEUpDown;
 
 
@@ -47,7 +46,6 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     public Input<Boolean> substitutionsInput = new Input<Boolean>("substitutions", "report branch lengths as substitutions (branch length times clock rate for the branch)", false);
     public Input<Integer> decimalPlacesInput = new Input<Integer>("dp", "the number of decimal places to use writing branch lengths and rates, use -1 for full precision (default = full precision)", -1);
     public Input<TraitSet> typeTraitInput = new Input<>("typeTrait", "Type trait set.");   
-    public Input<variableTrait> variableTraitInput = new Input<>("variableTrait","traits that can change");
 
     
     boolean someMetaDataNeedsLogging;
@@ -199,10 +197,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 			
 			if(traitInput){				
 				sampleState = (int) typeTraitInput.get().getValue(node.getID());
-			}
-			
-			if(variableTraitInput.get() != null)
-				sampleState = (int) variableTraitInput.get().getSamplingState(node.getID());
+			}			
 			
 			else{
 				sampleState = Integer.parseInt(splits[splits.length-1]); //samples states (or priors) should eventually be specified in the XML

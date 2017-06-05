@@ -47,7 +47,7 @@ public class SIS extends Dynamics {
 		for(double d : initialIntroductions) intros.add(d);
 
 		// sort the introductions
-		Collections.sort((List<T>) introductions);		
+//		Collections.sort((List<T>) introductions);		
 		for (int i = intros.size()-1; i > 0; i--)
 			intros.set(i, intros.get(i) - intros.get(i-1));
 				

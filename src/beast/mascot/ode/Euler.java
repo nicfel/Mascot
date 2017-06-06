@@ -2,9 +2,13 @@ package beast.mascot.ode;
 
 import java.util.Arrays;
 
+import org.apache.commons.math4.util.FastMath;
+
 public class Euler extends MascotSeperatedDifferentialEquation {
 
-	double epsilon = 0.01;
+	double epsilon = 0.1;
+	
+
 	
 	public Euler(double[][] migration_rates, double[] coalescent_rates, int lineages, int states) {
 		super(migration_rates, coalescent_rates, lineages, states);
@@ -15,39 +19,32 @@ public class Euler extends MascotSeperatedDifferentialEquation {
 		double[] pDotDot = new double[p.length];
 		while (duration > 0){
 			computeDerivatives(p, pDot);
-			computeSecondDerivate(p, pDot, pDotDot);
+			approximateSecondDerivate(p, pDot, pDotDot);
 			duration = updateP(duration, p,  pDot, pDotDot);		
 		}
 	}
 	
 	private double updateP (double duration, double[] p, double[] pDot, double[] pDotDot){
 		double max_dotdot = 0.0;
-		for (int i = 0; i < (p.length); i++){
-			if (pDotDot[i] > max_dotdot)
-				max_dotdot = pDotDot[i];
-		}
-		double max_step = Math.min(Math.sqrt(epsilon*2/max_dotdot), duration);
-
-		double max_ratio = 1.0;
 		for (int i = 0; i < (p.length-1); i++){
-			double new_val = p[i] + pDot[i]*max_step;
-			double lower = p[i]/2;
-			double upper = (1-p[i])/2 + p[i];
-			if (new_val < lower){
-				double ratio = 	(lower)/(p[i]-new_val);
-				if (ratio < max_ratio)
-					max_ratio = ratio;				
-			}
-			if(new_val > upper){
-				double ratio = (upper)/(new_val-p[i]);
-				if (ratio < max_ratio)
-					max_ratio = ratio;
-			}
+			double tmp = FastMath.abs(pDotDot[i]);
+			if (tmp > max_dotdot)
+				max_dotdot = tmp;
 		}
-		double stepSize = max_step*max_ratio;
-		
-		doUpdating(stepSize, p, pDot);
-		duration -= stepSize;
+		double timeStep = FastMath.min(FastMath.sqrt(epsilon*2/max_dotdot), duration);
+
+		for (int i = 0; i < (p.length-1); i++){
+			double new_val = p[i] + pDot[i]*timeStep;
+			double lower = p[i]*0.01;
+			double upper = (1-p[i])*0.99 + p[i];
+			
+			while (new_val > upper || new_val < lower){
+				timeStep *= 0.9;
+				new_val = p[i] + pDot[i]*timeStep ;
+			}			
+		}
+		doUpdating(timeStep, p, pDot);
+		duration -= timeStep;
 		return duration;
 		
 		

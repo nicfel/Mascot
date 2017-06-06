@@ -2,7 +2,7 @@ package beast.mascot.ode;
 
 import java.util.Arrays;
 
-public class RungeKutta2order extends MascotSeperatedDifferentialEquation {
+public class RungeKutta2order extends MascotODE2 {
 
 	public RungeKutta2order(double[][] migration_rates, double[] coalescent_rates, int lineages, int states) {
 		super(migration_rates, coalescent_rates, lineages, states);
@@ -12,21 +12,23 @@ public class RungeKutta2order extends MascotSeperatedDifferentialEquation {
 //		System.out.println(" ");
 		double remainingTime = duration;
 		double[] k1 = new double[p.length];
-		double[] k2 = new double[p.length];
-		double[] p_new = new double[p.length];
+//		double[] k2 = new double[p.length];
+//		double[] p_new = new double[p.length];
 		while (remainingTime > 0){ 
-			double scaleTs = Integer.MAX_VALUE;
-			while(scaleTs!=0.0){
+//			double scaleTs = Integer.MAX_VALUE;
+//			while(scaleTs!=0.0){
 				computeDerivatives(p, k1);			
 				// calculate an initial condition for the time step
 				double timeStep = getTimeStep(remainingTime, p,  k1);
 				remainingTime -= timeStep;			
-				multiplyAdd(p_new, p, k1, timeStep);
-				computeDerivatives(p_new, k2);
-			}
+				System.out.println(Arrays.toString(p));
+				multiplyAdd(p, k1, timeStep);
+//				computeDerivatives(p_new, k2);
+//			}
 			
 //			updateP(p, k1, k2, timeStep);			
 		}
+		System.out.println(Arrays.toString(p));
 	}
 	
 	private double newTS (double[] k1, double[] k2){
@@ -46,8 +48,8 @@ public class RungeKutta2order extends MascotSeperatedDifferentialEquation {
 		double max_ratio = 1.0;
 		for (int i = 0; i < (p.length-1); i++){
 			double new_val = p[i] + pDot[i]*timeStep;
-			double lower = p[i]*0.99;
-			double upper = (1-p[i])*0.99 + p[i];
+			double lower = p[i]*0.9;
+			double upper = (1-p[i])*0.9 + p[i];
 			if (new_val < lower){
 				double ratio = 	(lower)/(p[i]-new_val);
 				if (ratio < max_ratio)
@@ -62,9 +64,9 @@ public class RungeKutta2order extends MascotSeperatedDifferentialEquation {
 		return max_ratio*timeStep;		
 	}
 	
-	private void multiplyAdd(double[] p_new, double[] p, double[] pDot, double ts){
+	private void multiplyAdd(double[] p, double[] pDot, double ts){
 		for (int i = 0; i < p.length; i++)
-			p_new[i] = p[i] + pDot[i]*ts;	
+			p[i] += pDot[i]*ts;	
 	}
 
 	

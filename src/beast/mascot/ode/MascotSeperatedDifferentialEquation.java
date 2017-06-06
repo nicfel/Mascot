@@ -127,6 +127,9 @@ public class MascotSeperatedDifferentialEquation  {
 		return logPdotDot;
     }
     
+    
+    
+    
     public double getLogPDotDot(double[] sumStates, double[] sumDotStates, double[] p_norm, double[] pDot){
     	double[] dTdtStates = new double[states];
     	for (int i = 0; i < lineages; i++)
@@ -203,5 +206,35 @@ public class MascotSeperatedDifferentialEquation  {
 
     }
     
+    public void approximateSecondDerivate(double[] p, double[] pDot, double[] pDotDot){
+		
+    	// Caluclate the change in the lineage state probabilities for every lineage in every state
+    	for (int i = 0; i<lineages; i++){    		
+    		double totCoalRate = 0.0;
+    		for (int j = 0; j<states; j++)
+    			totCoalRate += 2*coalescent_rates[j] * p[states*i+j]* (sumStates[j] - p[states*i+j]);     		
+    		
+    		// Calculate the probability of a lineage changing states
+    		for (int j = 0; j<states; j++){
+    			double migrates = 0.0;
+    			for (int k = 0; k<states; k++){
+    				if (j != k){    					    					
+    					// the probability of lineage i being in state j is p[i*nr_states +j]
+    					migrates += pDot[states*i+k]*migration_rates[k][j] -
+    							pDot[states*i+j]*migration_rates[j][k];
+    				}
+    			}// j   
+    			
+    			// Calculate the Derivate of p:
+    			pDotDot[states*i+j] = migrates +
+    					pDot[states*i+j] * (totCoalRate - 2*coalescent_rates[j] * (sumStates[j] - p[states*i+j]));
+    		}// j
+    		
+    		
+    	}// lineages    
+    	
+		pDotDot[pDot.length-1]  = 0;		
+
+    }
     
 }

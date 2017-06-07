@@ -6,7 +6,8 @@ import org.apache.commons.math4.util.FastMath;
 
 public class Euler2ndOrder {
 
-	double epsilon = 0.001;
+	double epsilon;
+	double max_step;
 	
 	double[][] migration_rates;
 	double[] coalescent_rates;
@@ -18,7 +19,9 @@ public class Euler2ndOrder {
 	double[] totCoalRate;	
 
 	
-	public Euler2ndOrder(double[][] migration_rates, double[] coalescent_rates, int lineages, int states) {
+	public Euler2ndOrder(double[][] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+		this.max_step = max_step;
+		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
         this.coalescent_rates = coalescent_rates;
         this.lineages = lineages;
@@ -29,15 +32,26 @@ public class Euler2ndOrder {
 
 	
 	
-	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
+	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, double[] times){
 		while (duration > 0){
+//			long t0 = System.nanoTime();
 			pDot = new double[pDot.length];
 			pDotDot = new double[pDot.length];
 			pDotDotDot = new double[pDot.length];
+//			long t1 = System.nanoTime();
 			computeDerivatives(p, pDot);
+//			long t2 = System.nanoTime();
 			computeSecondDerivate(p, pDot, pDotDot);
+//			long t3 = System.nanoTime();
 			approximateThirdDerivate(p, pDot, pDotDot, pDotDotDot);
+//			long t4 = System.nanoTime();
 			duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot);
+//			long t5 = System.nanoTime();
+//			times[1] += (double) t1-t0;
+//			times[1] += (double) t2-t1;
+//			times[2] += (double) t3-t2;
+//			times[3] += (double) t4-t3;
+//			times[4] += (double) t5-t4;				
 		}
 	}	
 	
@@ -48,16 +62,13 @@ public class Euler2ndOrder {
 				max_dotdotdot = FastMath.abs(pDotDotDot[i]);
 		}
 		
-		double timeStep = FastMath.min(FastMath.pow((epsilon*6/max_dotdotdot), 1.0/3), duration);
+		double timeStep = FastMath.min(FastMath.pow((epsilon*6/max_dotdotdot), 1.0/3), FastMath.min(duration, max_step));
 
 		double timeStepSquare = timeStep*timeStep*0.5;
 		for (int i = 0; i < (p.length-1); i++){
 			double new_val = p[i] + pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
 			
-			double lower = p[i]*0.1;
-			double upper = (1-p[i])*0.9 + p[i];
-			
-			while (new_val > upper || new_val < lower){
+			while (new_val > 1 || new_val < 0){
 				timeStep *= 0.9;
 				timeStepSquare = timeStep*timeStep*0.5;
 				new_val = p[i] + pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
@@ -72,7 +83,18 @@ public class Euler2ndOrder {
 	
 	private void doUpdating(double timeStep, double timeStepSquare, double[] p, double[] pDot, double[] pDotDot){
 		for (int i = 0; i < (p.length); i++)
-			p[i] += pDot[i]*timeStep + pDotDot[i]*timeStepSquare;		
+			p[i] += pDot[i]*timeStep + pDotDot[i]*timeStepSquare;	
+		
+		// normalize to ensure stability
+		for (int i = 0; i < lineages; i ++){
+			double linSum = 0;
+			for (int j = 0; j < states; j++){
+				linSum += p[states*i+j];
+			}
+			for (int j = 0; j < states; j++){
+				p[states*i+j] /= linSum;
+			}
+		}
 	}
 	
     public void computeDerivatives (double[] p, double[] pDot) {
@@ -84,15 +106,14 @@ public class Euler2ndOrder {
     		for (int j = 0; j<states; j++)
 				sumStates[j] += p[states*i+j];    			
     		
-    	
     	// Caluclate the change in the lineage state probabilities for every lineage in every state
     	for (int i = 0; i<lineages; i++){
-    		double tCR = 0.0;
-    		for (int j = 0; j<states; j++)
-    			tCR += 2*coalescent_rates[j] * p[states*i+j]* (sumStates[j] - p[states*i+j]);     
-    		
-    		totCoalRate[i] = tCR;
-    		
+    		double[] tCR =  new double[states];
+    		for (int j = 0; j<states; j++){
+    			tCR[j] = 2*coalescent_rates[j] * p[states*i+j]* (sumStates[j] - p[states*i+j]);
+    			totCoalRate[i] += tCR[j];
+    		}
+    		pDot[pDot.length-1] -= totCoalRate[i];
     		// Calculate the probability of a lineage changing states
     		for (int j = 0; j < states; j++){
     			for (int k = j+1; k < states; k++){    				
@@ -105,12 +126,11 @@ public class Euler2ndOrder {
     			}// j    			 
     			
     			// Calculate the Derivate of p:
-    			pDot[states*i+j] +=	p[states*i+j] * (tCR - 2*coalescent_rates[j] * (sumStates[j] - p[states*i+j]));
+    			pDot[states*i+j] +=	p[states*i+j] * totCoalRate[i] - tCR[j];
     		}// j
     	}// lineages    
     	
-		pDot[pDot.length-1]  = getTotalCoalescent(sumStates, p);
-   	
+		pDot[pDot.length-1]  /= 2;
     }
     
     
@@ -129,6 +149,7 @@ public class Euler2ndOrder {
     		for (int j = 0; j<states; j++)
     			pCoalRate += 2*coalescent_rates[j] * p[states*i+j]* (sumDotStates[j] - pDot[states*i+j]);     
    		
+    		pDotDot[pDot.length-1]-=pCoalRate;
     		
     		double migrates;
     		// Calculate the probability of a lineage changing states
@@ -147,7 +168,7 @@ public class Euler2ndOrder {
 						pDot[states*i+j] * 2*coalescent_rates[j] * (sumStates[j] - p[states*i+j]);
     		}// j    		
     	}// lineages    	
-		pDotDot[pDot.length-1]  = getSecondCoalescent(sumStates, sumDotStates, p, pDot);		
+		pDotDot[pDot.length-1]  /= 2;		
 
     }
     
@@ -171,18 +192,12 @@ public class Euler2ndOrder {
     }
    
 
-    private double getTotalCoalescent(double[] sumStates, double[] p_norm){
-    	double[] dTdtStates = new double[states];
-    	for (int i = 0; i < lineages; i++)
-    		for (int j = 0; j<states; j++)
-    			dTdtStates[j] += p_norm[i*states+j]*(sumStates[j] - p_norm[i*states+j]);
-	
-    	
+    private double getTotalCoalescent(double[] sumStates, double[] p_norm){    	
     	double logPdot = 0;
-		for (int j = 0; j<states; j++)
-			logPdot -= coalescent_rates[j]*dTdtStates[j];
+		for (int j = 0; j<totCoalRate.length; j++)
+			logPdot -= totCoalRate[j];
 		
-		return logPdot;
+		return logPdot/2;
     }
     
     private double getSecondCoalescent(double[] sumStates, double[] sumDotStates, double[] p_norm, double[] pDot){
@@ -202,8 +217,6 @@ public class Euler2ndOrder {
 		return logPdotDot;
     }
   
-
-
 	
 }
 

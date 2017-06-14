@@ -39,7 +39,6 @@ public class RootStateLogger extends CalculationNode implements Loggable {
 		for (int i = 0 ; i < states; i++){
 			out.print(RootStates.get(i) + "\t");
 		}
-
 	}
 
 	@Override

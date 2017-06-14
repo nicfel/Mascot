@@ -4,12 +4,11 @@ import java.io.PrintStream;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.math4.ode.FirstOrderDifferentialEquations;
 import org.apache.commons.math4.ode.FirstOrderIntegrator;
-import org.apache.commons.math4.ode.nonstiff.DormandPrince853Integrator;
+import org.apache.commons.math4.ode.nonstiff.ClassicalRungeKuttaIntegrator;
 import org.jblas.DoubleMatrix;
 
 import beast.core.Function;
@@ -26,6 +25,7 @@ import beast.evolution.tree.Tree;
 import beast.evolution.tree.coalescent.IntervalType;
 import beast.mascot.distribution.StructuredTreeIntervals;
 import beast.mascot.dynamics.Dynamics;
+import beast.mascot.ode.Euler2ndOrderTransitions;
 import beast.mascot.ode.MascotODEUpDown;
 
 
@@ -37,6 +37,12 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 	
 	public Input<Dynamics> dynamicsInput = new Input<>("dynamics", "Input of rates", Input.Validate.REQUIRED);
     public Input<Tree> treeInput = new Input<>("tree", "tree to be logged", Validate.REQUIRED);
+    
+	public Input<Double> epsilonInput = new Input<>("epsilon", "step size for the RK4 integration",0.00001);
+	public Input<Double> maxStepInput = new Input<>("maxStep", "step size for the RK4 integration", Double.POSITIVE_INFINITY);
+	public Input<Double> stepSizeInput = new Input<>("stepSize", "step size for the RK4 integration");
+	
+	public Input<Boolean> useUpDown = new Input<>("upDown", "if up down algorithm is to use for the node state calculation", true);
     
     
     public Input<BranchRateModel.Base> clockModelInput = new Input<BranchRateModel.Base>("branchratemodel", "rate to be logged with branches of the tree");
@@ -317,35 +323,62 @@ public class StructuredTreeLogger extends Tree implements Loggable {
                 	CalculateNodeStates(tree);
                 	return;
                 }
-	        	double[] probs_for_ode = new double[linProbs.length + transitionProbs.length];   
-	        	double[] oldLinProbs = new double[linProbs.length + transitionProbs.length]; 
-	        	
-                for (int i = 0; i<linProbs.length; i++)
-                	oldLinProbs[i] = linProbs[i];  
-                for (int i = linProbs.length; i < transitionProbs.length; i++)
-                	oldLinProbs[i] = transitionProbs[i-linProbs.length];  
-	        	
-                FirstOrderIntegrator integrator = new DormandPrince853Integrator(1e-32, 1e10, maxTolerance, 1e-100);
-                // set the maximal number of evaluations
-                integrator.setMaxEvaluations((int) 1e3);
-                // set the odes
-                FirstOrderDifferentialEquations ode = new MascotODEUpDown(migrationRates, coalescentRates, nrLineages , coalescentRates.length);
+                if(stepSizeInput.get()!=null){
+    	        	double[] probs_for_ode = new double[linProbs.length + transitionProbs.length];   
+    	        	double[] oldLinProbs = new double[linProbs.length + transitionProbs.length]; 
+    	        	
+                    for (int i = 0; i<linProbs.length; i++)
+                    	oldLinProbs[i] = linProbs[i];  
+                    for (int i = linProbs.length; i < transitionProbs.length; i++)
+                    	oldLinProbs[i] = transitionProbs[i-linProbs.length];  
 
-                // integrate	        
-                try {
-                	integrator.integrate(ode, 0, oldLinProbs, nextEventTime, probs_for_ode);
-                }catch(Exception e){
-                	System.out.println(e);
-                	System.out.println("expection");
-                	System.exit(0);
-                	recalculateLogP = true;    				
-                }        		       	
-	           
-                for (int i = 0; i<linProbs.length; i++)
-            		linProbs[i] = probs_for_ode[i];  
-                for (int i = linProbs.length; i < transitionProbs.length; i++)
-            		transitionProbs[i-linProbs.length] = probs_for_ode[i];  
-    		}
+                	
+                	
+		        	double[] linProbs_for_ode = new double[linProbs.length]; 
+	                FirstOrderIntegrator integrator = new ClassicalRungeKuttaIntegrator(stepSizeInput.get());	                
+//	                integrator.setMaxEvaluations((int) 1e5);  // set the maximal number of evaluations              
+	                FirstOrderDifferentialEquations ode = new MascotODEUpDown(migrationRates, coalescentRates, nrLineages , coalescentRates.length);
+
+	                // integrate	        
+	                try {
+	                	integrator.integrate(ode, 0, oldLinProbs, nextEventTime, probs_for_ode);
+	                }catch(Exception e){
+	                	System.out.println(e);
+	                	System.out.println("expection");
+	                	System.exit(0);
+	                	recalculateLogP = true;    				
+	                }        		       	
+		           
+	                for (int i = 0; i<linProbs.length; i++)
+	            		linProbs[i] = probs_for_ode[i];  
+	                for (int i = linProbs.length; i < transitionProbs.length; i++)
+	            		transitionProbs[i-linProbs.length] = probs_for_ode[i];  
+	        	}else {
+		        	double[] linProbs_tmp = new double[linProbs.length + transitionProbs.length]; 
+		        	double[] linProbs_tmpdt = new double[linProbs.length + transitionProbs.length]; 
+		        	double[] linProbs_tmpddt = new double[linProbs.length + transitionProbs.length]; 
+		        	double[] linProbs_tmpdddt = new double[linProbs.length + transitionProbs.length]; 
+
+                    for (int i = 0; i<linProbs.length; i++)
+                    	linProbs_tmp[i] = linProbs[i];  
+                    
+                    for (int i = linProbs.length; i < (transitionProbs.length+linProbs.length); i++)
+                    	linProbs_tmp[i] = transitionProbs[i-linProbs.length];   		
+    	        	
+
+	        		Euler2ndOrderTransitions euler = new Euler2ndOrderTransitions(migrationRates, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
+		        	
+		        	
+		        	linProbs[linProbs.length-1] = 0;
+		        	euler.calculateValues(nextEventTime, linProbs_tmp, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt);		        	
+	        		
+	                for (int i = 0; i<linProbs.length; i++)
+	            		linProbs[i] = linProbs_tmp[i];  
+	                for (int i = linProbs.length; i < linProbs_tmp.length; i++)
+	            		transitionProbs[i-linProbs.length] = linProbs_tmp[i];  
+
+	        	}
+			}
         	
         	if (nextTreeEvent <= nextRateShift){
  	        	if (sti.getIntervalType(treeInterval) == IntervalType.COALESCENT) {
@@ -377,15 +410,15 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         	}
         	
         }while(nextTreeEvent <= Double.POSITIVE_INFINITY);
+        currTreeInterval = sti.getIntervalCount()-1;
         
-        boolean isRoot = true;
         do{
 		  	if (sti.getIntervalType(currTreeInterval) == IntervalType.COALESCENT) {
-		  		coalesceDown(currTreeInterval, isRoot);									// Set parent lineage state probs and remove children
-		  		isRoot = false;
+		  		coalesceDown(currTreeInterval);									// Set parent lineage state probs and remove children
 		   	}       	
 		  	currTreeInterval--;
         }while(currTreeInterval>=0);
+//        System.exit(0);
     }
 	
 
@@ -455,8 +488,8 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 				}
 			}
 			// add the initial transition probabilities (diagonal matrix)
-			for (int s = 0; s < states; s++)
-				for (int i = 0; i < states; i++)
+			for (int s = 0; s < states; s++){
+				for (int i = 0; i < states; i++){
 					if (i == s){
 						transitionProbsNew[currPositionTransitions] = 1.0;
 						currPositionTransitions++;
@@ -464,15 +497,14 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 						transitionProbsNew[currPositionTransitions] = 0.0;
 						currPositionTransitions++;
 					}
-
+				}
+			}
 		}	
 		linProbs = linProbsNew;
 		transitionProbs = transitionProbsNew;
-
     }
     
     private void coalesce(int currTreeInterval) {
-
     	// normalize the transition probabilities
     	for (int i = 0; i < nrLineages*states; i++){
     		double lineProbs = 0.0;
@@ -481,7 +513,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     				lineProbs += transitionProbs[i*states+j];
     			}else{
     				System.err.println("transition probability smaller than 0 (or NaN before normalizing");	    				
-    				System.exit(1);
+    				System.exit(0);
     			}
     		}
     		for (int j = 0; j < states; j++)
@@ -542,6 +574,19 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 				tP1.put(i, j, transitionProbs[daughterIndex1*states*states+i*states+j]);
 			}
 		}
+//		tP1.print();
+//		if (!coalLines.get(0).isLeaf()){
+//			DoubleMatrix start = stateProbabilities[coalLines.get(0).getNr() - nrSamples];
+////			start.print();
+//			start.transpose().mmul(tP1).div(start.transpose().mmul(tP1).sum()).print();
+//			System.out.print("[");
+//			for (int i = 0; i < (states-1); i++)
+//				System.out.print(String.format("%.6f", linProbs[daughterIndex1*states+i]) + ", ");
+//			System.out.print(String.format("%.6f", linProbs[daughterIndex1*states+states-1]) + "]\n");
+//			System.out.println();
+////			System.exit(0);
+//		}
+		
 		// get the transition probabilities of daughter lineage 2
 		DoubleMatrix tP2 = DoubleMatrix.zeros(states,states);
 		for (int i = 0; i< states; i++){
@@ -610,25 +655,50 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 		}
     }
 
-    private void coalesceDown(int currTreeInterval, boolean isRoot) {
+    private void coalesceDown(int currTreeInterval) {
 		List<Node> parentLines = sti.getLineagesAdded(currTreeInterval);
+		if (parentLines.size()!=1){
+			System.err.println("to many lineages, while coalescening down");
+			System.exit(0);
+		}
 		Node parentNode = parentLines.get(0);
 		
-		if (!isRoot){
+		if (!parentNode.isRoot()){
 			DoubleMatrix start = stateProbabilities[parentNode.getNr() - nrSamples];
-			DoubleMatrix end = stateProbabilities[parentNode.getParent().getNr() - nrSamples];
+			DoubleMatrix end = stateProbabilitiesDown[parentNode.getParent().getNr() - nrSamples];
 			DoubleMatrix flow = TransitionProbabilities[parentNode.getNr()];
 			DoubleMatrix otherSideInfo = end.div(start.transpose().mmul(flow));
 			DoubleMatrix conditional = flow.mmul(otherSideInfo);
 			conditional = conditional.mul(start);
-			stateProbabilities[parentNode.getNr() - nrSamples] = conditional.div(conditional.sum());
-		}
-    }
+			stateProbabilitiesDown[parentNode.getNr() - nrSamples] = conditional.div(conditional.sum());
+		}else{
+//			DoubleMatrix d1 = stateProbabilities[parentNode.getLeft().getNr() - nrSamples];
+//			DoubleMatrix d2 = stateProbabilities[parentNode.getRight().getNr() - nrSamples];
+//			DoubleMatrix f1 = TransitionProbabilities[parentNode.getLeft().getNr()];
+//			DoubleMatrix f2 = TransitionProbabilities[parentNode.getLeft().getNr()];
+//			d1.transpose().mmul(f1).print();
+//			d2.transpose().mmul(f2).print();
+//			d1.print();
+//			d2.print();
+//			System.out.println();
+//			f1.print();
+//			f2.print();
+//			System.out.println();
+//			stateProbabilities[parentNode.getNr() - nrSamples].print();
+//			
+//			System.out.println();
+//			System.exit(0);
+			stateProbabilitiesDown[parentNode.getNr() - nrSamples] = stateProbabilities[parentNode.getNr() - nrSamples];
+    	}
+	}
 
     
 	private DoubleMatrix getStateProb(int nr) {
-		// TODO Auto-generated method stub
-		return stateProbabilities[nr - nrSamples] ;
+		if(useUpDown.get()){			
+			return stateProbabilitiesDown[nr - nrSamples] ;
+		}else{
+			return stateProbabilities[nr - nrSamples] ;
+		}
 	}
 
 

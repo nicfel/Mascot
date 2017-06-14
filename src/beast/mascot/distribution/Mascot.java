@@ -407,6 +407,7 @@ public class Mascot extends StructuredTreeDistribution {
     				lineProbs += linProbs[i*states+j];
     			}else{
     				// try recalculation after lowering the tolerance
+    				System.out.println(linProbs[i*states+j]);
     				recalculateLogP = true;
     				return Math.log(1.0);
     			}

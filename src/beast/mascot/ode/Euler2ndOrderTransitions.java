@@ -2,7 +2,7 @@ package beast.mascot.ode;
 
 import java.util.Arrays;
 
-import org.apache.commons.math4.util.FastMath;
+import org.apache.commons.math3.util.FastMath;
 
 /**
  * @author Nicola Felix Mueller

@@ -1,7 +1,7 @@
 package beast.mascot.ode;
 
 import java.util.Arrays;
-import org.apache.commons.math4.ode.FirstOrderDifferentialEquations;
+import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 
 /**
  * @author Nicola Felix Mueller

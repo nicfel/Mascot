@@ -2,7 +2,7 @@ package beast.mascot.ode;
 
 import java.util.Arrays;
 
-import org.apache.commons.math4.util.FastMath;
+import org.apache.commons.math3.util.FastMath;
 
 public class Euler2ndOrder {
 

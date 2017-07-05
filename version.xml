@@ -1,0 +1,5 @@
+<addon name="Mascot" version="0.0.1">
+  <depends on="beast2" atleast="2.4.0"/>
+
+  <!-- Add other dependencies as necessary. -->
+</addon>

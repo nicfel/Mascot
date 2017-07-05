@@ -87,8 +87,8 @@ public class Constant extends Dynamics  {
 	    		for (int b = 0; b < dimensionInput.get(); b++){
 	    			if (a!=b){
 	    				m[a][b] = f_mInput.get().getArrayValue(c)
-	    						*NeInput.get().getArrayValue(i*dimensionInput.get() + b)
-	    							/NeInput.get().getArrayValue(i*dimensionInput.get() + a);
+	    						*NeInput.get().getArrayValue(b)
+	    							/NeInput.get().getArrayValue(a);
 	    				c++;
 	    			}
 	    		}

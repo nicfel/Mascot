@@ -7,12 +7,12 @@ import java.util.List;
 import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 import org.apache.commons.math3.ode.FirstOrderIntegrator;
 import org.apache.commons.math3.ode.nonstiff.ClassicalRungeKuttaIntegrator;
-import org.apache.commons.math3.ode.nonstiff.HighamHall54Integrator;
 import org.jblas.DoubleMatrix;
 
 import beast.core.Description;
 import beast.core.Input;
 import beast.evolution.tree.Node;
+import beast.evolution.tree.TraitSet;
 import beast.evolution.tree.coalescent.IntervalType;
 import beast.mascot.dynamics.Dynamics;
 import beast.mascot.ode.Euler2ndOrder;
@@ -27,14 +27,12 @@ import beast.mascot.ode.MascotODE;
 public class Mascot extends StructuredTreeDistribution {
 	
 	public Input<Dynamics> dynamicsInput = new Input<>("dynamics", "Input of rates", Input.Validate.REQUIRED);
-	public Input<Integer> eulerSteps = new Input<>("steps", "number of steps for euler integration, if not " +
-													"specified, dormand prince integration is used");
 	public Input<Double> epsilonInput = new Input<>("epsilon", "step size for the RK4 integration",0.001);
 	public Input<Double> maxStepInput = new Input<>("maxStep", "step size for the RK4 integration", Double.POSITIVE_INFINITY);
 	public Input<Double> stepSizeInput = new Input<>("stepSize", "step size for the RK4 integration");
 	public Input<Boolean> saveRamInput = new Input<>("saveRamInput", "doesn't save intermediate steps", false);
 	
-    
+
     
 	public int samples;
 	public int nrSamples;
@@ -72,20 +70,14 @@ public class Mascot extends StructuredTreeDistribution {
 	// maximum integration error tolerance
     private double maxTolerance = 1e-3;            
     private boolean recalculateLogP;    
-    
-    private boolean useEuler = false;
-    
-    private double[] times;   
-        
+            
     @Override
     public void initAndValidate(){    	
     	treeIntervalsInput.get().calculateIntervals();       
     	stateProbabilities = new DoubleMatrix[treeIntervalsInput.get().getSampleCount()];
         nrSamples = treeIntervalsInput.get().getSampleCount() + 1;    
         states = dynamicsInput.get().getDimension();
-        
-        times = new double[5];
-        
+                
     	int intCount = treeIntervalsInput.get().getIntervalCount();
 
     	// initialize storing arrays and ArrayLists
@@ -95,13 +87,11 @@ public class Mascot extends StructuredTreeDistribution {
     	coalActiveLineages = new ArrayList<>();
     	ArrayList<Integer> emptyList = new ArrayList<>();
     	for (int i = 0; i <= intCount; i++) coalActiveLineages.add(emptyList);
-    	
-    	if (eulerSteps.get()!=null) useEuler = true;
-    	
-    	
+    	    	
     }
         
     public double calculateLogP() {
+//    	System.out.println(treeIntervalsInput.get().treeInput.get());
     	// newly calculate tree intervals
     	treeIntervalsInput.get().calculateIntervals();
     	// correctly calculate the daughter nodes at coalescent intervals in the case of
@@ -211,7 +201,7 @@ public class Mascot extends StructuredTreeDistribution {
 		        	for (int i = 0; i < linProbs.length; i++) linProbs_tmp[i] = linProbs[i];		        	
 		        	
 		        	linProbs[linProbs.length-1] = 0;
-		        	euler.calculateValues(nextEventTime, linProbs_tmp, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt, times);		        	
+		        	euler.calculateValues(nextEventTime, linProbs_tmp, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt);		        	
 	        		
 		            for (int i = 0; i < linProbs.length; i++) linProbs[i] = linProbs_tmp[i]; 
 		            
@@ -265,134 +255,6 @@ public class Mascot extends StructuredTreeDistribution {
 //    private void ei(double duration, double[] linProbs_for_ode, double[] meanLinProbs){
 //    	eulerIntegration(duration, linProbs_for_ode, meanLinProbs);   	
 //    }
-
-    
-    private void eulerIntegration(double duration, double[] linProbs_for_ode, double[] meanLinProbs){
-    	int nrSteps = eulerSteps.get();
-    	double integrationWidth = duration/nrSteps;
-    	
-    	double[] maxRateOut = new double[states];
-    	for (int a = 0; a < states; a++)
-    		for (int b = 0; b < states; b++)
-    			if (a==b)
-    				maxRateOut[a] += coalescentRates[a];
-    			else
-    				maxRateOut[a] += migrationRates[a][b];
-    	
-    	double max = maxRateOut[0];
-    	for (int i = 1; i < states; i++)
-    		if (maxRateOut[i]>max)
-    			max = maxRateOut[i];
-    			
-    	double maxStepSize = 1/(1*max);
-    	
-    	while (integrationWidth > maxStepSize){
-    		nrSteps++;
-    		integrationWidth = duration/nrSteps;
-    	}    
-    	
-//    	System.out.println(integrationWidth);
-    	
-
-    	normalizeLineages();
-    	
-		for (int intStep = 0; intStep < nrSteps; intStep++){
-        	double[] sumStates = new double[states];
-        	
-        	for (int i = 0; i< nrLineages; i++)
-        		for (int j = 0; j<states; j++)
-        			sumStates[j] += linProbs[states*i+j];  
-        	
-        	updateLinProbs(sumStates, linProbs, linProbs_for_ode, integrationWidth);
-        	
-        	// normalize linProbs_for_ode
-        	normalizeLinProbs_for_ode(linProbs_for_ode);
-        	getMean(meanLinProbs, linProbs_for_ode);
-        	
-        	
-        	
-        	// update logP
-        	double[] meanSumStates = new double[states];
-        	double[] dTdtStates = new double[states];
-        	
-        	for (int i = 0; i< nrLineages; i++)
-        		for (int j = 0; j<states; j++)
-        			meanSumStates[j] += meanLinProbs[states*i+j];  
-        	
-        	for (int i = 0; i<nrLineages; i++)
-        		for (int j = 0; j<states; j++)
-        			dTdtStates[j] += meanLinProbs[i*states+j]*(meanSumStates[j] - meanLinProbs[i*states+j]);
-        	
-    		for (int j = 0; j<states; j++)
-    			logP -= integrationWidth*coalescentRates[j]*dTdtStates[j];
-    		
-            for (int i = 0; i<linProbs.length; i++)
-        		linProbs[i] = linProbs_for_ode[i]; 
-    	}
-    	
-    }
-    
-    private void getMean(double[] meanLinProbs, double[] linProbs_for_ode) {
-    	for (int i = 0; i < nrLineages; i++)
-    		for (int j = 0; j < states; j++)
-    			meanLinProbs[i*states+j] = (linProbs_for_ode[i*states+j] + linProbs[i*states+j])/2;
-	}
-
-	private void normalizeLinProbs_for_ode(double[] linProbs_for_ode){
-    	for (int i = 0; i < nrLineages; i++){
-    		double lineProbs = 0.0;
-    		for (int j = 0; j < states; j++)
-    			lineProbs += linProbs_for_ode[i*states+j];
-    		for (int j = 0; j < states; j++)
-    			linProbs_for_ode[i*states+j] = linProbs_for_ode[i*states+j]/lineProbs;
-    	}       
-    }
-    
-    private void updateLinProbs(double[] sumStates, double[] linProbs, double[] linProbs_for_ode, double integrationWidth){
-//		double[] linProbs_for_ode = new double[linProbs.length];
-    	// Caluclate the change in the lineage state probabilities for every lineage in every state
-    	for (int i = 0; i<nrLineages; i++){
-    		double totCoalRate = getTotCoal(i, sumStates);
-    		
-   		
-    		// Calculate the probability of a lineage changing states
-    		for (int j = 0; j<states; j++){
-    			
-    			double migrates = getMigration(i, j);
-    			
-    			// Calculate the Derivate of p:
-    			double pDot = migrates + linProbs[states*i+j] *(totCoalRate -2*coalescentRates[j] * (sumStates[j] - linProbs[states*i+j]));
-    			double newVal = linProbs[states*i+j] + pDot*integrationWidth;
-    			
-    			
-    			if (newVal < 0.0 || newVal > 1.0){
-//    				System.err.println("invalid lin Prob value " + newVal);
-    				recalculateLogP = true;
-    			}else{
-    				linProbs_for_ode[states*i+j] = newVal;
-    			}
-    		}
-    	}   
-    }
-    
-    private double getTotCoal(int i, double[] sumStates){
-		double totCoalRate = 0.0;
-		for (int j = 0; j<states; j++)
-			totCoalRate += 2*coalescentRates[j] * linProbs[states*i+j]* (sumStates[j] - linProbs[states*i+j]);     		
-		return totCoalRate;
-    }
-
-    private double getMigration(int i, int j){
-    	double migrates = 0.0;
-		for (int k = 0; k<states; k++){
-			if (j != k){				    					
-				// the probability of lineage i being in state j is p[i*nr_states +j]
-				migrates += linProbs[states*i+k]*migrationRates[k][j] -
-						linProbs[states*i+j]*migrationRates[j][k];
-			}
-		}   	
-		return migrates;
-    }
     
     private double normalizeLineages(){
     	if (linProbs==null)
@@ -439,23 +301,44 @@ public class Mascot extends StructuredTreeDistribution {
 		 * the last value of the taxon name, the last value after a _, is an integer
 		 * that gives the type of that taxon
 		 */
-		for (Node l : incomingLines) {
-			activeLineages.add(l.getNr());
-			String sampleID = l.getID();
-			int sampleState = 0;
-			if (states > 1){				
-				String[] splits = sampleID.split("_");
-				sampleState = Integer.parseInt(splits[splits.length-1]); //samples states (or priors) should eventually be specified in the XML
-			}
-			for (int i = 0; i< states; i++){
-				if (i == sampleState){
-					linProbsNew[currPosition] = 1.0;currPosition++;
+		if (dynamicsInput.get().typeTraitInput.get()!=null){
+			for (Node l : incomingLines) {
+				activeLineages.add(l.getNr());
+				int sampleState = dynamicsInput.get().getValue(l.getID());
+				
+				if (sampleState>= dynamicsInput.get().getDimension()){
+					System.err.println("sample discovered with higher state than dimension");
+					System.exit(0);
 				}
-				else{
-					linProbsNew[currPosition] = 0.0;currPosition++;
+				
+				for (int i = 0; i < states; i++){
+					if (i == sampleState){
+						linProbsNew[currPosition] = 1.0;currPosition++;
+					}
+					else{
+						linProbsNew[currPosition] = 0.0;currPosition++;
+					}
 				}
-			}
-		}	
+			}				
+		}else{
+			for (Node l : incomingLines) {
+				activeLineages.add(l.getNr());
+				String sampleID = l.getID();
+				int sampleState = 0;
+				if (states > 1){				
+					String[] splits = sampleID.split("_");
+					sampleState = Integer.parseInt(splits[splits.length-1]); //samples states (or priors) should eventually be specified in the XML
+				}
+				for (int i = 0; i < states; i++){
+					if (i == sampleState){
+						linProbsNew[currPosition] = 1.0;currPosition++;
+					}
+					else{
+						linProbsNew[currPosition] = 0.0;currPosition++;
+					}
+				}
+			}	
+		}
 		linProbs = linProbsNew;
 		// store the node
 		storeNode(currTreeInterval, currRatesInterval, linProbs, logP, activeLineages);

@@ -4,13 +4,15 @@ package beast.mascot.dynamics;
 import beast.core.CalculationNode;
 import beast.core.Description;
 import beast.core.Input;
-import beast.core.Input.Validate;
+import beast.evolution.tree.TraitSet;
 
 @Description("Probabilistic representation that can produce " +
         "a log probability for instance for running an MCMC chain.")
 public abstract class Dynamics extends CalculationNode  {
 	
-    public Input<Integer> dimensionInput = new Input<>("dimension", "the number of different states ", Validate.REQUIRED);
+    public Input<Integer> dimensionInput = new Input<>("dimension", "the number of different states ", 1);
+    public Input<TraitSet> typeTraitInput = new Input<>("typeTrait", "Type trait set.  Used only by BEAUti.");
+
 
     private boolean dynamicsKnown;
 
@@ -39,10 +41,40 @@ public abstract class Dynamics extends CalculationNode  {
      */    
 	public abstract double[][] getBackwardsMigration(int i);
 
+	TraitSet typeTraitSet; 
 
     @Override
     public void initAndValidate() {
-        // nothing to do
+    	
+    	
+//        if (typeTraitInput.get() != null)
+//            typeTraitSet = typeTraitInput.get();
+
+        // Construct type list.
+        if (typeTraitSet == null) {
+//            if (getTaxonset() != null) {
+                TraitSet dummyTraitSet = new TraitSet();
+
+                StringBuilder sb = new StringBuilder();
+                for (int i=0; i<10; i++) {
+                    if (i>0)
+                        sb.append(",\n");
+                    sb.append("lala").append("=NOT_SET");
+                }
+//                try {
+//                    dummyTraitSet.initByName(
+//                        "traitname", "type",
+//                        "taxa", getTaxonset(),
+//                        "value", sb.toString());
+//                    dummyTraitSet.setID("typeTraitSet.t:"
+//                        + BeautiDoc.parsePartition(getID()));
+//                    setTypeTrait(dummyTraitSet);
+//                } catch (Exception ex) {
+//                    System.out.println("Error setting default type trait.");
+//                }
+//            }
+        }
+
     }
     
     /**
@@ -73,6 +105,11 @@ public abstract class Dynamics extends CalculationNode  {
 	public int getDimension(){
 		return dimensionInput.get();
 	}
-	
 
+	public int getValue(String id) {
+		return (int) typeTraitInput.get().getValue(id);
+			
+	}
+	
+	
 } // class Distribution

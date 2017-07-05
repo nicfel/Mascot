@@ -51,7 +51,6 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     public Input<BooleanParameter> conditionalStateProbsInput = new Input<BooleanParameter>("conditionalStateProbs", "report branch lengths as substitutions (branch length times clock rate for the branch)");
     public Input<Boolean> substitutionsInput = new Input<Boolean>("substitutions", "report branch lengths as substitutions (branch length times clock rate for the branch)", false);
     public Input<Integer> decimalPlacesInput = new Input<Integer>("dp", "the number of decimal places to use writing branch lengths and rates, use -1 for full precision (default = full precision)", -1);
-    public Input<TraitSet> typeTraitInput = new Input<>("typeTrait", "Type trait set.");   
 
     
     boolean someMetaDataNeedsLogging;
@@ -70,9 +69,6 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 	
     @Override
     public void initAndValidate() {  	
-    	
-        if (typeTraitInput.get() != null) traitInput = true;    
-
     	
         if (parameterInput.get().size() == 0 && clockModelInput.get() == null) {
         	someMetaDataNeedsLogging = false;
@@ -171,20 +167,19 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         }
         if (!node.isLeaf()) {
         	if (!takeMax){	        
-		        buf.append("[&" + type + "prob={");
+		        buf.append("[&");
 		        
 		        DoubleMatrix stateProbs = new DoubleMatrix();
 		        
 	        	stateProbs = getStateProb(node.getNr());		        
 		        
-		        for (int i = 0 ; i < states-1; i++){
-		        	buf.append(String.format("%.3f", stateProbs.get(i)));
-		        	buf.append(",");
-		        }
-		        buf.append(String.format("%.3f", stateProbs.get(states-1)));
-		        buf.append("}");
+		        for (int i = 0 ; i < states; i++)
+		        	buf.append(String.format("state%d=%.3f,", i, stateProbs.get(i)));
+		        
+//		        buf.append(String.format("%.3f", stateProbs.get(states-1)));
+//		        buf.append("}");
 	        
-		        buf.append(",max" + type + "=");
+		        buf.append("max=");
 		        buf.append(String.format("%d", stateProbs.argmax() ));
 		        buf.append(']');
         	}else{
@@ -201,8 +196,8 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 			String[] splits = sampleID.split("_");
 			int sampleState;
 			
-			if(traitInput){				
-				sampleState = (int) typeTraitInput.get().getValue(node.getID());
+			if(dynamicsInput.get().typeTraitInput.get()!=null){				
+				sampleState = (int) dynamicsInput.get().typeTraitInput.get().getValue(node.getID());
 			}			
 			
 			else{
@@ -212,20 +207,13 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     	        
 		        buf.append("[&" + type + "prob={");
 	
-		        for (int i = 0 ; i < states-1; i++){
-		        	if (sampleState != i) buf.append(String.format("0.0"));
-		        	if (sampleState == i) buf.append(String.format("1.0"));
-	            	buf.append(",");
-		        }
-
-	        	if (sampleState != states-1) buf.append(String.format("0.0"));
-	        	if (sampleState == states-1) buf.append(String.format("1.0"));
-		        
-		        buf.append("}");
-		        buf.append(",max" + type + "=");
+		        for (int i = 0 ; i < states; i++){
+		        	if (sampleState != i) buf.append(String.format("state%d=0,", i));
+		        	if (sampleState == i) buf.append(String.format("state%d=1,", i));
+		        }		        
+		        buf.append("max=");
 
 		        buf.append(String.format("%d", sampleState ));
-//		        buf.append(']'); 
 		        buf.append(']');
         	}else{
 		        buf.append("[&max" + type + "=");
@@ -334,7 +322,6 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 
                 	
                 	
-		        	double[] linProbs_for_ode = new double[linProbs.length]; 
 	                FirstOrderIntegrator integrator = new ClassicalRungeKuttaIntegrator(stepSizeInput.get());	                
 //	                integrator.setMaxEvaluations((int) 1e5);  // set the maximal number of evaluations              
 	                FirstOrderDifferentialEquations ode = new MascotODEUpDown(migrationRates, coalescentRates, nrLineages , coalescentRates.length);
@@ -471,35 +458,62 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 		 * the last value of the taxon name, the last value after a _, is an integer
 		 * that gives the type of that taxon
 		 */
-		for (Node l : incomingLines) {
-			activeLineages.add(l.getNr());
-			String sampleID = l.getID();
-			int sampleState = 0;
-			if (states > 1){				
-				String[] splits = sampleID.split("_");
-				sampleState = Integer.parseInt(splits[splits.length-1]); //samples states (or priors) should eventually be specified in the XML
-			}
-			for (int i = 0; i< states; i++){
-				if (i == sampleState){
-					linProbsNew[currPositionLineages] = 1.0;currPositionLineages++;
-				}
-				else{
-					linProbsNew[currPositionLineages] = 0.0;currPositionLineages++;
-				}
-			}
-			// add the initial transition probabilities (diagonal matrix)
-			for (int s = 0; s < states; s++){
-				for (int i = 0; i < states; i++){
-					if (i == s){
-						transitionProbsNew[currPositionTransitions] = 1.0;
-						currPositionTransitions++;
-					}else{
-						transitionProbsNew[currPositionTransitions] = 0.0;
-						currPositionTransitions++;
+		if (dynamicsInput.get().typeTraitInput.get()!=null){
+			for (Node l : incomingLines) {
+				activeLineages.add(l.getNr());
+				int sampleState = (int) dynamicsInput.get().typeTraitInput.get().getValue(l.getID());
+				for (int i = 0; i< states; i++){
+					if (i == sampleState){
+						linProbsNew[currPositionLineages] = 1.0;currPositionLineages++;
+					}
+					else{
+						linProbsNew[currPositionLineages] = 0.0;currPositionLineages++;
 					}
 				}
-			}
-		}	
+				// add the initial transition probabilities (diagonal matrix)
+				for (int s = 0; s < states; s++){
+					for (int i = 0; i < states; i++){
+						if (i == s){
+							transitionProbsNew[currPositionTransitions] = 1.0;
+							currPositionTransitions++;
+						}else{
+							transitionProbsNew[currPositionTransitions] = 0.0;
+							currPositionTransitions++;
+						}
+					}
+				}
+			}				
+		}else{
+			for (Node l : incomingLines) {
+				activeLineages.add(l.getNr());
+				String sampleID = l.getID();
+				int sampleState = 0;
+				if (states > 1){				
+					String[] splits = sampleID.split("_");
+					sampleState = Integer.parseInt(splits[splits.length-1]); //samples states (or priors) should eventually be specified in the XML
+				}
+				for (int i = 0; i< states; i++){
+					if (i == sampleState){
+						linProbsNew[currPositionLineages] = 1.0;currPositionLineages++;
+					}
+					else{
+						linProbsNew[currPositionLineages] = 0.0;currPositionLineages++;
+					}
+				}
+				// add the initial transition probabilities (diagonal matrix)
+				for (int s = 0; s < states; s++){
+					for (int i = 0; i < states; i++){
+						if (i == s){
+							transitionProbsNew[currPositionTransitions] = 1.0;
+							currPositionTransitions++;
+						}else{
+							transitionProbsNew[currPositionTransitions] = 0.0;
+							currPositionTransitions++;
+						}
+					}
+				}
+			}	
+		}
 		linProbs = linProbsNew;
 		transitionProbs = transitionProbsNew;
     }

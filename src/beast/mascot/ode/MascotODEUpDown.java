@@ -1,6 +1,5 @@
 package beast.mascot.ode;
 
-import java.util.Arrays;
 import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 
 /**

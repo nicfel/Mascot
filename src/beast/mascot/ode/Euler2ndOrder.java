@@ -1,6 +1,5 @@
 package beast.mascot.ode;
 
-import java.util.Arrays;
 
 import org.apache.commons.math3.util.FastMath;
 
@@ -34,7 +33,7 @@ public class Euler2ndOrder {
 
 	
 	
-	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, double[] times){
+	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
 		while (duration > 0){
 			pDot = new double[pDot.length];
 			pDotDot[pDot.length-1] = 0;
@@ -90,7 +89,6 @@ public class Euler2ndOrder {
 	
     
 	public void computeDerivatives (double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot) {
-//    	totCoalRate = new double[(p.length-1)/states];
     	double migrates;
     	// Compute the sum of line state probabilities for each state
      	sumStates = new double[states];
@@ -160,7 +158,6 @@ public class Euler2ndOrder {
 							pj*migration_rates[j][k];
 					pDotDot[currlin+j] += migrates;
 					pDotDot[currlin+k] -= migrates;
-
     			}// j    			
     			// Calculate the Derivate of p:
     			pDotDot[currlin+j] += p[currlin+j]*(pCoalRate - coalescent_rates[j] * (sumDotStates[j] - pDot[currlin+j]));

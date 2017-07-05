@@ -18,7 +18,7 @@ import beast.mascot.distribution.Mascot;
 public class RootStateLogger extends CalculationNode implements Loggable {
 	public Input<Mascot> mascotInput = new Input<Mascot>(
 			"mascot",
-			"A deterministic epidemiological model");
+			"");
 
 	
 	private int states;

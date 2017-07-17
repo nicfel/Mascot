@@ -9,6 +9,7 @@ import org.apache.commons.math3.ode.FirstOrderIntegrator;
 import org.apache.commons.math3.ode.nonstiff.ClassicalRungeKuttaIntegrator;
 import org.jblas.DoubleMatrix;
 
+import beast.core.Citation;
 import beast.core.Description;
 import beast.core.Input;
 import beast.evolution.tree.Node;
@@ -24,13 +25,14 @@ import beast.mascot.ode.MascotODE;
  */
 
 @Description("Calculates the probability of a beast.tree using under the framework of Mueller (2017).")
+@Citation("Nicola F. Müller, David A. Rasmussen, Tanja Stadler;\nThe Structured Coalescent and its Approximations.\nMol Biol Evol 2017 msx186. doi: 10.1093/molbev/msx186")
 public class Mascot extends StructuredTreeDistribution {
 	
 	public Input<Dynamics> dynamicsInput = new Input<>("dynamics", "Input of rates", Input.Validate.REQUIRED);
 	public Input<Double> epsilonInput = new Input<>("epsilon", "step size for the RK4 integration",0.001);
 	public Input<Double> maxStepInput = new Input<>("maxStep", "step size for the RK4 integration", Double.POSITIVE_INFINITY);
 	public Input<Double> stepSizeInput = new Input<>("stepSize", "step size for the RK4 integration");
-	public Input<Boolean> saveRamInput = new Input<>("saveRamInput", "doesn't save intermediate steps", false);
+	public Input<Boolean> saveRamInput = new Input<>("saveRamInput", "doesn't save intermediate steps", true);
 	
 
     
@@ -91,7 +93,8 @@ public class Mascot extends StructuredTreeDistribution {
     }
         
     public double calculateLogP() {
-//    	System.out.println(treeIntervalsInput.get().treeInput.get());
+//    	treeIntervalsInput.get().print();
+//    	System.out.println(String.format("%.200s",treeIntervalsInput.get().print());
     	// newly calculate tree intervals
     	treeIntervalsInput.get().calculateIntervals();
     	// correctly calculate the daughter nodes at coalescent intervals in the case of
@@ -165,7 +168,7 @@ public class Mascot extends StructuredTreeDistribution {
 				}
 			}	
         }
-    	
+//        System.out.println(activeLineages + " " + treeInterval);
         // Calculate the likelihood
         do {       
         	nextEventTime = Math.min(nextTreeEvent, nextRateShift); 	 
@@ -211,6 +214,7 @@ public class Mascot extends StructuredTreeDistribution {
        	
         	if (nextTreeEvent <= nextRateShift){
  	        	if (treeIntervalsInput.get().getIntervalType(treeInterval) == IntervalType.COALESCENT) {
+// 	        		System.out.print(String.format("%.3f ", nextTreeEvent));
 	        		logP += normalizeLineages();									// normalize all lineages before event		
  	        		nrLineages--;													// coalescent event reduces the number of lineages by one
 	        		logP += coalesce(treeInterval, ratesInterval);	  				// calculate the likelihood of the coalescent event
@@ -238,6 +242,7 @@ public class Mascot extends StructuredTreeDistribution {
  	       		nextRateShift = dynamicsInput.get().getInterval(ratesInterval);
         	}
         }while(nextTreeEvent <= Double.POSITIVE_INFINITY);
+//        System.out.print("\n");
         first = false;
 //        System.exit(0);
         
@@ -360,6 +365,7 @@ public class Mascot extends StructuredTreeDistribution {
     	final int daughterIndex1 = activeLineages.indexOf(coalLines.get(0).getNr());
 		final int daughterIndex2 = activeLineages.indexOf(coalLines.get(1).getNr());
 		if (daughterIndex1 == -1 || daughterIndex2 == -1) {
+			System.out.println(coalLines.get(0).getNr() + " " + coalLines.get(1).getNr() + " " + activeLineages);
 			System.out.println("daughter lineages at coalescent event not found");
 			return Double.NaN;
 		}
@@ -427,7 +433,10 @@ public class Mascot extends StructuredTreeDistribution {
 		// store the node
 		storeNode(currTreeInterval, currRatesInterval, linProbs, logP + Math.log(lambda.sum()), activeLineages);
 		
-    	return Math.log(lambda.sum());
+		if (lambda.sum()==0)
+			return Double.NEGATIVE_INFINITY;
+		else
+			return Math.log(lambda.sum());
     }
             
     public DoubleMatrix getStateProb(int nr){

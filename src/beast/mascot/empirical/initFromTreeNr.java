@@ -5,31 +5,22 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
-import beast.core.Description;
+import org.jblas.util.Random;
+
 import beast.core.Input;
-import beast.core.Operator;
 import beast.core.StateNode;
 import beast.core.StateNodeInitialiser;
-import beast.core.parameter.RealParameter;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.operators.TreeOperator;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
-import beast.util.Randomizer;
 import beast.util.TreeParser;
 
-
-@Description("Read tree distribution from file, similar to the empiricalTreeDistributionOperator from BEAST1" +
-			"and from TreeFromNewickFile from Tim Vaughan")
-public class empiricalTreeDistribution extends TreeParser implements StateNodeInitialiser {
+public class initFromTreeNr extends TreeParser implements StateNodeInitialiser {
     final public Input<String> treeFilenameInput = new Input<>("filename", "filename of tree file to be read", Input.Validate.REQUIRED);
-    final public Input<String> logfilenameInput = new Input<>("filename", "filename of log file to be read", "tree.trees");
+    final public Input<Integer> treeNumberInput = new Input<>("treeNumber", "filename of tree file to be read", 1);
 
-    ArrayList<Tree> trees;
+    private Tree tree;
     
     @Override
     public void initAndValidate() {
@@ -46,12 +37,13 @@ public class empiricalTreeDistribution extends TreeParser implements StateNodeIn
         // get translation
         ArrayList<String> translation1 = new ArrayList<String>();
         ArrayList<String> translation2 = new ArrayList<String>();
+              
+        boolean stop = false;
+        int counter = 1;
         
-        
-        trees = new ArrayList<>();
-        System.out.print("read in trees from file\n");
+        System.out.print("read in tree number " + treeNumberInput.get() +  " from file named " +  treeFilenameInput.get() + "\n");
         try {
-            while ((line = reader.readLine()) != null){
+            while ((line = reader.readLine()) != null && !stop){
             	// check for the first line of translate
             	if (line.trim().equals("Translate")){
             		do{
@@ -66,9 +58,12 @@ public class empiricalTreeDistribution extends TreeParser implements StateNodeIn
     			String[] tmp_line = line.trim().split(" "); 
     			
     			
-    			while (tmp_line[0].equals("tree")){
-    		        System.out.print(".");
-    				trees.add(getTree(tmp_line[tmp_line.length-1], translation1, translation2));
+    			while (tmp_line[0].equals("tree") && !stop){
+    				if (counter == (int) treeNumberInput.get()){
+	    				tree = getTree(tmp_line[tmp_line.length-1], translation1, translation2).copy();
+	    				stop = true;
+    				}
+    				counter++;
         			line = reader.readLine();
         			if(line == null)
         				break;
@@ -81,7 +76,7 @@ public class empiricalTreeDistribution extends TreeParser implements StateNodeIn
             throw new RuntimeException("Error reading from input file.");
         }
        
-        System.out.print("\nfinished reading " + trees.size() + " trees");
+        System.out.print("\nfinished reading tree");
     }
     
     private Tree getTree(String tree_string, ArrayList<String> translation1,  ArrayList<String> translation2){
@@ -92,8 +87,6 @@ public class empiricalTreeDistribution extends TreeParser implements StateNodeIn
     		tree_string = tree_string.replace(String.format(",%s:", translation1.get(i)),
     				String.format(",%s:", translation2.get(i)));
     	}
-//    	System.out.println(tree_string);
-//    	System.exit(0);
     	newickInput.setValue(tree_string, this);
         isLabelledNewickInput.setValue(true, this);
         adjustTipHeightsInput.setValue(false, this);
@@ -102,22 +95,25 @@ public class empiricalTreeDistribution extends TreeParser implements StateNodeIn
     	super.initAndValidate();
     	
     	Node root = parseNewick(tree_string);
-//    	Tree tree = new Tree(root);
-//    	System.out.println(tree);
-    	
     	return new Tree(root);
     }
 
-    /*
-     *StateNodeInitializer implementation
-     */
-    @Override
-    public void initStateNodes() { }
 
-    @Override
-    public void getInitialisedStateNodes(List<StateNode> stateNodeList) {
-        stateNodeList.add(this);
-    }    
-
+    
+		
+//    @Override
+//    public void initStateNodes() {
+//    	System.out.println(tree);
+//        if (m_initial.get() != null) {
+//            m_initial.get().assignFrom(tree);
+//        }
+//    }
+//
+//    @Override
+//    public void getInitialisedStateNodes(final List<StateNode> stateNodes) {
+//        if (m_initial.get() != null) {
+//            stateNodes.add(m_initial.get());
+//        }
+//    }
 
 }

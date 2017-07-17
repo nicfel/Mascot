@@ -110,7 +110,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
     }
 
     public StructuredTreeIntervals(Tree tree) {
-    	this.tree = tree;
+//    	tree = 
     	calculateIntervals();
     }
 
@@ -134,49 +134,49 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
     @SuppressWarnings("unchecked")
 	@Override
     protected void restore() {
-//        double[] tmp = storedIntervals;
-//        storedIntervals = intervals;
-//        intervals = tmp;
-//
-//        int[] tmp2 = storedLineageCounts;
-//        storedLineageCounts = lineageCounts;
-//        lineageCounts = tmp2;
-//
-//        int tmp3 = storedIntervalCount;
-//        storedIntervalCount = intervalCount;
-//        intervalCount = tmp3;
-//        
-//    	lineagesAdded = new List[intervalCount];
-//    	for (int i = 0; i < intervalCount; i++) {
-//    		if (storedLineagesAdded[i] != null) {
-//    			List<Node> nodeList = new ArrayList<>();
-//    			int nodeCount = storedLineagesAdded[i].size();
-//    			for (int n = 0; n < nodeCount; n++) {
-//    				nodeList.add(storedLineagesAdded[i].get(n).copy());
-//    			}
-//    			lineagesAdded[i] = nodeList;
-//    		}
-//    	}
-//    	
-//    	lineagesRemoved = new List[intervals.length];
-//    	for (int i = 0; i < intervalCount; i++) {
-//    		if (storedLineagesRemoved[i] != null) {
-//	    		List<Node> nodeList = new ArrayList<>();
-//	    		int nodeCount = storedLineagesRemoved[i].size();
-//	    		for (int n = 0; n < nodeCount; n++) {
-//	    			nodeList.add(storedLineagesRemoved[i].get(n).copy());
-//	    		}
-//	    		lineagesRemoved[i] = nodeList;
-//    		}
-//    	}
-//
-//
-//        
-////       // Added these last two for struct coalescent models
-////        lineagesAdded = storedLineagesAdded;        
-////        lineagesRemoved = storedLineagesRemoved;
-//        
-//        setIntervalsClean();
+        double[] tmp = storedIntervals;
+        storedIntervals = intervals;
+        intervals = tmp;
+
+        int[] tmp2 = storedLineageCounts;
+        storedLineageCounts = lineageCounts;
+        lineageCounts = tmp2;
+
+        int tmp3 = storedIntervalCount;
+        storedIntervalCount = intervalCount;
+        intervalCount = tmp3;
+        
+    	lineagesAdded = new List[intervalCount];
+    	for (int i = 0; i < intervalCount; i++) {
+    		if (storedLineagesAdded[i] != null) {
+    			List<Node> nodeList = new ArrayList<>();
+    			int nodeCount = storedLineagesAdded[i].size();
+    			for (int n = 0; n < nodeCount; n++) {
+    				nodeList.add(storedLineagesAdded[i].get(n).copy());
+    			}
+    			lineagesAdded[i] = nodeList;
+    		}
+    	}
+    	
+    	lineagesRemoved = new List[intervals.length];
+    	for (int i = 0; i < intervalCount; i++) {
+    		if (storedLineagesRemoved[i] != null) {
+	    		List<Node> nodeList = new ArrayList<>();
+	    		int nodeCount = storedLineagesRemoved[i].size();
+	    		for (int n = 0; n < nodeCount; n++) {
+	    			nodeList.add(storedLineagesRemoved[i].get(n).copy());
+	    		}
+	    		lineagesRemoved[i] = nodeList;
+    		}
+    	}
+
+
+        
+//       // Added these last two for struct coalescent models
+//        lineagesAdded = storedLineagesAdded;        
+//        lineagesRemoved = storedLineagesRemoved;
+        
+        setIntervalsClean();
         super.restore();
         
     }
@@ -184,7 +184,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
     public void print(){
     	System.out.print("\n");
         System.out.println("restore tree intervals");
-        for (int i = 0; i < lineagesRemoved.length; i++){
+        for (int i = 0; i < 100; i++){
         	System.out.print("[");
         	if (lineagesRemoved[i]!=null)
         		for (int j = 0; j < lineagesRemoved[i].size(); j++)
@@ -198,16 +198,16 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
 
     @Override
     protected void store() {
-//    	// stores the lineage Counts per intervall and the intervalls in the arrays stored...
-//        System.arraycopy(lineageCounts, 0, storedLineageCounts, 0, lineageCounts.length);
-//        System.arraycopy(intervals, 0, storedIntervals, 0, intervals.length);
-//        storedIntervalCount = intervalCount;
-//        
-//        // Create new deep copies for storedLineagsAdded/Removed
-//        storedLineagesAdded = deepCopyLineagesAdded();
-//        storedLineagesRemoved = deepCopyLineagesRemoved();
-//       
-//        setIntervalsClean();
+    	// stores the lineage Counts per intervall and the intervalls in the arrays stored...
+        System.arraycopy(lineageCounts, 0, storedLineageCounts, 0, lineageCounts.length);
+        System.arraycopy(intervals, 0, storedIntervals, 0, intervals.length);
+        storedIntervalCount = intervalCount;
+        
+        // Create new deep copies for storedLineagsAdded/Removed
+        storedLineagesAdded = deepCopyLineagesAdded();
+        storedLineagesRemoved = deepCopyLineagesRemoved();
+       
+        setIntervalsClean();
         super.store();
     }    
     
@@ -404,10 +404,14 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
      */
     @SuppressWarnings("unchecked")
 	public void calculateIntervals() {
-    	if (tree!=null);
-    	else
-    		tree = treeInput.get();
+//    	System.out.println("update intervals " + treeInput.get());
+//    	if (tree!=null);
+//    	else
+		tree = treeInput.get();
 
+		
+//		System.out.println(String.format("%.200s",tree));
+		
         final int nodeCount = tree.getNodeCount();
 
         double[] times = new double[nodeCount];
@@ -422,6 +426,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         intervalIsDirty = new boolean[nodeCount];
 
         if (intervals == null || intervals.length != nodeCount) {
+//        	System.out.println("dfllfdlk");
         	// Initialize new Lists
         	intervals = new double[nodeCount];
             lineageCounts = new int[nodeCount];
@@ -535,7 +540,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
             // coalescent event
             numLines -= lineagesRemoved;
         }    
-        
+//        print();
         intervalsKnown = true;
     }
 

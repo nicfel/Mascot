@@ -172,7 +172,7 @@
                 <structuredTreeIntervals spec="beast.mascot.distribution.StructuredTreeIntervals" id="TreeIntervals.t:$(n)" tree="@Tree.t:$(n)"/>
                 <dynamics spec="beast.mascot.dynamics.Constant" id="constant.t:$(n)">
                   <Ne spec='parameter.RealParameter' id='Ne.t:$(n)' value='1.0' estimate='true'/>
-                  <forwardsMigration spec='parameter.RealParameter' id='migration.t:$(n)' value='1.0' estimate='true'/>
+                  <backwardsMigration spec='parameter.RealParameter' id='migration.t:$(n)' value='1.0' estimate='true'/>
                 </dynamics>
             </plugin>
 
@@ -239,7 +239,7 @@
             <operator id='gammaShapeScaler.s:$(n)' spec='ScaleOperator' scaleFactor="0.5" weight="0.1" parameter="@gammaShape.s:$(n)"/>
 
             <operator id='NeScaler.t:$(n)' spec='ScaleOperator' scaleFactor="0.8" weight="3" parameter="@Ne.t:$(n)"/>
-            <operator id='MigrationScaler.t:$(n)' spec='ScaleOperator' scaleFactor="0.8" weight="3" parameter="@migration.t:$(n)"/?
+            <operator id='MigrationScaler.t:$(n)' spec='ScaleOperator' scaleFactor="0.8" weight="3" parameter="@migration.t:$(n)"/>
 
             <!-- Multi-type tree operators -->
             
@@ -254,12 +254,18 @@
          
 
 
-            <!-- Tree log -->
-            <logger id="treelog.t:$(n)" logEvery="10000" fileName="$(filebase).$(tree).trees" mode="tree" log="@Tree.t:$(n)"/>
-
 
             <!-- Trace log elements -->
             <log id="treeHeight.t:$(n)" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree.t:$(n)"/>
+
+
+
+            <logger id="treelog.t:$(n)" fileName="$(n).trees" logEvery="10000" mode="tree">
+                <log id="structuredTreelog.t:$(n)" spec="beast.mascot.logger.StructuredTreeLogger" mascot="@structuredCoalescent.t:$(n)"/>
+            </logger>
+
+
+            
 ]]>
 
 <!--			<connect method="beast.app.beauti.SiteModelInputEditor.customConnector"/>-->
@@ -303,20 +309,24 @@
 
 <!--            <connect srcID='MTTUpDown.t:$(n)' targetID='mcmc' inputName='operator' if='Tree.t:$(n)/estimate=true'/>-->
 
-            
+            <connect srcID='NeScaler.t:$(n)' targetID='mcmc' inputName='operator' if='Ne.t:$(n)/estimate=true'/>
+            <connect srcID='MigrationScaler.t:$(n)' targetID='mcmc' inputName='operator' if='migration.t:$(n)/estimate=true'/>
+
+
+
 <!--            <connect srcID='popSizes.t:$(n)' targetID='MTTUpDown.t:$(n)' inputName='parameter' if='Tree.t:$(n)/estimate=true and popSizes.t:$(n)/estimate=true'/>-->
 <!--            <connect srcID='rateMatrix.t:$(n)' targetID='MTTUpDown.t:$(n)' inputName='parameterInverse' if='Tree.t:$(n)/estimate=true and rateMatrix.t:$(n)/estimate=true'/>-->
 
             <connect srcID='treelog.t:$(n)' targetID='mcmc' inputName='logger' if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
-
             <connect srcID='treeLikelihood.$(n)' targetID='tracelog' inputName='log' if='inlikelihood(treeLikelihood.$(n))'/>
+            <connect srcID='structuredCoalescent.t:$(n)' targetID='tracelog' inputName='log' if='inposterior(Tree.t:$(n))'/>
             <connect srcID='TreeHeight.t:$(n)' targetID='tracelog' inputName='log' if='inposterior(Tree.t:$(n))'/>
             <connect srcID='proportionInvariant.s:$(n)' targetID='tracelog' inputName='log' if='inposterior(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'/>
             <connect srcID='mutationRate.s:$(n)' targetID='tracelog' inputName='log' if='inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'/>
             <connect srcID='gammaShape.s:$(n)' targetID='tracelog' inputName='log' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'/>
             <connect srcID='clockRate.c:$(n)' targetID='tracelog' inputName='log' if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'/>
+            <connect srcID='constant.t:$(n)' targetID='tracelog' inputName='log' if='inposterior(Tree.t:$(n))'/>
 
-<!--            <connect srcID='migModelLogger.t:$(n)' targetID='tracelog' inputName='log' if='inposterior(migModel.t:$(n))'/>-->
 
         </partitiontemplate>
 

@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2013 Tim Vaughan <tgvaughan@gmail.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package beast.mascot.beauti;
 
 import beast.app.beauti.BeautiDoc;
@@ -32,12 +16,9 @@ import java.util.Set;
 
 /**
  *
- * @author Tim Vaughan <tgvaughan@gmail.com>
+ * @author Nicola Felix Müller <nicola.felix.muelelr@gmail.com>
  */
-@Description("A multi-type phylogenetic tree.")
-@Citation("Timothy G. Vaughan, Denise Kuhnert, Alex Popinga, David Welch and \n"
-        + "Alexei J. Drummond, 'Efficient Bayesian inference under the \n"
-        + "structured coalescent', Bioinformatics 30:2272, 2014.")
+@Description("A phylogenetic tree with a trait class (somehow needed for Beauti)")
 public class TreeWithTrait extends Tree implements StateNodeInitialiser {
 
     /*

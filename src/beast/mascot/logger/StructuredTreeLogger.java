@@ -15,17 +15,13 @@ import beast.core.Function;
 import beast.core.Input;
 import beast.core.Loggable;
 import beast.core.StateNode;
-import beast.core.Input.Validate;
 import beast.core.parameter.BooleanParameter;
 
 import beast.evolution.branchratemodel.BranchRateModel;
 import beast.evolution.tree.Node;
-import beast.evolution.tree.TraitSet;
 import beast.evolution.tree.Tree;
 import beast.evolution.tree.coalescent.IntervalType;
 import beast.mascot.distribution.Mascot;
-import beast.mascot.distribution.StructuredTreeIntervals;
-import beast.mascot.dynamics.Dynamics;
 import beast.mascot.ode.Euler2ndOrderTransitions;
 import beast.mascot.ode.MascotODEUpDown;
 

@@ -1,7 +1,8 @@
 <packages>
-    <addon name="Mascot" version="0.0.1"
+    <addon name="Mascot" version="0.0.2"
            url="https://github.com/nicfel/Mascot/releases/download/v0.0.1/Mascot.v0.0.1.zip"
-           description="Marginal approximation of the structured coalescent">
+           description="Marginal approximation of the structured coalescent"
+           projectURL="https://github.com/nicfel/Mascot-Tutorial">
       <depends on="BEAST" atleast="2.4.0"/>
     </addon>
 </packages>

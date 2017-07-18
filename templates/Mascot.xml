@@ -313,9 +313,9 @@
 
 
             <connect srcID='NeMigUpDownOperator.t:$(n)' targetID='mcmc' inputName='operator' if='Tree.t:$(n)/estimate=true'/>
-            <connect srcID='Ne.t:$(n)' targetID='NeMigUpDownOperator.t:$(n)' up='parameter' if='Tree.t:$(n)/estimate=true and Ne.t:$(n)/estimate=true'/>
-            <connect srcID='migration.t:$(n)' targetID='NeMigUpDownOperator.t:$(n)' down='parameterInverse' if='Tree.t:$(n)/estimate=true and migration.t:$(n)/estimate=true'/>
-            <connect srcID='clockRate.c:$(n)' targetID='NeMigUpDownOperator.t:$(n)' down='parameterInverse' if='Tree.t:$(n)/estimate=true and clockRate.c:$(n)/estimate=true'/>
+            <connect srcID='Ne.t:$(n)' targetID='NeMigUpDownOperator.t:$(n)' inputName='up' if='Tree.t:$(n)/estimate=true and Ne.t:$(n)/estimate=true'/>
+            <connect srcID='migration.t:$(n)' targetID='NeMigUpDownOperator.t:$(n)' inputName='down' if='Tree.t:$(n)/estimate=true and migration.t:$(n)/estimate=true'/>
+            <connect srcID='clockRate.c:$(n)' targetID='NeMigUpDownOperator.t:$(n)' inputName='down' if='Tree.t:$(n)/estimate=true and clockRate.c:$(n)/estimate=true'/>
 
             <connect srcID='treelog.t:$(n)' targetID='mcmc' inputName='logger' if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
             <connect srcID='treeLikelihood.$(n)' targetID='tracelog' inputName='log' if='inlikelihood(treeLikelihood.$(n))'/>

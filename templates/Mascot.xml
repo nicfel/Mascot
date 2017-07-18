@@ -252,6 +252,7 @@
             <operator spec='WilsonBalding' id='WilsonBalding.t:$(n)' weight="3" tree="@Tree.t:$(n)"/>
             
          
+            <operator spec='UpDownOperator' id='NeMigUpDownOperator.t:$(n)' weight="3" up="@Tree.t:$(n)"/>
 
 
 
@@ -296,8 +297,6 @@
             <connect srcID='proportionInvariantScaler.s:$(n)' targetID='mcmc' inputName='operator' if='inlikelihood(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'>Scales proportion of invariant sites parameter of partition $(n)</connect>
             <connect srcID='mutationRateScaler.s:$(n)' targetID='mcmc' inputName='operator' if='nooperator(FixMeanMutationRatesOperator) and inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'>Scales mutation rate of partition s:$(n)</connect>
             <connect srcID='gammaShapeScaler.s:$(n)' targetID='mcmc' inputName='operator' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'>Scales gamma shape parameter of partition s:$(n)</connect>
-            <connect srcID='NePrior.t:$(n)' targetID='mcmc' inputName='operator' if='inposterior(NePrior.t:$(n)) and NePrior.t:$(n)/estimate=true'/>
-            <connect srcID='MigrationPrior.t:$(n)' targetID='mcmc' inputName='operator' if='inposterior(MigrationPrior.t:$(n)) and MigrationPrior.t:$(n)/estimate=true'/>
 
             
             <connect srcID='TreeScaler.t:$(n)' targetID='mcmc' inputName='operator' if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
@@ -307,15 +306,16 @@
             <connect srcID='Narrow.t:$(n)' targetID='mcmc' inputName='operator' if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
             <connect srcID='WilsonBalding.t:$(n)' targetID='mcmc' inputName='operator' if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
 
-<!--            <connect srcID='MTTUpDown.t:$(n)' targetID='mcmc' inputName='operator' if='Tree.t:$(n)/estimate=true'/>-->
 
             <connect srcID='NeScaler.t:$(n)' targetID='mcmc' inputName='operator' if='Ne.t:$(n)/estimate=true'/>
             <connect srcID='MigrationScaler.t:$(n)' targetID='mcmc' inputName='operator' if='migration.t:$(n)/estimate=true'/>
 
 
 
-<!--            <connect srcID='popSizes.t:$(n)' targetID='MTTUpDown.t:$(n)' inputName='parameter' if='Tree.t:$(n)/estimate=true and popSizes.t:$(n)/estimate=true'/>-->
-<!--            <connect srcID='rateMatrix.t:$(n)' targetID='MTTUpDown.t:$(n)' inputName='parameterInverse' if='Tree.t:$(n)/estimate=true and rateMatrix.t:$(n)/estimate=true'/>-->
+            <connect srcID='NeMigUpDownOperator.t:$(n)' targetID='mcmc' inputName='operator' if='Tree.t:$(n)/estimate=true'/>
+            <connect srcID='Ne.t:$(n)' targetID='NeMigUpDownOperator.t:$(n)' up='parameter' if='Tree.t:$(n)/estimate=true and Ne.t:$(n)/estimate=true'/>
+            <connect srcID='migration.t:$(n)' targetID='NeMigUpDownOperator.t:$(n)' down='parameterInverse' if='Tree.t:$(n)/estimate=true and migration.t:$(n)/estimate=true'/>
+            <connect srcID='clockRate.c:$(n)' targetID='NeMigUpDownOperator.t:$(n)' down='parameterInverse' if='Tree.t:$(n)/estimate=true and clockRate.c:$(n)/estimate=true'/>
 
             <connect srcID='treelog.t:$(n)' targetID='mcmc' inputName='logger' if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
             <connect srcID='treeLikelihood.$(n)' targetID='tracelog' inputName='log' if='inlikelihood(treeLikelihood.$(n))'/>

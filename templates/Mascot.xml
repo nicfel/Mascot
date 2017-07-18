@@ -252,7 +252,7 @@
             <operator spec='WilsonBalding' id='WilsonBalding.t:$(n)' weight="3" tree="@Tree.t:$(n)"/>
             
          
-            <operator spec='UpDownOperator' id='NeMigUpDownOperator.t:$(n)' weight="3" up="@Tree.t:$(n)"/>
+            <operator spec='UpDownOperator' id='NeMigUpDownOperator.t:$(n)' scaleFactor="0.8" weight="1.5" up="@Tree.t:$(n)"/>
 
 
 

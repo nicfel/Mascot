@@ -1,4 +1,4 @@
-package beast.mascot.beauti;
+package beast.app.mascot.beauti;
 
 import beast.app.beauti.BeautiDoc;
 import beast.core.Citation;

@@ -35,21 +35,33 @@ public class Constant extends Dynamics implements Loggable  {
     public void initAndValidate() {
     	super.initAndValidate();
     	
+    	if (dimensionInput.get()<1)
+    		dimensionInput.set(getNrTypes());
+    	
     	
     	if (b_mInput.get()!=null)
     		isBackwardsMigration = true;
     	else
     		isBackwardsMigration = false;
     	
+    	if (dimensionInput.get()!=NeInput.get().getDimension()){
+    		System.err.println("the dimension of " + NeInput.get().getID() + " is set to " + dimensionInput.get());
+    		NeInput.get().setDimension(dimensionInput.get());
+    	}
+    	
     	int migDim = NeInput.get().getDimension()*(NeInput.get().getDimension()-1);
     	
     	if (isBackwardsMigration){
-    		if (migDim == b_mInput.get().getDimension())
+    		if (migDim == b_mInput.get().getDimension()){
     			migrationType = MigrationType.asymmetric;
-    		else if ((int) migDim/2 == b_mInput.get().getDimension())
+    		}else if ((int) migDim/2 == b_mInput.get().getDimension()){
     			migrationType = MigrationType.symmetric;
-    		else
-    			System.err.println("wrong number of migraiton or Ne elements");
+    		}else{
+    			migrationType = MigrationType.asymmetric;
+    			System.err.println("Wrong number of migration elements, assume asymmetric migration:");
+        		System.err.println("the dimension of " + b_mInput.get().getID() + " is set to " + migDim);
+    			b_mInput.get().setDimension(migDim);       		
+    		}
     	}
     	if (!isBackwardsMigration){
     		if (migDim == f_mInput.get().getDimension()){
@@ -57,9 +69,10 @@ public class Constant extends Dynamics implements Loggable  {
     		}else if ((int) migDim/2 == f_mInput.get().getDimension()){
     			migrationType = MigrationType.symmetric;
     		}else{
-    			System.err.println("wrong number of migration or Ne elements");
-    			System.err.println("check the dimension of the migration and Ne parameter in the xml");
-//    			System.exit(0);
+    			migrationType = MigrationType.asymmetric;
+    			System.err.println("Wrong number of migration elements, assume asymmetric migration:");
+        		System.err.println("the dimension of " + f_mInput.get().getID() + " is set to " + migDim);
+        		f_mInput.get().setDimension(migDim);       		
     		}
     	}
    	
@@ -164,20 +177,15 @@ public class Constant extends Dynamics implements Loggable  {
     	
     	return m;  	
     }    
-
-	@Override 
-	public int getDimension() {
-		return NeInput.get().getDimension();
-	}
 	
 	@Override
 	public void recalculate() {
 	}
-
+	
 	@Override
 	public void init(PrintStream out) {
 		for (int i = 0 ; i < NeInput.get().getDimension(); i++){
-			out.print(String.format("Ne.%s\t", getStringStateValue(i)));
+			out.print(String.format("%s.%s\t", NeInput.get().getID(), getStringStateValue(i)));
 		}
 		if (migrationType == MigrationType.asymmetric){
 	    	int c = 0;
@@ -185,9 +193,9 @@ public class Constant extends Dynamics implements Loggable  {
 	    		for (int b = 0; b < NeInput.get().getDimension(); b++){
 	    			if (a!=b){
 	    				if (isBackwardsMigration)
-	    					out.print(String.format("b_migration.%s_to_%s\t", getStringStateValue(a), getStringStateValue(b)));
+	    					out.print(String.format("b_%s.%s_to_%s\t", b_mInput.get().getID(), getStringStateValue(a), getStringStateValue(b)));
 	    				else
-	    					out.print(String.format("f_migration.%s_to_%s\t", getStringStateValue(b), getStringStateValue(a)));	    					
+	    					out.print(String.format("f_%s.%s_to_%s\t", f_mInput.get().getID(), getStringStateValue(b), getStringStateValue(a)));	    					
 	    				c++;
 	    			}
 	    		}
@@ -199,9 +207,9 @@ public class Constant extends Dynamics implements Loggable  {
 	    		for (int b = a+1; b < NeInput.get().getDimension(); b++){
 	    			if (a!=b){
 	    				if (isBackwardsMigration)
-	    					out.print(String.format("b_migration.%s_and_%s\t", getStringStateValue(a), getStringStateValue(b)));
+	    					out.print(String.format("b_%s.%s_and_%s\t", b_mInput.get().getID(), getStringStateValue(a), getStringStateValue(b)));
 	    				else
-	    					out.print(String.format("f_migration.%s_and_%s\t", getStringStateValue(b), getStringStateValue(a)));	    					
+	    					out.print(String.format("f_%s.%s_and_%s\t", f_mInput.get().getID(), getStringStateValue(b), getStringStateValue(a)));	    					
 	    				c++;
 	    			}
 	    		}
@@ -253,6 +261,7 @@ public class Constant extends Dynamics implements Loggable  {
 		// TODO Auto-generated method stub
 		
 	}
+
 
 
 

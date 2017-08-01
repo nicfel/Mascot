@@ -44,6 +44,7 @@ public class Mascot extends StructuredTreeDistribution {
 
     // current rates         
     private double[][] migrationRates;
+    private int[][] indicators;
     private double[] coalescentRates; 	
 
     
@@ -109,6 +110,25 @@ public class Mascot extends StructuredTreeDistribution {
         double nextEventTime = 0.0;
 		coalescentRates = dynamicsInput.get().getCoalescentRate(ratesInterval);  
         migrationRates = dynamicsInput.get().getBackwardsMigration(ratesInterval);
+		indicators = dynamicsInput.get().getIndicators(ratesInterval);  
+		
+//    	for (int a = 0; a < migrationRates.length; a++){
+//    		for (int b = 0; b < migrationRates.length-1; b++){
+//    			if (migrationRates[a][b]==0)
+//        			System.out.print("0, ");
+//    			else
+//    				System.out.print("1, ");
+//    		}
+//			if (migrationRates[a][migrationRates.length-1]==0)
+//    			System.out.print("0;");
+//			else
+//				System.out.print("1;");
+//    		System.out.print("\n");
+//    	}
+//    	System.out.println();
+
+
+        
         // Time to the next rate shift or event on the tree
         double nextTreeEvent = treeIntervalsInput.get().getInterval(treeInterval);
         double nextRateShift = dynamicsInput.get().getInterval(ratesInterval);
@@ -195,7 +215,12 @@ public class Mascot extends StructuredTreeDistribution {
 		            for (int i = 0; i<linProbs.length; i++)
 		        		linProbs[i] = linProbs_for_ode[i]; 
 	        	}else {
-	        		Euler2ndOrder euler = new Euler2ndOrder(migrationRates, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
+	        		Euler2ndOrder euler;
+	        		if (dynamicsInput.get().hasIndicators)
+	        			euler = new Euler2ndOrder(migrationRates, indicators, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
+	        		else
+	        			euler = new Euler2ndOrder(migrationRates, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
+	        		
 		        	double[] linProbs_tmp = new double[linProbs.length+1]; 
 		        	double[] linProbs_tmpdt = new double[linProbs.length+1]; 
 		        	double[] linProbs_tmpddt = new double[linProbs.length+1]; 
@@ -238,9 +263,12 @@ public class Mascot extends StructuredTreeDistribution {
         		ratesInterval++;
         		coalescentRates = dynamicsInput.get().getCoalescentRate(ratesInterval);  
                 migrationRates = dynamicsInput.get().getBackwardsMigration(ratesInterval);
+        		indicators = dynamicsInput.get().getIndicators(ratesInterval);  
         		nextTreeEvent -= nextRateShift;
  	       		nextRateShift = dynamicsInput.get().getInterval(ratesInterval);
         	}
+        	if (logP == Double.NEGATIVE_INFINITY)
+        		return logP;
         }while(nextTreeEvent <= Double.POSITIVE_INFINITY);
 //        System.out.print("\n");
         first = false;
@@ -279,6 +307,8 @@ public class Mascot extends StructuredTreeDistribution {
     				return Math.log(1.0);
     			}
     		for (int j = 0; j < states; j++){
+    			if (lineProbs==0.0)
+    				return Double.NEGATIVE_INFINITY;
     			linProbs[i*states+j] = linProbs[i*states+j]/lineProbs;
     		}    		
     		interval +=lineProbs;
@@ -313,7 +343,7 @@ public class Mascot extends StructuredTreeDistribution {
 				
 				if (sampleState>= dynamicsInput.get().getDimension()){
 					System.err.println("sample discovered with higher state than dimension");
-					System.exit(0);
+//					System.exit(1);
 				}
 				
 				for (int i = 0; i < states; i++){

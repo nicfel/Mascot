@@ -15,10 +15,13 @@ import beast.evolution.tree.TraitSet;
         "a log probability for instance for running an MCMC chain.")
 public abstract class Dynamics extends CalculationNode  {
 	
-    public Input<Integer> dimensionInput = new Input<>("dimension", "the number of different states ", -1);
+    public Input<Integer> dimensionInput = new Input<>("dimension", "the number of different states." + 
+    " if -1, it will use the number of different types ", -1);
     public Input<TraitSet> typeTraitInput = new Input<>("typeTrait", "Type trait set.  Used only by BEAUti.");
 
 
+    public boolean hasIndicators = false;
+    
     private boolean dynamicsKnown;
 
     /**
@@ -46,8 +49,18 @@ public abstract class Dynamics extends CalculationNode  {
      */    
 	public abstract double[][] getBackwardsMigration(int i);
 
+	
+	/**
+	 * get indicator variables for migration
+	 * @param i
+	 * @return
+	 */
+	public int[][] getIndicators(int i){
+		return null;
+	}
 
-	HashMap<String, Integer> traitToType; 
+
+	HashMap<String, Integer> traitToType = new HashMap<>(); 
 	HashMap<Integer, String> reverseTraitToType; 
 
     @Override
@@ -70,6 +83,12 @@ public abstract class Dynamics extends CalculationNode  {
     		for (int i = 0; i < unique.size(); i++)
     			reverseTraitToType.put(i, unique.get(i));
     	}
+    	
+    	if (dimensionInput.get()>1 && dimensionInput.get()<traitToType.size())
+            throw new IllegalArgumentException("dimension is not -1 (undefined) and smaller " +
+            		"than the number of different traits");
+
+    	
     }
     
     /**
@@ -101,7 +120,10 @@ public abstract class Dynamics extends CalculationNode  {
 		return dimensionInput.get();
 	}
 	
-	
+
+	public int getNrTypes(){
+		return traitToType.size();
+	}
 
 	public int getValue(String id) {
 		return traitToType.get(typeTraitInput.get().getStringValue(id));	

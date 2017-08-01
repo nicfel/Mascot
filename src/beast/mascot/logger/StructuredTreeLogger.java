@@ -284,6 +284,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 
     // current rates         
     private double[][] migrationRates;
+    private int[][] indicators;
     private double[] coalescentRates; 	
 
     
@@ -325,6 +326,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         double nextEventTime = 0.0;
 		coalescentRates = mascotInput.get().dynamicsInput.get().getCoalescentRate(ratesInterval);  
         migrationRates = mascotInput.get().dynamicsInput.get().getBackwardsMigration(ratesInterval);
+		indicators = mascotInput.get().dynamicsInput.get().getIndicators(ratesInterval);  
         // Time to the next rate shift or event on the tree
         double nextTreeEvent = mascotInput.get().treeIntervalsInput.get().getInterval(treeInterval);
         double nextRateShift = mascotInput.get().dynamicsInput.get().getInterval(ratesInterval);
@@ -384,8 +386,11 @@ public class StructuredTreeLogger extends Tree implements Loggable {
                     for (int i = linProbs.length; i < (transitionProbs.length+linProbs.length); i++)
                     	linProbs_tmp[i] = transitionProbs[i-linProbs.length];   		
     	        	
-
-	        		Euler2ndOrderTransitions euler = new Euler2ndOrderTransitions(migrationRates, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
+                    Euler2ndOrderTransitions euler;
+	        		if (mascotInput.get().dynamicsInput.get().hasIndicators)
+	        			euler = new Euler2ndOrderTransitions(migrationRates, indicators, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
+	        		else
+	        			euler = new Euler2ndOrderTransitions(migrationRates, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
 		        	
 		        	
 		        	linProbs[linProbs.length-1] = 0;
@@ -424,6 +429,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         		ratesInterval++;
         		coalescentRates = mascotInput.get().dynamicsInput.get().getCoalescentRate(ratesInterval);  
                 migrationRates = mascotInput.get().dynamicsInput.get().getBackwardsMigration(ratesInterval);
+        		indicators = mascotInput.get().dynamicsInput.get().getIndicators(ratesInterval);  
         		nextTreeEvent -= nextRateShift;
  	       		nextRateShift = mascotInput.get().dynamicsInput.get().getInterval(ratesInterval);
         	}

@@ -13,13 +13,13 @@ import beast.core.Loggable;
 import beast.core.parameter.RealParameter;
 
 
-@Description("Extracts the intervals from a tree. Points in the intervals " +
-        "are defined by the heights of nodes in the tree.")
+@Description("Constant migration rates and effective population sizes over time.")
 public class Constant extends Dynamics implements Loggable  {
 
     public Input<RealParameter> NeInput = new Input<>("Ne", "input of effective population sizes", Validate.REQUIRED);    
     public Input<RealParameter> b_mInput = new Input<>("backwardsMigration", "input of backwards in time migration rates");    
     public Input<RealParameter> f_mInput = new Input<>("forwardsMigration", "input of backwards in time migration rates", Validate.XOR, b_mInput);    
+    public Input<Double> ploidyInput = new Input<>("ploidy", "Ploidy (copy number) for this gene, typically a whole number or half (default is 1).", 1.0);
 
 	private boolean isBackwardsMigration;
 	
@@ -110,7 +110,7 @@ public class Constant extends Dynamics implements Loggable  {
     	double[] coal = new double[NeInput.get().getDimension()];
     	int c = 0;
     	for (int j = 0; j < NeInput.get().getDimension(); j++){
-    		coal[c] = 1/(2*NeInput.get().getArrayValue(j));
+    		coal[c] = 1/(ploidyInput.get()*NeInput.get().getArrayValue(j));
     		c++;
     	}
     	return coal;
@@ -174,7 +174,6 @@ public class Constant extends Dynamics implements Loggable  {
 		    	}    			
     		}
     	}
-    	
     	return m;  	
     }    
 	
@@ -221,7 +220,7 @@ public class Constant extends Dynamics implements Loggable  {
 	@Override
 	public void log(int sample, PrintStream out) {
 		for (int i = 0 ; i < NeInput.get().getDimension(); i++){
-			out.print(String.format("%f\t", NeInput.get().getArrayValue(i)));
+			out.print(NeInput.get().getArrayValue(i) + "\t");
 		}
 		
 		if (migrationType == MigrationType.asymmetric){
@@ -230,9 +229,9 @@ public class Constant extends Dynamics implements Loggable  {
 	    		for (int b = 0; b < NeInput.get().getDimension(); b++){
 	    			if (a!=b){
 	    				if (isBackwardsMigration)
-	    					out.print(String.format("%f\t", b_mInput.get().getArrayValue(c)));
+	    					out.print(b_mInput.get().getArrayValue(c) + "\t");
 	    				else
-	    					out.print(String.format("%f\t", f_mInput.get().getArrayValue(c)));
+	    					out.print(f_mInput.get().getArrayValue(c) + "\t");
 	    				c++;
 	    			}
 	    		}
@@ -244,9 +243,9 @@ public class Constant extends Dynamics implements Loggable  {
 	    		for (int b = a+1; b < NeInput.get().getDimension(); b++){
 	    			if (a!=b){
 	    				if (isBackwardsMigration)
-	    					out.print(String.format("%f\t", b_mInput.get().getArrayValue(c)));
+	    					out.print(b_mInput.get().getArrayValue(c) + "\t");
 	    				else
-	    					out.print(String.format("%f\t", f_mInput.get().getArrayValue(c)));
+	    					out.print(f_mInput.get().getArrayValue(c) + "\t");
 	    				c++;
 	    			}
 	    		}

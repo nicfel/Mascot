@@ -650,6 +650,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         			activeLineages.add(l.getNr());
         		}
         	}
+
        	
         	if(IntervalType.COALESCENT == getIntervalType(i)){
         		List<Node> daughter = getLineagesRemoved(i);

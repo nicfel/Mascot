@@ -11,8 +11,7 @@ import beast.core.Description;
 import beast.core.Input;
 import beast.evolution.tree.TraitSet;
 
-@Description("Probabilistic representation that can produce " +
-        "a log probability for instance for running an MCMC chain.")
+@Description("Class that is to be extended by other dynamic processes")
 public abstract class Dynamics extends CalculationNode  {
 	
     public Input<Integer> dimensionInput = new Input<>("dimension", "the number of different states." + 

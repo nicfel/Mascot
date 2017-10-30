@@ -29,7 +29,18 @@ public class LogLinear extends GLMmodel {
     		for (int j = 0; j < covariatesInput.get().get(i).getDimension(); j++)
     			covariatesInput.get().get(i).setValue(j,
     					covariatesInput.get().get(i).getValue(j) - paramsum);
-
+    		
+    		// calculate the standard deviation
+    		double sd_sq = 0.0;
+    		for (int j = 0; j < covariatesInput.get().get(i).getDimension(); j++)
+    			sd_sq += Math.pow(covariatesInput.get().get(i).getValue(j),2);
+    		
+    		double sd = Math.pow(sd_sq, 0.5);
+    		
+    		// devide the covariates by the standard deviation
+    		for (int j = 0; j < covariatesInput.get().get(i).getDimension(); j++)
+    			covariatesInput.get().get(i).setValue(j,
+    					covariatesInput.get().get(i).getValue(j)/sd);
     	}
 	}
 
@@ -58,7 +69,6 @@ public class LogLinear extends GLMmodel {
 
 		return rates;
 	}
-
 
 	@Override
 	public void init(PrintStream out) {

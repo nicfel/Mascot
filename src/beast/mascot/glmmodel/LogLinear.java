@@ -35,7 +35,10 @@ public class LogLinear extends GLMmodel {
     		for (int j = 0; j < covariatesInput.get().get(i).getDimension(); j++)
     			sd_sq += Math.pow(covariatesInput.get().get(i).getValue(j),2);
     		
+    		sd_sq /= covariatesInput.get().get(i).getDimension();
+    		
     		double sd = Math.pow(sd_sq, 0.5);
+    		
     		
     		// devide the covariates by the standard deviation
     		for (int j = 0; j < covariatesInput.get().get(i).getDimension(); j++)

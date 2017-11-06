@@ -9,6 +9,7 @@ import org.apache.commons.math3.ode.FirstOrderIntegrator;
 import org.apache.commons.math3.ode.nonstiff.ClassicalRungeKuttaIntegrator;
 import org.jblas.DoubleMatrix;
 
+import beast.core.CalculationNode;
 import beast.core.Citation;
 import beast.core.Description;
 import beast.core.Input;
@@ -550,6 +551,11 @@ public class Mascot extends StructuredTreeDistribution {
     	first = storedFirst;    	
         // store the 
     	super.restore();
+    }
+
+    @Override
+    protected boolean requiresRecalculation() {
+        return ((CalculationNode) dynamicsInput.get()).isDirtyCalculation() || super.requiresRecalculation();
     }
 
     

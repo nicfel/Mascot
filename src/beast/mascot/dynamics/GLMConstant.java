@@ -217,6 +217,10 @@ public class GLMConstant extends Dynamics implements Loggable {
 		
 	}
 	
+    @Override
+	protected boolean requiresRecalculation(){
+    	return intervalIsDirty(0);
+    }
 
     
 }

@@ -9,6 +9,7 @@ import org.apache.commons.math3.ode.FirstOrderIntegrator;
 import org.apache.commons.math3.ode.nonstiff.ClassicalRungeKuttaIntegrator;
 import org.jblas.DoubleMatrix;
 
+import beast.core.CalculationNode;
 import beast.core.Citation;
 import beast.core.Description;
 import beast.core.Input;
@@ -525,5 +526,12 @@ public class MascotCollaps extends StructuredTreeDistribution {
     	super.restore();
     }
 
-    
+    @Override
+    protected boolean requiresRecalculation() {
+        return ((CalculationNode) dynamicsInput.get()).isDirtyCalculation()
+        		|| ancestralNeInput.get().isDirty(0)
+        		|| collapsTimeInput.get().isDirty(0)
+        		|| super.requiresRecalculation();
+    }
+
 }

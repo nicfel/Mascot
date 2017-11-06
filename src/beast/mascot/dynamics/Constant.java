@@ -262,6 +262,11 @@ public class Constant extends Dynamics implements Loggable  {
 	}
 
 
+    @Override
+	protected boolean requiresRecalculation(){
+    	return intervalIsDirty(0);
+    }
+
 
 
     

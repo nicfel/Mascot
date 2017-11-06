@@ -21,7 +21,7 @@ public abstract class GLMmodel extends CalculationNode implements Loggable {
 	
 	public boolean isDirty(){
 		for (int i = 0; i < scalerInput.get().getDimension(); i++)
-			if(scalerInput.get().isDirty(i) && indicatorInput.get().isDirty(i))
+			if(scalerInput.get().isDirty(i))
 					return true;
 		
 		for (int i = 0; i < indicatorInput.get().getDimension(); i++)

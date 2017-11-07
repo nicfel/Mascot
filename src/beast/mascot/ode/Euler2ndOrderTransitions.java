@@ -56,8 +56,8 @@ public class Euler2ndOrderTransitions  {
 	}
 
 	
-	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
-		if (hasIndicators){
+	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot) throws Exception{
+		if (false){
 			while (duration > 0){
 				pDot = new double[pDot.length];
 				pDotDot[pDot.length-1] = 0;
@@ -78,7 +78,7 @@ public class Euler2ndOrderTransitions  {
 		}
 	}	
 	
-	private double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
+	private double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot) throws Exception{
 		double max_dotdotdot = 0.0;
 		for (int i = 0; i < p.length; i++){
 			if (FastMath.abs(pDotDotDot[i]) > max_dotdotdot)
@@ -97,7 +97,7 @@ public class Euler2ndOrderTransitions  {
 					System.out.println("values are " + p[i] + " " + pDot[i]  + " " + pDotDot[i] + " " + pDotDotDot[i]);
 					System.out.println("index is " + i + " of " + p.length + " " + lineages*states);
 					System.out.println("minimum step size of 1e-32 reached");
-					System.exit(0);
+					throw new Exception("error in the calculation of transition probabilities");
 				}
 				timeStepSquare = timeStep*timeStep*0.5;
 				new_val = p[i] + pDot[i]*timeStep + pDotDot[i]*timeStepSquare;

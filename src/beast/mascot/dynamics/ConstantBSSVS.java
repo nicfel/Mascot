@@ -99,7 +99,11 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
     }   
     
     public boolean intervalIsDirty(int i){
-    	boolean intervalIsDirty = false;  	    	
+    	boolean intervalIsDirty = false;  
+    	
+    	if (migrationClockInput.get().isDirty(0))
+			intervalIsDirty = true;
+
     	
     	for (int j = 0; j < dimensionInput.get(); j++)
     		if (NeInput.get().isDirty(j))
@@ -109,16 +113,14 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 			for (int j = 0; j < b_mInput.get().getDimension(); j++){
 				if (indicatorInput.get().isDirty(j))
 					intervalIsDirty = true; 
-				if (b_mInput.get().isDirty(j) && indicatorInput.get().getArrayValue(j)>0.5)
+				if (b_mInput.get().isDirty(j))
 					intervalIsDirty = true; 
-//				if (b_mInput.get().isDirty(j))
-//					intervalIsDirty = true; 
 			}
     	}else{
 			for (int j = 0; j < f_mInput.get().getDimension(); j++){
 				if (indicatorInput.get().isDirty(j))
 					intervalIsDirty = true; 
-				if (f_mInput.get().isDirty(j) && indicatorInput.get().getArrayValue(j)>0.5)
+				if (f_mInput.get().isDirty(j))
 					intervalIsDirty = true;    		
 			}
     	}		

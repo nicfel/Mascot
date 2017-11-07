@@ -406,7 +406,12 @@ public class StructuredTreeLoggerCollaps extends Tree implements Loggable {
 		        	
 		        	
 		        	linProbs[linProbs.length-1] = 0;
-		        	euler.calculateValues(nextEventTime, linProbs_tmp, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt);		        	
+		        	try {
+						euler.calculateValues(nextEventTime, linProbs_tmp, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}		        	
 	        		
 	                for (int i = 0; i<linProbs.length; i++)
 	            		linProbs[i] = linProbs_tmp[i];  

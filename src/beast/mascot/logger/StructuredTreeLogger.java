@@ -109,7 +109,12 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         // make sure we get the current version of the inputs
 //        Tree tree = (Tree) mascotInput.get().treeIntervalsInput.get().treeInput.get().getCurrent();
         //calculate the state of each node
-    	CalculateNodeStates();
+    	try {
+			CalculateNodeStates();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     	
     	used = new boolean[stateProbabilities.length];
     	report = false;
@@ -298,7 +303,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     private boolean recalculateLogP;   
 
 	
-    private void CalculateNodeStates(){  
+    private void CalculateNodeStates() throws Exception{  
     	// newly calculate tree intervals
     	mascotInput.get().treeIntervalsInput.get().calculateIntervals();
     	// correctly calculate the daughter nodes at coalescent intervals in the case of
@@ -730,9 +735,18 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 			DoubleMatrix end = stateProbabilitiesDown[parentNode.getParent().getNr() - nrSamples];
 			DoubleMatrix flow = TransitionProbabilities[parentNode.getNr()];
 			DoubleMatrix otherSideInfo = end.div(start.transpose().mmul(flow));
+			// get rid of NaN from division by 0
+			for (int i = 0; i < otherSideInfo.length; i++)
+				if (Double.isNaN(otherSideInfo.get(i)))
+					otherSideInfo.put(i, 0.0);
+				
+				
+				
 			DoubleMatrix conditional = flow.mmul(otherSideInfo);
 			conditional = conditional.mul(start);
 			stateProbabilitiesDown[parentNode.getNr() - nrSamples] = conditional.div(conditional.sum());
+			if (!(conditional.get(0) >= 0.0 && conditional.get(0)<=1.0))
+				conditional.print();
 		}else{
 //			DoubleMatrix d1 = stateProbabilities[parentNode.getLeft().getNr() - nrSamples];
 //			DoubleMatrix d2 = stateProbabilities[parentNode.getRight().getNr() - nrSamples];

@@ -147,6 +147,7 @@ public class GLMConstant extends Dynamics implements Loggable {
 		for (int i = 0 ; i < dimensionInput.get(); i++){
 			out.print(String.format("Ne.%s.%s\t", getID(), getStringStateValue(i)));
 		}
+		
     	int c = 0;
     	for (int a = 0; a < dimensionInput.get(); a++){
     		for (int b = 0; b < dimensionInput.get(); b++){
@@ -156,8 +157,24 @@ public class GLMConstant extends Dynamics implements Loggable {
     			}
     		}
     	} 
-		
-		
+    	if (NeGLMInput.get() != null)
+    		if (NeGLMInput.get().errorInput.get() != null)
+    			for (int i = 0 ; i < dimensionInput.get(); i++)
+    				out.print(String.format("Ne_error.%s.%s\t", getID(), getStringStateValue(i)));    			
+
+    	c = 0;
+    	if (migrationGLMInput.get() != null){
+    		if (migrationGLMInput.get().errorInput.get() != null){
+    	    	for (int a = 0; a < dimensionInput.get(); a++){
+    	    		for (int b = 0; b < dimensionInput.get(); b++){
+    	    			if (a!=b){
+    						out.print(String.format("migration_error.%s.%s_to_%s\t", getID(), getStringStateValue(a), getStringStateValue(b)));
+    	    				c++;
+    	    			}
+    	    		}
+    	    	} 
+    		}
+    	}
 
 	}
 
@@ -200,15 +217,33 @@ public class GLMConstant extends Dynamics implements Loggable {
 			out.print(Ne[i] + "\t");
 		}
 		
-    	int c = 0;
     	for (int a = 0; a < dimensionInput.get(); a++){
     		for (int b = 0; b < dimensionInput.get(); b++){
     			if (a!=b){
 					out.print(m[a][b] + "\t");
-    				c++;
     			}
     		}
     	} 
+    	
+    	if (NeGLMInput.get() != null)
+    		if (NeGLMInput.get().errorInput.get() != null)
+    			for (int i = 0 ; i < dimensionInput.get(); i++)
+    				out.print(NeGLMInput.get().errorInput.get().getArrayValue(i) + "\t");    			
+
+    	int c = 0;
+    	if (migrationGLMInput.get() != null){
+    		if (migrationGLMInput.get().errorInput.get() != null){
+    	    	for (int a = 0; a < dimensionInput.get(); a++){
+    	    		for (int b = 0; b < dimensionInput.get(); b++){
+    	    			if (a!=b){
+    						out.print(migrationGLMInput.get().errorInput.get().getArrayValue(c) +"\t");
+    	    				c++;
+    	    			}
+    	    		}
+    	    	} 
+    		}
+    	}
+
 	}
 
 	@Override

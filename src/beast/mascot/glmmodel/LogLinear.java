@@ -13,7 +13,6 @@ public class LogLinear extends GLMmodel {
     	indicatorInput.get().setDimension(covariatesInput.get().size());
     	if (errorInput.get()!=null)
     		errorInput.get().setDimension(covariatesInput.get().get(0).getDimension());
-
 		// ensure that all the entries in all the log covariates sum to 0
     	for (int i = 0; i < covariatesInput.get().size(); i++){
     		double paramsum = 0;
@@ -35,7 +34,7 @@ public class LogLinear extends GLMmodel {
     		for (int j = 0; j < covariatesInput.get().get(i).getDimension(); j++)
     			sd_sq += Math.pow(covariatesInput.get().get(i).getValue(j),2);
     		
-    		sd_sq /= covariatesInput.get().get(i).getDimension();
+    		sd_sq /= (covariatesInput.get().get(i).getDimension() -1);
     		
     		double sd = Math.pow(sd_sq, 0.5);
     		
@@ -78,7 +77,6 @@ public class LogLinear extends GLMmodel {
 		for (int i = 0 ; i < scalerInput.get().getDimension(); i++){
 			out.print(String.format("%sscaler.%s\t", getID(), covariatesInput.get().get(i).getID()));
 		}
-		
 	}
 
 	@Override

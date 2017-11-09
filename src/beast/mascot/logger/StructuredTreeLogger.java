@@ -105,6 +105,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 
     @Override
     public void log(int nSample, PrintStream out) {
+    	states = mascotInput.get().dynamicsInput.get().getDimension();
     	
         // make sure we get the current version of the inputs
 //        Tree tree = (Tree) mascotInput.get().treeIntervalsInput.get().treeInput.get().getCurrent();
@@ -745,8 +746,8 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 			DoubleMatrix conditional = flow.mmul(otherSideInfo);
 			conditional = conditional.mul(start);
 			stateProbabilitiesDown[parentNode.getNr() - nrSamples] = conditional.div(conditional.sum());
-			if (!(conditional.get(0) >= 0.0 && conditional.get(0)<=1.0))
-				conditional.print();
+//			if (!(conditional.get(0) >= 0.0 && conditional.get(0)<=1.0))
+//				conditional.print();
 		}else{
 //			DoubleMatrix d1 = stateProbabilities[parentNode.getLeft().getNr() - nrSamples];
 //			DoubleMatrix d2 = stateProbabilities[parentNode.getRight().getNr() - nrSamples];

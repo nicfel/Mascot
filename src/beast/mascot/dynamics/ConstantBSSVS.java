@@ -33,9 +33,7 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
     
 
     @Override
-    public void initAndValidate() {
-    	super.initAndValidate();
-    	
+    public void initAndValidate() {    	
     	super.initAndValidate();
     	
     	if (dimensionInput.get()<1)
@@ -143,6 +141,7 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 	@Override    
     public double[][] getBackwardsMigration(int i){
     	double[][] m = new double[NeInput.get().getDimension()][NeInput.get().getDimension()];
+//    	System.out.println(b_mInput.get());
     	
     	if (isBackwardsMigration){
     		if (migrationType == MigrationType.asymmetric){

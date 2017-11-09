@@ -21,6 +21,8 @@ import org.apache.commons.math.MathException;
 public class MaxRate extends Distribution {
     final public Input<GLMConstant> GLMmodelInput = new Input<>("GLMmodel", "glm model input", Validate.REQUIRED);
     final public Input<ParametricDistribution> distInput = new Input<>("distr", "distribution used to calculate prior, e.g. normal, beta, gamma.", Validate.REQUIRED);
+    final public Input<Boolean> migrationOnlyInput = new Input<>("migrationOnly", "put prior only on migration rates", false);
+    final public Input<Boolean> NeOnlyInput = new Input<>("NeOnly", "put prior only on migration rates", false);
 
     /**
      * shadows distInput *
@@ -56,8 +58,14 @@ public class MaxRate extends Distribution {
     	RealParameter dCoal = new RealParameter(coal);
     	RealParameter dMig = new RealParameter(mig);
     	
-        logP = dist.calcLogP(dCoal);
-        logP += dist.calcLogP(dMig);
+    	logP = 0.0;
+    	
+    	if (migrationOnlyInput.get()){
+	        logP += dist.calcLogP(dMig);
+    	}else{
+	        logP += dist.calcLogP(dCoal);
+	        logP += dist.calcLogP(dMig);
+    	}
         if (logP == Double.POSITIVE_INFINITY) {
             logP = Double.NEGATIVE_INFINITY;
         }

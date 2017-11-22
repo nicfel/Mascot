@@ -98,8 +98,6 @@ public class MascotCollaps extends StructuredTreeDistribution {
     }
         
     public double calculateLogP() {
-//    	treeIntervalsInput.get().print();
-//    	System.out.println(String.format("%.200s",treeIntervalsInput.get().print());
     	// newly calculate tree intervals
     	treeIntervalsInput.get().calculateIntervals();
     	// correctly calculate the daughter nodes at coalescent intervals in the case of
@@ -115,24 +113,7 @@ public class MascotCollaps extends StructuredTreeDistribution {
 		coalescentRates = dynamicsInput.get().getCoalescentRate(ratesInterval);  
         migrationRates = dynamicsInput.get().getBackwardsMigration(ratesInterval);
 		indicators = dynamicsInput.get().getIndicators(ratesInterval);  
-		
-//    	for (int a = 0; a < migrationRates.length; a++){
-//    		for (int b = 0; b < migrationRates.length-1; b++){
-//    			if (migrationRates[a][b]==0)
-//        			System.out.print("0, ");
-//    			else
-//    				System.out.print("1, ");
-//    		}
-//			if (migrationRates[a][migrationRates.length-1]==0)
-//    			System.out.print("0;");
-//			else
-//				System.out.print("1;");
-//    		System.out.print("\n");
-//    	}
-//    	System.out.println();
-
-
-        
+		        
         // Time to the next rate shift or event on the tree
         double nextTreeEvent = treeIntervalsInput.get().getInterval(treeInterval);
         double nextRateShift = dynamicsInput.get().getInterval(ratesInterval);
@@ -244,12 +225,6 @@ public class MascotCollaps extends StructuredTreeDistribution {
 		return logP;  	
     }   
     
-//    private void integrate(double duration){
-//    }
-//
-//    private void ei(double duration, double[] linProbs_for_ode, double[] meanLinProbs){
-//    	eulerIntegration(duration, linProbs_for_ode, meanLinProbs);   	
-//    }
     
     private double normalizeLineages(){
     	if (linProbs==null)
@@ -432,6 +407,9 @@ public class MascotCollaps extends StructuredTreeDistribution {
 		
 		// store the node
 		storeNode(currTreeInterval, currRatesInterval, linProbs, logP + Math.log(lambda.sum()), activeLineages);
+		
+		
+		
 		
 		if (coalescentRates.length>1){
 			if (lambda.sum()==0)

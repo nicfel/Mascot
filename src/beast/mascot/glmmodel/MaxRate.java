@@ -59,7 +59,7 @@ public class MaxRate extends Distribution {
     	RealParameter dMig = new RealParameter(mig);
     	
     	logP = 0.0;
-    	
+    	    	
     	if (migrationOnlyInput.get()){
 	        logP += dist.calcLogP(dMig);
     	}else{

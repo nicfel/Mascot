@@ -306,10 +306,17 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 	    	for (int a = 0; a < NeInput.get().getDimension(); a++){
 	    		for (int b = a+1; b < NeInput.get().getDimension(); b++){
 	    			if (a!=b){
-	    				if (isBackwardsMigration)
-	    					out.print(String.format("%f\t", migrationClockInput.get().getValue()*b_mInput.get().getArrayValue(c)));
-	    				else
-	    					out.print(String.format("%f\t", migrationClockInput.get().getValue()*f_mInput.get().getArrayValue(c)));
+	    				if (isBackwardsMigration){
+		    				if (indicatorInput.get().getArrayValue(c)>0.5)
+		    					out.print(String.format("%f\t", migrationClockInput.get().getValue()*b_mInput.get().getArrayValue(c)));
+		    				else
+		    					out.print("0.0\t");
+	    				}else{
+		    				if (indicatorInput.get().getArrayValue(c)>0.5)
+		    					out.print(String.format("%f\t", migrationClockInput.get().getValue()*f_mInput.get().getArrayValue(c)));
+		    				else
+		    					out.print("0.0\t");
+	    				}
 	    				c++;
 	    			}
 	    		}

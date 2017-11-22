@@ -16,8 +16,10 @@ public abstract class GLMStepwiseModel extends CalculationNode implements Loggab
     public Input<RealParameter> scalerInput = new Input<>("scaler", "input of covariates scaler", Validate.REQUIRED);    
     public Input<BooleanParameter> indicatorInput = new Input<>("indicator", "input of covariates scaler", Validate.REQUIRED);
     public Input<RealParameter> clockInput = new Input<>("clock", "clock rate of the parameter",Validate.REQUIRED);
-    public Input<Integer> intervalsInput = new Input<>("intervals", "number of time intervals", 1);
-
+    public Input<RealParameter> errorInput = new Input<>("error", "error term in the GLM model for the- rates");
+    
+    int nrIntervals;
+    
 	public abstract double[] getRates(int i);
 	
 	public boolean isDirty(){
@@ -33,6 +35,10 @@ public abstract class GLMStepwiseModel extends CalculationNode implements Loggab
 			return true;
 		
 		return false;
+	}
+
+	public void setNrIntervals(int i){
+		nrIntervals = i;
 	}
 
 }

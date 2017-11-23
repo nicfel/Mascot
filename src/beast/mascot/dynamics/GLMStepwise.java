@@ -1,5 +1,6 @@
 package beast.mascot.dynamics;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 import beast.core.Description;
@@ -25,9 +26,15 @@ public class GLMStepwise extends Dynamics {
 	public Input<String> typesInput = new Input<>(
 			"types", "input of the different types in the order that will be used by the glm", Validate.REQUIRED);
       
+	double[] intTimes;
     
     @Override
     public void initAndValidate() {
+    	intTimes = new double[(int) rateShiftsInput.get().getDimension()];
+    	intTimes[0] = rateShiftsInput.get().getArrayValue(0);
+    	for (int i = 1; i < rateShiftsInput.get().getDimension(); i++)
+    		intTimes[i] = rateShiftsInput.get().getArrayValue(i) - rateShiftsInput.get().getArrayValue(i-1); 
+    	
     	String[] splittedTypes = typesInput.get().split("\\s+");
 
 		dimensionInput.set(splittedTypes.length);
@@ -40,18 +47,19 @@ public class GLMStepwise extends Dynamics {
 			reverseTraitToType.put(i, splittedTypes[i]);
 		
 		// set the number of intervals for the GLM models
-		migrationGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension()+1);
-		NeGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension()+1);
+		migrationGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension());
+		NeGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension());
     }
 
     /**
      * Returns the time to the next interval.
      */
     public double getInterval(int i) {
-    	if (i > rateShiftsInput.get().getDimension())
+    	if (i > rateShiftsInput.get().getDimension()){
     		return Double.NEGATIVE_INFINITY;
-		else
-			return rateShiftsInput.get().getArrayValue(i);
+    	}else{
+			return intTimes[i];
+    	}
     }   
 
     public boolean intervalIsDirty(int i){
@@ -60,7 +68,6 @@ public class GLMStepwise extends Dynamics {
 		if(migrationGLMInput.get().isDirty())
 			return true;
     	return false;
-
     }  
     
 
@@ -91,12 +98,15 @@ public class GLMStepwise extends Dynamics {
 
     	double[][] m = new double[dimensionInput.get()][dimensionInput.get()];
 		double[] mig = migrationGLMInput.get().getRates(intervalNr);
-		double[] Ne = NeGLMInput.get().getRates(i);
+		double[] Ne = NeGLMInput.get().getRates(intervalNr);
+		
 		int c = 0;
 		for (int a = 0; a < dimensionInput.get(); a++){
 			for (int b = 0; b < dimensionInput.get(); b++){
 				if (a!=b){
-					m[b][a] = mig[c]*Ne[a]/Ne[b];
+					m[b][a] = 
+							mig[c]*
+							Ne[a]/Ne[b];
 					c++;
 				}
 			}

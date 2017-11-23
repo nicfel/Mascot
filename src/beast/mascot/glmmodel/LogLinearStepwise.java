@@ -6,8 +6,6 @@ import beast.core.Input;
 
 public class LogLinearStepwise extends GLMStepwiseModel {
 
-	int verticalEntries;
-	
 	@Override
 	public void initAndValidate() {
 		// set the dimension of the scalers, indicators and potentially the error term
@@ -17,10 +15,6 @@ public class LogLinearStepwise extends GLMStepwiseModel {
     		errorInput.get().setDimension(covariatesInput.get().get(0).getDimension());
 	}
 	
-	public void setStates() {
-		verticalEntries = covariatesInput.get().get(0).getDimension()/nrIntervals;
-	}
-
 
 	@Override
 	public double[] getRates(int i) {
@@ -30,10 +24,12 @@ public class LogLinearStepwise extends GLMStepwiseModel {
     		logrates[j] = 0;
     	    	
 		for (int j = 0; j < covariatesInput.get().size(); j++){
-			if (indicatorInput.get().getArrayValue(j) > 0.0)
-				for (int k = 0; k < logrates.length; k++)
+			if (indicatorInput.get().getArrayValue(j) > 0.0){
+				for (int k = 0; k < logrates.length; k++){
 					logrates[k] += scalerInput.get().getArrayValue(j)
 						*covariatesInput.get().get(j).getArrayValue(verticalEntries*i + k);
+				}
+			}
 		}
 		
     	if (errorInput.get()!=null)

@@ -273,13 +273,6 @@ public class Mascot extends StructuredTreeDistribution {
         }while(nextTreeEvent <= Double.POSITIVE_INFINITY);
 //        System.out.print("\n");
         first = false;
-//        System.exit(0);
-        
-//        System.out.println(times[1]/(times[0]+times[1]+times[2]+times[3]+times[4]));
-//        System.out.println(times[0]/(times[0]+times[1]) + " " + times[2]/(times[2]+times[3]));
-        
-//        System.out.println((times[0]/(times[0]+times[1]+times[2]+times[3])) + " " + times[1]/(times[0]+times[1]+times[2]+times[3]) +
-//        		" " + times[2]/(times[0]+times[1]+times[2]+times[3]) + " " + times[3]/(times[0]+times[1]+times[2]+times[3]));
 		return logP;  	
     }   
     

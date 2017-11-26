@@ -1,18 +1,20 @@
 package beast.mascot.dynamics;
 
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.Input.Validate;
+import beast.core.Loggable;
 import beast.core.parameter.RealParameter;
 import beast.mascot.glmmodel.GLMStepwiseModel;
 
 
 @Description("Extracts the intervals from a tree. Points in the intervals " +
         "are defined by the heights of nodes in the tree.")
-public class GLMStepwise extends Dynamics {	
+public class GLMStepwise extends Dynamics implements Loggable {	
     
 	public Input<GLMStepwiseModel> migrationGLMInput = new Input<>(
 			"migrationGLM", "input of migration GLM model", Validate.REQUIRED);
@@ -55,8 +57,8 @@ public class GLMStepwise extends Dynamics {
      * Returns the time to the next interval.
      */
     public double getInterval(int i) {
-    	if (i > rateShiftsInput.get().getDimension()){
-    		return Double.NEGATIVE_INFINITY;
+    	if (i >= rateShiftsInput.get().getDimension()){
+    		return Double.POSITIVE_INFINITY;
     	}else{
 			return intTimes[i];
     	}
@@ -75,8 +77,8 @@ public class GLMStepwise extends Dynamics {
 	@Override
     public double[] getCoalescentRate(int i){
 		int intervalNr;
-    	if (i > rateShiftsInput.get().getDimension())
-    		intervalNr = rateShiftsInput.get().getDimension();
+    	if (i >= rateShiftsInput.get().getDimension())
+    		intervalNr = rateShiftsInput.get().getDimension()-1;
     	else
     		intervalNr = i;
 
@@ -84,15 +86,14 @@ public class GLMStepwise extends Dynamics {
 		double[] coal = new double[Ne.length];
 		for (int j = 0; j < Ne.length; j++)
 			coal[j] = 1/Ne[j];
-		
 		return coal;
     }
     
 	@Override    
     public double[][] getBackwardsMigration(int i){
 		int intervalNr;
-    	if (i > rateShiftsInput.get().getDimension())
-    		intervalNr = rateShiftsInput.get().getDimension();
+    	if (i >= rateShiftsInput.get().getDimension())
+    		intervalNr = rateShiftsInput.get().getDimension()-1;
     	else
     		intervalNr = i;
 
@@ -105,12 +106,20 @@ public class GLMStepwise extends Dynamics {
 			for (int b = 0; b < dimensionInput.get(); b++){
 				if (a!=b){
 					m[b][a] = 
-							mig[c]*
-							Ne[a]/Ne[b];
+							mig[c];
 					c++;
 				}
 			}
 		}
+//		System.out.println(Arrays.toString(mig));
+//		for (int a = 0; a < dimensionInput.get(); a++){
+//			for (int b = 0; b < dimensionInput.get(); b++){
+//				System.out.print(m[a][b] + "\t");
+//			}
+//			System.out.print("\n");
+//		}
+//		System.exit(0);
+		
 		return m;
     }
 
@@ -119,4 +128,56 @@ public class GLMStepwise extends Dynamics {
 		// TODO Auto-generated method stub
 		
 	}    
+	
+	public Double[] getAllCoalescentRate() {
+		Double[] coal = new Double[NeGLMInput.get().nrIntervals*NeGLMInput.get().verticalEntries];
+		
+		for (int i = 0; i < intTimes.length; i++){
+	    	double[] Ne = NeGLMInput.get().getRates(i);
+	    	for (int j = 0; j < Ne.length; j++)
+	    		coal[i*NeGLMInput.get().verticalEntries + j] = 1/Ne[j];
+		}
+		return coal;
+	}
+
+	public Double[] getAllBackwardsMigration() {
+		Double[] mig = new Double[migrationGLMInput.get().nrIntervals*migrationGLMInput.get().verticalEntries];
+		
+		for (int i = 0; i < intTimes.length; i++){
+	    	double[] m = migrationGLMInput.get().getRates(i);
+	    	for (int j = 0; j < m.length; j++)
+	    		mig[i*migrationGLMInput.get().verticalEntries + j] = m[j];
+		}
+		return mig;
+	}
+
+	@Override
+	public void init(PrintStream out) {
+		for (int j = 0; j < dimensionInput.get(); j++){
+			for (int i = 0; i < intTimes.length; i++){
+				out.print(String.format("Ne.%d.%d\t", j,i));
+			}			
+		}
+	}
+
+	@Override
+	public void log(int sample, PrintStream out) {
+		for (int j = 0; j < dimensionInput.get(); j++){
+			for (int i = 0; i < intTimes.length; i++){
+		    	double[] Ne = NeGLMInput.get().getRates(i);
+				out.print(1/Ne[j] + "\t");
+			}			
+		}
+	}
+
+	@Override
+	public void close(PrintStream out) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+
+	
 }

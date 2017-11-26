@@ -18,8 +18,8 @@ public abstract class GLMStepwiseModel extends CalculationNode implements Loggab
     public Input<RealParameter> clockInput = new Input<>("clock", "clock rate of the parameter",Validate.REQUIRED);
     public Input<RealParameter> errorInput = new Input<>("error", "error term in the GLM model for the- rates");
     
-    int nrIntervals;
-    int verticalEntries;
+    public int nrIntervals;
+    public int verticalEntries;
     
 	public abstract double[] getRates(int i);
 	
@@ -42,6 +42,6 @@ public abstract class GLMStepwiseModel extends CalculationNode implements Loggab
 		nrIntervals = i;
 		verticalEntries = covariatesInput.get().get(0).getDimension()/nrIntervals;
 	}
-
+	
 
 }

@@ -10,7 +10,7 @@ import beast.core.Loggable;
 import beast.core.parameter.BooleanParameter;
 import beast.core.parameter.RealParameter;
 
-public abstract class GLMStepwiseModel extends CalculationNode implements Loggable {
+public abstract class GlmModel extends CalculationNode implements Loggable {
 	
     public Input<List<RealParameter>> covariatesInput = new Input<>("covariates", "input of covariates", new ArrayList<>(), Validate.REQUIRED);
     public Input<RealParameter> scalerInput = new Input<>("scaler", "input of covariates scaler", Validate.REQUIRED);    
@@ -25,13 +25,18 @@ public abstract class GLMStepwiseModel extends CalculationNode implements Loggab
 	
 	public boolean isDirty(){
 		for (int i = 0; i < scalerInput.get().getDimension(); i++)
-			if(scalerInput.get().isDirty(i) && indicatorInput.get().isDirty(i))
+			if(scalerInput.get().isDirty(i))
 					return true;
 		
 		for (int i = 0; i < indicatorInput.get().getDimension(); i++)
 			if(indicatorInput.get().isDirty(i))
 					return true;
-				
+		
+		if (errorInput.get() != null)
+			for (int i = 0; i < errorInput.get().getDimension(); i++)
+				if(errorInput.get().isDirty(i))
+						return true;
+		
 		if (clockInput.get().isDirty(0))
 			return true;
 		

@@ -9,21 +9,21 @@ import beast.core.Input;
 import beast.core.Input.Validate;
 import beast.core.Loggable;
 import beast.core.parameter.RealParameter;
-import beast.mascot.glmmodel.GLMStepwiseModel;
+import beast.mascot.glmmodel.GlmModel;
 
 
 @Description("Extracts the intervals from a tree. Points in the intervals " +
         "are defined by the heights of nodes in the tree.")
-public class GLMStepwise extends Dynamics implements Loggable {	
+public class GLM extends Dynamics implements Loggable {	
     
-	public Input<GLMStepwiseModel> migrationGLMInput = new Input<>(
+	public Input<GlmModel> migrationGLMInput = new Input<>(
 			"migrationGLM", "input of migration GLM model", Validate.REQUIRED);
     
-	public Input<GLMStepwiseModel> NeGLMInput = new Input<>(
+	public Input<GlmModel> NeGLMInput = new Input<>(
 			"NeGLM", "input of migration GLM model", Validate.REQUIRED);
     
     public Input<RealParameter> rateShiftsInput = new Input<>(
-    		"rateShifts", "input of timings of rate shifts relative to the most recent sample", Validate.REQUIRED);    
+    		"rateShifts", "input of timings of rate shifts relative to the most recent sample", Validate.OPTIONAL);    
 
 	public Input<String> typesInput = new Input<>(
 			"types", "input of the different types in the order that will be used by the glm", Validate.REQUIRED);
@@ -32,10 +32,16 @@ public class GLMStepwise extends Dynamics implements Loggable {
     
     @Override
     public void initAndValidate() {
-    	intTimes = new double[(int) rateShiftsInput.get().getDimension()];
-    	intTimes[0] = rateShiftsInput.get().getArrayValue(0);
-    	for (int i = 1; i < rateShiftsInput.get().getDimension(); i++)
-    		intTimes[i] = rateShiftsInput.get().getArrayValue(i) - rateShiftsInput.get().getArrayValue(i-1); 
+    	// if there are rate shifts as an input, use the stepwise glm model otherwise the constant
+    	if (rateShiftsInput.get() != null){
+	    	intTimes = new double[(int) rateShiftsInput.get().getDimension()];
+	    	intTimes[0] = rateShiftsInput.get().getArrayValue(0);
+	    	for (int i = 1; i < rateShiftsInput.get().getDimension(); i++)
+	    		intTimes[i] = rateShiftsInput.get().getArrayValue(i) - rateShiftsInput.get().getArrayValue(i-1); 
+    	}else{
+	    	intTimes = new double[1];
+	    	intTimes[0] = Double.POSITIVE_INFINITY;
+    	}
     	
     	String[] splittedTypes = typesInput.get().split("\\s+");
 
@@ -111,15 +117,6 @@ public class GLMStepwise extends Dynamics implements Loggable {
 				}
 			}
 		}
-//		System.out.println(Arrays.toString(mig));
-//		for (int a = 0; a < dimensionInput.get(); a++){
-//			for (int b = 0; b < dimensionInput.get(); b++){
-//				System.out.print(m[a][b] + "\t");
-//			}
-//			System.out.print("\n");
-//		}
-//		System.exit(0);
-		
 		return m;
     }
 
@@ -176,7 +173,10 @@ public class GLMStepwise extends Dynamics implements Loggable {
 		
 	}
 
-
+    @Override
+	protected boolean requiresRecalculation(){
+    	return intervalIsDirty(0);
+    }
 
 
 	

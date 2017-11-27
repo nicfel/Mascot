@@ -1,15 +1,10 @@
 package beast.mascot.glmmodel;
 
 import java.io.PrintStream;
-import java.util.Arrays;
 
 import beast.core.Input;
-import beast.core.Input.Validate;
-import beast.core.parameter.BooleanParameter;
 
-public class LogLinear extends GLMmodel {
-	
-	public Input<Boolean> logStandardizeInput = new Input<>("logStandardize", "if true log standard transformation is used", true);
+public class LogLinear extends GlmModel {
 
 	@Override
 	public void initAndValidate() {
@@ -18,63 +13,32 @@ public class LogLinear extends GLMmodel {
     	indicatorInput.get().setDimension(covariatesInput.get().size());
     	if (errorInput.get()!=null)
     		errorInput.get().setDimension(covariatesInput.get().get(0).getDimension());
-    	if(logStandardizeInput.get()){
-			// ensure that all the entries in all the log covariates sum to 0
-	    	for (int i = 0; i < covariatesInput.get().size(); i++){
-	    		double paramsum = 0;
-	
-	    		// log transform
-	    		for (int j = 0; j < covariatesInput.get().get(i).getDimension(); j++){  			
-	    			covariatesInput.get().get(i).setValue(j, 
-	    					Math.log(covariatesInput.get().get(i).getArrayValue(j)));
-	    			paramsum += covariatesInput.get().get(i).getValue(j);
-	    		}
-				paramsum /= covariatesInput.get().get(i).getDimension();
-								
-	    		// ensure that the elements sum to 0
-	    		for (int j = 0; j < covariatesInput.get().get(i).getDimension(); j++)
-	    			covariatesInput.get().get(i).setValue(j,
-	    					covariatesInput.get().get(i).getValue(j) - paramsum);
-	    		
-	    		// calculate the standard deviation
-	    		double sd_sq = 0.0;
-	    		for (int j = 0; j < covariatesInput.get().get(i).getDimension(); j++)
-	    			sd_sq += Math.pow(covariatesInput.get().get(i).getValue(j),2);
-	    		
-	    		sd_sq /= (covariatesInput.get().get(i).getDimension() -1);
-	    		
-	    		double sd = Math.pow(sd_sq, 0.5);
-	    		
-	    		
-	    		// devide the covariates by the standard deviation
-	    		for (int j = 0; j < covariatesInput.get().get(i).getDimension(); j++)
-	    			covariatesInput.get().get(i).setValue(j,
-	    					covariatesInput.get().get(i).getValue(j)/sd);
-	    	}
-    	}
 	}
+	
 
 	@Override
-	public double[] getRates() {
-    	double[] logrates = new double[covariatesInput.get().get(0).getDimension()];
+	public double[] getRates(int i) {
+    	double[] logrates = new double[verticalEntries];
     	
-    	for (int j = 0; j < covariatesInput.get().get(0).getDimension(); j++)
+    	for (int j = 0; j < logrates.length; j++)
     		logrates[j] = 0;
     	    	
 		for (int j = 0; j < covariatesInput.get().size(); j++){
-			if (indicatorInput.get().getArrayValue(j) > 0.0)
-				for (int k = 0; k < covariatesInput.get().get(j).getDimension(); k++)
+			if (indicatorInput.get().getArrayValue(j) > 0.0){
+				for (int k = 0; k < logrates.length; k++){
 					logrates[k] += scalerInput.get().getArrayValue(j)
-						*covariatesInput.get().get(j).getArrayValue(k);
+						*covariatesInput.get().get(j).getArrayValue(verticalEntries*i + k);
+				}
+			}
 		}
 		
     	if (errorInput.get()!=null)
     		for (int k = 0; k < errorInput.get().getDimension(); k++)
-    			logrates[k] += errorInput.get().getArrayValue(k);
+    			logrates[k] += errorInput.get().getArrayValue(verticalEntries*i + k);
 
-    	double[] rates = new double[covariatesInput.get().get(0).getDimension()];
+    	double[] rates = new double[verticalEntries];
    	
-		for (int k = 0; k < covariatesInput.get().get(0).getDimension(); k++){
+		for (int k = 0; k < verticalEntries; k++){
 			rates[k] = clockInput.get().getArrayValue()*Math.exp(logrates[k]);				
 		}
 

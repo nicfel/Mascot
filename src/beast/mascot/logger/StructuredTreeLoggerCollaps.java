@@ -107,6 +107,7 @@ public class StructuredTreeLoggerCollaps extends Tree implements Loggable {
 
     @Override
     public void log(int nSample, PrintStream out) {
+    	states = mascotInput.get().dynamicsInput.get().getDimension();
     	
         // make sure we get the current version of the inputs
 //        Tree tree = (Tree) mascotInput.get().treeIntervalsInput.get().treeInput.get().getCurrent();

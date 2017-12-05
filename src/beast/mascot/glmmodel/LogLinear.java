@@ -11,8 +11,13 @@ public class LogLinear extends GlmModel {
 		// set the dimension of the scalers, indicators and potentially the error term
     	scalerInput.get().setDimension(covariatesInput.get().size());
     	indicatorInput.get().setDimension(covariatesInput.get().size());
+    	
     	if (errorInput.get()!=null)
     		errorInput.get().setDimension(covariatesInput.get().get(0).getDimension());
+    	
+    	if (constantErrorInput.get()!=null)
+    		if (constantErrorInput.get().getDimension()<1)
+    			constantErrorInput.get().setDimension(verticalEntries);
 	}
 	
 
@@ -33,8 +38,12 @@ public class LogLinear extends GlmModel {
 		}
 		
     	if (errorInput.get()!=null)
-    		for (int k = 0; k < errorInput.get().getDimension(); k++)
+    		for (int k = 0; k < logrates.length; k++)
     			logrates[k] += errorInput.get().getArrayValue(verticalEntries*i + k);
+    	
+    	if (constantErrorInput.get()!=null)
+    		for (int k = 0; k < logrates.length; k++)
+    			logrates[k] += constantErrorInput.get().getArrayValue( k);
 
     	double[] rates = new double[verticalEntries];
    	

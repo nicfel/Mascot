@@ -4,6 +4,8 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import org.apache.commons.math3.util.FastMath;
+
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.Input.Validate;
@@ -24,10 +26,13 @@ public class GLM extends Dynamics implements Loggable {
     
     public Input<RealParameter> rateShiftsInput = new Input<>(
     		"rateShifts", "input of timings of rate shifts relative to the most recent sample", Validate.OPTIONAL);    
-
+    
 	public Input<String> typesInput = new Input<>(
 			"types", "input of the different types in the order that will be used by the glm", Validate.REQUIRED);
-      
+ 
+	public Input<Double> maxRateInput = new Input<>(
+			"maxRate", "maximum rate used for integration", Double.POSITIVE_INFINITY);
+
 	double[] intTimes;
     
     @Override
@@ -90,8 +95,9 @@ public class GLM extends Dynamics implements Loggable {
 
     	double[] Ne = NeGLMInput.get().getRates(intervalNr);
 		double[] coal = new double[Ne.length];
-		for (int j = 0; j < Ne.length; j++)
-			coal[j] = 1/Ne[j];
+		for (int j = 0; j < Ne.length; j++){
+			coal[j] = FastMath.min(1/Ne[j],maxRateInput.get());
+		}
 		return coal;
     }
     
@@ -111,8 +117,9 @@ public class GLM extends Dynamics implements Loggable {
 		for (int a = 0; a < dimensionInput.get(); a++){
 			for (int b = 0; b < dimensionInput.get(); b++){
 				if (a!=b){
-					m[b][a] = 
-							mig[c];
+					m[b][a] = FastMath.min( 
+							Ne[a]*mig[c]/Ne[b],
+							maxRateInput.get());
 					c++;
 				}
 			}

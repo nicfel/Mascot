@@ -16,7 +16,8 @@ public abstract class GlmModel extends CalculationNode implements Loggable {
     public Input<RealParameter> scalerInput = new Input<>("scaler", "input of covariates scaler", Validate.REQUIRED);    
     public Input<BooleanParameter> indicatorInput = new Input<>("indicator", "input of covariates scaler", Validate.REQUIRED);
     public Input<RealParameter> clockInput = new Input<>("clock", "clock rate of the parameter",Validate.REQUIRED);
-    public Input<RealParameter> errorInput = new Input<>("error", "error term in the GLM model for the- rates");
+    public Input<RealParameter> errorInput = new Input<>("error", "time variant error term in the GLM model for the rates");
+    public Input<RealParameter> constantErrorInput = new Input<>("constantError", "time invariant error term in the GLM model for the rates");
     
     public int nrIntervals;
     public int verticalEntries;
@@ -36,6 +37,12 @@ public abstract class GlmModel extends CalculationNode implements Loggable {
 			for (int i = 0; i < errorInput.get().getDimension(); i++)
 				if(errorInput.get().isDirty(i))
 						return true;
+		
+		if (constantErrorInput.get() != null)
+			for (int i = 0; i < constantErrorInput.get().getDimension(); i++)
+				if(constantErrorInput.get().isDirty(i))
+						return true;
+
 		
 		if (clockInput.get().isDirty(0))
 			return true;

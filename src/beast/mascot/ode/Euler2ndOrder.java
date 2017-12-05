@@ -1,6 +1,8 @@
 package beast.mascot.ode;
 
 
+import java.util.Arrays;
+
 import org.apache.commons.math3.util.FastMath;
 
 public class Euler2ndOrder {
@@ -70,13 +72,14 @@ public class Euler2ndOrder {
 		}
 	}	
 	
+	int count = 1;
 	private double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
 		double max_dotdotdot = 0.0;
 		for (int i = 0; i < (p.length-1); i++){
 			if (FastMath.abs(pDotDotDot[i]) > max_dotdotdot)
 				max_dotdotdot = FastMath.abs(pDotDotDot[i]);
 		}
-		
+				
 		double timeStep = FastMath.min(FastMath.pow((epsilon*6/max_dotdotdot), 1.0/3), FastMath.min(duration, max_step));
 
 		double timeStepSquare = timeStep*timeStep*0.5;

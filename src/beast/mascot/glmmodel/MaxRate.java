@@ -19,7 +19,7 @@ import org.apache.commons.math.MathException;
         "If x is multidimensional, the components of x are assumed to be independent, " +
         "so the sum of log probabilities of all elements of x is returned as the prior.")
 public class MaxRate extends Distribution {
-    final public Input<GLM> GLMStepwiseModelInput = new Input<>("GLMStepwiseModel", "glm model input");
+    final public Input<GLM> GLMStepwiseModelInput = new Input<>("GLMmodel", "glm model input");
     final public Input<ParametricDistribution> distInput = new Input<>("distr", "distribution used to calculate prior, e.g. normal, beta, gamma.", Validate.REQUIRED);
     final public Input<Boolean> migrationOnlyInput = new Input<>("migrationOnly", "put prior only on migration rates", false);
     final public Input<Boolean> NeOnlyInput = new Input<>("NeOnly", "put prior only on migration rates", false);

@@ -605,7 +605,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 		 * supposed to happen
 		 */
         for (int k = 0; k < states; k++) { 
-        	Double pairCoalRate = coalescentRates[k] * 2 * linProbs[daughterIndex1*states + k] * linProbs[daughterIndex2*states + k];			
+        	Double pairCoalRate = coalescentRates[k] * linProbs[daughterIndex1*states + k] * linProbs[daughterIndex2*states + k];			
 			if (!Double.isNaN(pairCoalRate)){
 				lambda.put(k, pairCoalRate);
 			}else{

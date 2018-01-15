@@ -6,5 +6,7 @@
 /build/
 /build-lib/
 /build-beast/
+/build-test/
+/test-reports/
 /dist/
 

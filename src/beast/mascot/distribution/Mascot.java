@@ -95,8 +95,6 @@ public class Mascot extends StructuredTreeDistribution {
     }
         
     public double calculateLogP() {
-//    	treeIntervalsInput.get().print();
-//    	System.out.println(String.format("%.200s",treeIntervalsInput.get().print());
     	// newly calculate tree intervals
     	treeIntervalsInput.get().calculateIntervals();
     	// correctly calculate the daughter nodes at coalescent intervals in the case of
@@ -111,24 +109,7 @@ public class Mascot extends StructuredTreeDistribution {
         double nextEventTime = 0.0;
 		coalescentRates = dynamicsInput.get().getCoalescentRate(ratesInterval);  
         migrationRates = dynamicsInput.get().getBackwardsMigration(ratesInterval);
-		indicators = dynamicsInput.get().getIndicators(ratesInterval);  
-		
-//    	for (int a = 0; a < migrationRates.length; a++){
-//    		for (int b = 0; b < migrationRates.length-1; b++){
-//    			if (migrationRates[a][b]==0)
-//        			System.out.print("0, ");
-//    			else
-//    				System.out.print("1, ");
-//    		}
-//			if (migrationRates[a][migrationRates.length-1]==0)
-//    			System.out.print("0;");
-//			else
-//				System.out.print("1;");
-//    		System.out.print("\n");
-//    	}
-//    	System.out.println();
-
-
+		indicators = dynamicsInput.get().getIndicators(ratesInterval);  		
         
         // Time to the next rate shift or event on the tree
         double nextTreeEvent = treeIntervalsInput.get().getInterval(treeInterval);

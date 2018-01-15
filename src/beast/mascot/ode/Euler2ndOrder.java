@@ -25,10 +25,10 @@ public class Euler2ndOrder {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
-        this.coalescent_rates = new double[states];
-        for (int i = 0; i < states; i++){
-        	this.coalescent_rates[i] = 2*coalescent_rates[i];
-        }
+        this.coalescent_rates = coalescent_rates;
+//        for (int i = 0; i < states; i++){
+//        	this.coalescent_rates[i] = 2*coalescent_rates[i];
+//        }
         this.lineages = lineages;
         this.states = states;
         this.dimension = this.lineages*this.states;
@@ -41,7 +41,10 @@ public class Euler2ndOrder {
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
         this.indicators = indicators;
-    	this.coalescent_rates = coalescent_rates;       
+        this.coalescent_rates = coalescent_rates;
+//        for (int i = 0; i < states; i++){
+//        	this.coalescent_rates[i] = 2*coalescent_rates[i];
+//        }
         this.lineages = lineages;
         this.states = states;
         this.dimension = this.lineages*this.states;

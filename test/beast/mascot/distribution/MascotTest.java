@@ -132,8 +132,6 @@ public class MascotTest  {
 		coalescent.initByName("populationModel", cp, "treeIntervals", ti);
 		
 		Assert.assertTrue(Math.abs(mascot.calculateLogP()-coalescent.calculateLogP())<0.000000001);
-		
-
 	}
 
 }

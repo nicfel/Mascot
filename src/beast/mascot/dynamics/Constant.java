@@ -20,6 +20,7 @@ public class Constant extends Dynamics implements Loggable  {
     public Input<RealParameter> b_mInput = new Input<>("backwardsMigration", "input of backwards in time migration rates");    
     public Input<RealParameter> f_mInput = new Input<>("forwardsMigration", "input of backwards in time migration rates", Validate.XOR, b_mInput);    
     public Input<Double> ploidyInput = new Input<>("ploidy", "Ploidy (copy number) for this gene, typically a whole number or half (default is 1).", 1.0);
+	public Input<Boolean> fromBeautiInput = new Input<>("fromBeauti", "if true reinitalize the dimensions", true);
 
 	private boolean isBackwardsMigration;
 	
@@ -44,7 +45,8 @@ public class Constant extends Dynamics implements Loggable  {
     	else
     		isBackwardsMigration = false;
     	
-    	if (dimensionInput.get()!=NeInput.get().getDimension()){
+    	
+    	if (dimensionInput.get()!=NeInput.get().getDimension() || fromBeautiInput.get()){
     		System.err.println("the dimension of " + NeInput.get().getID() + " is set to " + dimensionInput.get());
     		NeInput.get().setDimension(dimensionInput.get());
     	}
@@ -52,27 +54,39 @@ public class Constant extends Dynamics implements Loggable  {
     	int migDim = NeInput.get().getDimension()*(NeInput.get().getDimension()-1);
     	
     	if (isBackwardsMigration){
-    		if (migDim == b_mInput.get().getDimension()){
+    		if (fromBeautiInput.get()){
     			migrationType = MigrationType.asymmetric;
-    		}else if ((int) migDim/2 == b_mInput.get().getDimension()){
-    			migrationType = MigrationType.symmetric;
-    		}else{
-    			migrationType = MigrationType.asymmetric;
-    			System.err.println("Wrong number of migration elements, assume asymmetric migration:");
         		System.err.println("the dimension of " + b_mInput.get().getID() + " is set to " + migDim);
-    			b_mInput.get().setDimension(migDim);       		
+    			b_mInput.get().setDimension(migDim);       		   			
+    		}else{
+	    		if (migDim == b_mInput.get().getDimension()){
+	    			migrationType = MigrationType.asymmetric;
+	    		}else if ((int) migDim/2 == b_mInput.get().getDimension()){
+	    			migrationType = MigrationType.symmetric;
+	    		}else{
+	    			migrationType = MigrationType.asymmetric;
+	    			System.err.println("Wrong number of migration elements, assume asymmetric migration:");
+	        		System.err.println("the dimension of " + b_mInput.get().getID() + " is set to " + migDim);
+	    			b_mInput.get().setDimension(migDim);       		
+	    		}
     		}
     	}
     	if (!isBackwardsMigration){
-    		if (migDim == f_mInput.get().getDimension()){
+    		if (fromBeautiInput.get()){
     			migrationType = MigrationType.asymmetric;
-    		}else if ((int) migDim/2 == f_mInput.get().getDimension()){
-    			migrationType = MigrationType.symmetric;
-    		}else{
-    			migrationType = MigrationType.asymmetric;
-    			System.err.println("Wrong number of migration elements, assume asymmetric migration:");
         		System.err.println("the dimension of " + f_mInput.get().getID() + " is set to " + migDim);
-        		f_mInput.get().setDimension(migDim);       		
+        		f_mInput.get().setDimension(migDim);       					
+    		}else{
+    			if (migDim == f_mInput.get().getDimension()){
+    				migrationType = MigrationType.asymmetric;
+	    		}else if ((int) migDim/2 == f_mInput.get().getDimension()){
+	    			migrationType = MigrationType.symmetric;
+	    		}else{
+	    			migrationType = MigrationType.asymmetric;
+	    			System.err.println("Wrong number of migration elements, assume asymmetric migration:");
+	        		System.err.println("the dimension of " + f_mInput.get().getID() + " is set to " + migDim);
+	        		f_mInput.get().setDimension(migDim);       		
+	    		}
     		}
     	}
    	

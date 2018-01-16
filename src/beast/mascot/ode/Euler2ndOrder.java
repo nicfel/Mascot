@@ -21,6 +21,8 @@ public class Euler2ndOrder {
 	double[] sumStates;
 	boolean hasIndicators;
 	boolean hasMultiplicator;
+	
+	int iterations;
 
 	
 	public Euler2ndOrder(double[][] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
@@ -34,6 +36,8 @@ public class Euler2ndOrder {
     	sumStates = new double[states];    	
     	hasIndicators = false;
     	hasMultiplicator = false;
+    	
+    	iterations=0;
 	}
 	
 	public Euler2ndOrder(double[][] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
@@ -48,6 +52,8 @@ public class Euler2ndOrder {
     	sumStates = new double[states];
     	hasIndicators = true;
     	hasMultiplicator = false;
+    	
+    	iterations=0;
 	}
 
 	public Euler2ndOrder(int[] multiplicator, double[][] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
@@ -61,21 +67,47 @@ public class Euler2ndOrder {
         this.dimension = this.lineages*this.states;
     	sumStates = new double[states];    	
     	hasIndicators = false;
-    	hasMultiplicator = true;    	
+    	hasMultiplicator = true; 
+    	
+    	iterations=0;
 	}
 	
+	public Euler2ndOrder(int[] multiplicator, double[][] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+		this.max_step = max_step;
+		this.epsilon = epsilon;
+        this.migration_rates = migration_rates;
+        this.multiplicator = multiplicator;
+        this.indicators = indicators;
+        this.coalescent_rates = coalescent_rates;
+        this.lineages = lineages;
+        this.states = states;
+        this.dimension = this.lineages*this.states;
+    	sumStates = new double[states];    	
+    	hasIndicators = true;
+    	hasMultiplicator = true;   
+    	
+    	iterations=0;
+	}
+
 	
 	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
 		while (duration > 0){
+	    	iterations++;
 			pDot = new double[pDot.length];
 			computeDerivatives(p, pDot, pDotDot, pDotDotDot);
 			computeSecondDerivate(p, pDot, pDotDot);
 			approximateThirdDerivate(p, pDot, pDotDot, pDotDotDot);
 			duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot);
+			
+			if (iterations>10000){
+				System.err.println("too many iterations, erturn negative infinity");
+				p[p.length-1] = Double.NEGATIVE_INFINITY;
+				break;
+			}
+				
 		}			
 	}	
 	
-	int count = 1;
 	private double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
 		double max_dotdotdot = 0.0;
 		for (int i = 0; i < (p.length-1); i++){
@@ -111,16 +143,19 @@ public class Euler2ndOrder {
 		for (int i = 0; i < lineages; i ++){
 			double linSum = 0;
 			for (int j = 0; j < states; j++){
-				linSum += p[states*i+j];
+				if (p[states*i+j]>=0.0){
+					linSum += p[states*i+j];
+				}else{
+					System.err.println(Arrays.toString(p));
+					System.exit(0);
+				}
 			}
 			for (int j = 0; j < states; j++){
 				p[states*i+j] /= linSum;
 			}
 		}
 	}
-	
-
-    
+	    
 	public void computeDerivatives (double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot) {
 		
     	double migrates;
@@ -301,9 +336,6 @@ public class Euler2ndOrder {
 	    	}
     	}
     }
-
-
-
 
 }
 

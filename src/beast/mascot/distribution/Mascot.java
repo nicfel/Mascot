@@ -73,8 +73,8 @@ public class Mascot extends StructuredTreeDistribution {
 	
 	// maximum integration error tolerance
     private double maxTolerance = 1e-3;            
-    private boolean recalculateLogP;    
-            
+    private boolean recalculateLogP;
+
     @Override
     public void initAndValidate(){    	
     	treeIntervalsInput.get().calculateIntervals();       
@@ -91,9 +91,9 @@ public class Mascot extends StructuredTreeDistribution {
     	coalActiveLineages = new ArrayList<>();
     	ArrayList<Integer> emptyList = new ArrayList<>();
     	for (int i = 0; i <= intCount; i++) coalActiveLineages.add(emptyList);
-    	    	
+
     }
-        
+
     public double calculateLogP() {
     	// newly calculate tree intervals
     	treeIntervalsInput.get().calculateIntervals();
@@ -101,7 +101,7 @@ public class Mascot extends StructuredTreeDistribution {
     	// bifurcation or in case two nodes are at the same height
     	treeIntervalsInput.get().swap();    	
         // Set up ArrayLists for the indices of active lineages and the lineage state probabilities
-        activeLineages = new ArrayList<Integer>(); 
+        activeLineages = new ArrayList<Integer>();
         logP = 0;
         nrLineages = 0;
         linProbs = new double[0];// initialize the tree and rates interval counter
@@ -197,25 +197,7 @@ public class Mascot extends StructuredTreeDistribution {
 		            for (int i = 0; i<linProbs.length; i++)
 		        		linProbs[i] = linProbs_for_ode[i]; 
 	        	}else {
-	        		Euler2ndOrder euler;
-	        		if (dynamicsInput.get().hasIndicators)
-	        			euler = new Euler2ndOrder(migrationRates, indicators, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
-	        		else
-	        			euler = new Euler2ndOrder(migrationRates, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
-	        		
-		        	double[] linProbs_tmp = new double[linProbs.length+1]; 
-		        	double[] linProbs_tmpdt = new double[linProbs.length+1]; 
-		        	double[] linProbs_tmpddt = new double[linProbs.length+1]; 
-		        	double[] linProbs_tmpdddt = new double[linProbs.length+1]; 
-		        	
-		        	for (int i = 0; i < linProbs.length; i++) linProbs_tmp[i] = linProbs[i];		        	
-		        	
-		        	linProbs[linProbs.length-1] = 0;
-		        	euler.calculateValues(nextEventTime, linProbs_tmp, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt);		        	
-	        		
-		            for (int i = 0; i < linProbs.length; i++) linProbs[i] = linProbs_tmp[i]; 
-		            
-		            logP += linProbs_tmp[linProbs_tmp.length-1];
+	        		logP += doEuler(nextEventTime);
 	        	}        	
         	}
        	
@@ -255,7 +237,32 @@ public class Mascot extends StructuredTreeDistribution {
 //        System.out.print("\n");
         first = false;
 		return logP;  	
-    }   
+    }
+
+	private double doEuler(double nextEventTime) {
+		Euler2ndOrder euler;
+		if (dynamicsInput.get().hasIndicators)
+			euler = new Euler2ndOrder(migrationRates, indicators, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
+		else
+			euler = new Euler2ndOrder(migrationRates, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
+
+		double[] linProbs_tmp = new double[linProbs.length+1];
+		double[] linProbs_tmpdt = new double[linProbs.length+1];
+		double[] linProbs_tmpddt = new double[linProbs.length+1];
+		double[] linProbs_tmpdddt = new double[linProbs.length+1];
+
+		//for (int i = 0; i < linProbs.length; i++) linProbs_tmp[i] = linProbs[i];
+		System.arraycopy(linProbs,0,linProbs_tmp,0,linProbs.length);
+
+		linProbs[linProbs.length-1] = 0;
+		euler.calculateValues(nextEventTime, linProbs_tmp, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt);
+
+		//for (int i = 0; i < linProbs.length; i++) linProbs[i] = linProbs_tmp[i];
+		System.arraycopy(linProbs_tmp,0,linProbs,0,linProbs.length);
+
+		return linProbs_tmp[linProbs_tmp.length-1];
+	}
+
     
 //    private void integrate(double duration){
 //    }

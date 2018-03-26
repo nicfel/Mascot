@@ -1,5 +1,6 @@
 package beast.mascot.distribution;
 
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,7 +15,6 @@ import beast.core.Citation;
 import beast.core.Description;
 import beast.core.Input;
 import beast.evolution.tree.Node;
-import beast.evolution.tree.TraitSet;
 import beast.evolution.tree.coalescent.IntervalType;
 import beast.mascot.dynamics.Dynamics;
 import beast.mascot.ode.Euler2ndOrder;
@@ -92,7 +92,19 @@ public class Mascot extends StructuredTreeDistribution {
     	ArrayList<Integer> emptyList = new ArrayList<>();
     	for (int i = 0; i <= intCount; i++) coalActiveLineages.add(emptyList);
 
+    	int MAX_SIZE = intCount * states;
+    	linProbs_for_ode = new double[MAX_SIZE];
+    	linProbs_tmp = new double[MAX_SIZE];
+    	linProbs_tmpdt = new double[MAX_SIZE];
+    	linProbs_tmpddt = new double[MAX_SIZE];
+    	linProbs_tmpdddt = new double[MAX_SIZE];
+    	
     }
+    double [] linProbs_for_ode;
+    double [] linProbs_tmp;
+    double [] linProbs_tmpdt;
+    double [] linProbs_tmpddt;
+    double [] linProbs_tmpdddt;
 
     public double calculateLogP() {
     	// newly calculate tree intervals
@@ -184,7 +196,7 @@ public class Mascot extends StructuredTreeDistribution {
                 	return calculateLogP();
                 }
                 if(stepSizeInput.get()!=null){
-		        	double[] linProbs_for_ode = new double[linProbs.length]; 
+		        	//double[] linProbs_for_ode = new double[linProbs.length]; 
 	                FirstOrderIntegrator integrator = new ClassicalRungeKuttaIntegrator(stepSizeInput.get());	                
 //	                integrator.setMaxEvaluations((int) 1e5);  // set the maximal number of evaluations              
 	                FirstOrderDifferentialEquations ode = new MascotODE(migrationRates, coalescentRates, nrLineages , coalescentRates.length);                
@@ -194,8 +206,9 @@ public class Mascot extends StructuredTreeDistribution {
 	                	System.out.println(e);
 	                	recalculateLogP = true;    				
 	                }                
-		            for (int i = 0; i<linProbs.length; i++)
-		        		linProbs[i] = linProbs_for_ode[i]; 
+		            //for (int i = 0; i<linProbs.length; i++)
+		        	//	linProbs[i] = linProbs_for_ode[i];
+		            System.arraycopy(linProbs_for_ode, 0, linProbs, 0, linProbs.length);
 	        	}else {
 	        		logP += doEuler(nextEventTime);
 	        	}        	
@@ -246,24 +259,25 @@ public class Mascot extends StructuredTreeDistribution {
 		else
 			euler = new Euler2ndOrder(migrationRates, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
 
-		double[] linProbs_tmp = new double[linProbs.length+1];
-		double[] linProbs_tmpdt = new double[linProbs.length+1];
-		double[] linProbs_tmpddt = new double[linProbs.length+1];
-		double[] linProbs_tmpdddt = new double[linProbs.length+1];
+//		double[] linProbs_tmp = new double[linProbs.length+1];
+//		double[] linProbs_tmpdt = new double[linProbs.length+1];
+//		double[] linProbs_tmpddt = new double[linProbs.length+1];
+//		double[] linProbs_tmpdddt = new double[linProbs.length+1];
 
 		//for (int i = 0; i < linProbs.length; i++) linProbs_tmp[i] = linProbs[i];
 		System.arraycopy(linProbs,0,linProbs_tmp,0,linProbs.length);
+		linProbs_tmp[linProbs.length] = 0;
 
 		linProbs[linProbs.length-1] = 0;
-		euler.calculateValues(nextEventTime, linProbs_tmp, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt);
+		euler.calculateValues(nextEventTime, linProbs_tmp, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt, linProbs.length + 1);
 
 		//for (int i = 0; i < linProbs.length; i++) linProbs[i] = linProbs_tmp[i];
 		System.arraycopy(linProbs_tmp,0,linProbs,0,linProbs.length);
 
-		return linProbs_tmp[linProbs_tmp.length-1];
+		return linProbs_tmp[linProbs.length];
 	}
 
-    
+	
 //    private void integrate(double duration){
 //    }
 //

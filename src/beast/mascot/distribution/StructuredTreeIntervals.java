@@ -3,6 +3,7 @@ package beast.mascot.distribution;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -134,6 +135,14 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
     @SuppressWarnings("unchecked")
 	@Override
     protected void restore() {
+        intervalsKnown = false;
+        Arrays.fill(intervalIsDirty, true);
+        lastIntervalDirty = true;
+        super.store();
+        if (true)
+        	return;
+
+    	
         double[] tmp = storedIntervals;
         storedIntervals = intervals;
         intervals = tmp;
@@ -198,7 +207,14 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
 
     @Override
     protected void store() {
-    	// stores the lineage Counts per intervall and the intervalls in the arrays stored...
+        intervalsKnown = false;
+        Arrays.fill(intervalIsDirty, true);
+        lastIntervalDirty = true;
+        super.restore();
+        if (true)
+        	return;
+
+        // stores the lineage Counts per intervall and the intervalls in the arrays stored...
         System.arraycopy(lineageCounts, 0, storedLineageCounts, 0, lineageCounts.length);
         System.arraycopy(intervals, 0, storedIntervals, 0, intervals.length);
         storedIntervalCount = intervalCount;

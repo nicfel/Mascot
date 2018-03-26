@@ -90,27 +90,37 @@ public class Euler2ndOrder {
 	}
 
 	
-	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
+	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
+		clearArray(pDotDot, length);
+		clearArray(pDotDotDot, length);
+
 		while (duration > 0){
 	    	iterations++;
-			pDot = new double[pDot.length];
-			computeDerivatives(p, pDot, pDotDot, pDotDotDot);
-			computeSecondDerivate(p, pDot, pDotDot);
-			approximateThirdDerivate(p, pDot, pDotDot, pDotDotDot);
-			duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot);
+			//pDot = new double[length];
+			clearArray(pDot, length);
+			computeDerivatives(p, pDot, pDotDot, pDotDotDot, length);
+			computeSecondDerivate(p, pDot, pDotDot, length);
+			approximateThirdDerivate(p, pDot, pDotDot, pDotDotDot, length);
+			duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot, length);
 			
 			if (iterations>10000){
 				System.err.println("too many iterations, erturn negative infinity");
-				p[p.length-1] = Double.NEGATIVE_INFINITY;
+				p[length-1] = Double.NEGATIVE_INFINITY;
 				break;
 			}
 				
 		}			
 	}	
 	
-	private double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
+	private void clearArray(double[] v, int n) {
+		for (int i = 0; i < n; i++) {
+			v[i] = 0.0;
+		}		
+	}
+
+	private double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
 		double max_dotdotdot = 0.0;
-		for (int i = 0; i < (p.length-1); i++){
+		for (int i = 0; i < (length-1); i++){
 			if (FastMath.abs(pDotDotDot[i]) > max_dotdotdot)
 				max_dotdotdot = FastMath.abs(pDotDotDot[i]);
 		}
@@ -118,7 +128,7 @@ public class Euler2ndOrder {
 		double timeStep = FastMath.min(FastMath.pow((epsilon*6/max_dotdotdot), 1.0/3), FastMath.min(duration, max_step));
 
 		double timeStepSquare = timeStep*timeStep*0.5;
-		for (int i = 0; i < (p.length-1); i++){
+		for (int i = 0; i < (length-1); i++){
 			double new_val = p[i] + pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
 			double diff = FastMath.abs(new_val - p[i]);
 			while (new_val > 1 || new_val < 0 || diff>0.2){
@@ -128,15 +138,15 @@ public class Euler2ndOrder {
 				diff = FastMath.abs(new_val - p[i]);
 			}			
 		}
-		doUpdating(timeStep, timeStepSquare, p, pDot, pDotDot);
+		doUpdating(timeStep, timeStepSquare, p, pDot, pDotDot, length);
 		duration -= timeStep;
 		return duration;
 		
 		
 	}
 	
-	private void doUpdating(double timeStep, double timeStepSquare, double[] p, double[] pDot, double[] pDotDot){
-		for (int i = 0; i < p.length; i++)
+	private void doUpdating(double timeStep, double timeStepSquare, double[] p, double[] pDot, double[] pDotDot, int length){
+		for (int i = 0; i < length; i++)
 			p[i] += pDot[i]*timeStep + pDotDot[i]*timeStepSquare;	
 		
 		// normalize to ensure stability
@@ -156,7 +166,7 @@ public class Euler2ndOrder {
 		}
 	}
 	    
-	public void computeDerivatives (double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot) {
+	public void computeDerivatives (double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length) {
 		
     	double migrates;
     	// Compute the sum of line state probabilities for each state
@@ -181,9 +191,9 @@ public class Euler2ndOrder {
     			sumCoal += p[currlin+j]*tCR[j];
     		}
          	if (hasMultiplicator){
-         		pDot[pDot.length-1] -= multiplicator[i]*sumCoal;
+         		pDot[length-1] -= multiplicator[i]*sumCoal;
          	}else{
-         		pDot[pDot.length-1] -= sumCoal;        		
+         		pDot[length-1] -= sumCoal;        		
          	}
     		for (int j = 0; j < states; j++){    			
     			// Calculate the Derivate of p:
@@ -226,11 +236,11 @@ public class Euler2ndOrder {
         	}// lineages       		
     	}
     	
-		pDot[pDot.length-1]  /= 2;
+		pDot[length-1]  /= 2;
 
     }
         
-    public void computeSecondDerivate (double[] p, double[] pDot, double[] pDotDot){  
+    public void computeSecondDerivate (double[] p, double[] pDot, double[] pDotDot, int length){  
     	double[] sumDotStates = new double[states];
     	if (hasMultiplicator){
 	    	for (int i = 0; i<lineages; i++)
@@ -253,9 +263,9 @@ public class Euler2ndOrder {
     			pDotDot[currlin+j] *= pDot[currlin+j];
     		
     		if (hasMultiplicator){
-    			pDotDot[pDot.length-1] -= multiplicator[i]*pCoalRate;
+    			pDotDot[length-1] -= multiplicator[i]*pCoalRate;
     		}else{
-    			pDotDot[pDot.length-1] -= pCoalRate;    			
+    			pDotDot[length-1] -= pCoalRate;    			
     		}    		
 
     		for (int j = 0; j<states; j++){
@@ -296,10 +306,10 @@ public class Euler2ndOrder {
         	}// lineages    
 			
 		}
-		pDotDot[pDot.length-1] /= 2;
+		pDotDot[length-1] /= 2;
     }
     
-    public void approximateThirdDerivate (double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
+    public void approximateThirdDerivate (double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
     	
     	
     	double migrates;

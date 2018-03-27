@@ -101,7 +101,7 @@ public class Euler2ndOrder {
 			computeDerivatives(p, pDot, pDotDot, pDotDotDot, length);
 			computeSecondDerivate(p, pDot, pDotDot, length);
 			approximateThirdDerivate(p, pDot, pDotDot, pDotDotDot, length);
-			duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot, length);
+			duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot, length - 1);
 			
 			if (iterations>10000){
 				System.err.println("too many iterations, erturn negative infinity");
@@ -119,16 +119,15 @@ public class Euler2ndOrder {
 	}
 
 	private double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
-		double max_dotdotdot = 0.0;
-		for (int i = 0; i < (length-1); i++){
-			if (FastMath.abs(pDotDotDot[i]) > max_dotdotdot)
-				max_dotdotdot = FastMath.abs(pDotDotDot[i]);
-		}
-				
-		double timeStep = FastMath.min(FastMath.pow((epsilon*6/max_dotdotdot), 1.0/3), FastMath.min(duration, max_step));
+		final double max_dotdotdot = maxAbs(pDotDotDot, length);	
+		
+		//double timeStep = FastMath.min(FastMath.pow(epsilon*6/max_dotdotdot, C), FastMath.min(duration, max_step));
+
+		double timeStep = FastMath.min(FastMath.cbrt(epsilon*6/max_dotdotdot), FastMath.min(duration, max_step));
 
 		double timeStepSquare = timeStep*timeStep*0.5;
-		for (int i = 0; i < (length-1); i++){
+		
+		for (int i = 0; i < length; i++){
 			double new_val = p[i] + pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
 			double diff = FastMath.abs(new_val - p[i]);
 			while (new_val > 1 || new_val < 0 || diff>0.2){
@@ -138,47 +137,74 @@ public class Euler2ndOrder {
 				diff = FastMath.abs(new_val - p[i]);
 			}			
 		}
-		doUpdating(timeStep, timeStepSquare, p, pDot, pDotDot, length);
+		doUpdating(timeStep, timeStepSquare, p, pDot, pDotDot, length + 1);
 		duration -= timeStep;
 		return duration;
-		
-		
 	}
 	
-	private void doUpdating(double timeStep, double timeStepSquare, double[] p, double[] pDot, double[] pDotDot, int length){
-		for (int i = 0; i < length; i++)
-			p[i] += pDot[i]*timeStep + pDotDot[i]*timeStepSquare;	
+	
+	private double maxAbs(double[] pDotDotDot, int length) {
+		double max_dotdotdot = 0.0;
+		for (int i = 0; i < length; i++) {
+			max_dotdotdot = FastMath.max(max_dotdotdot, FastMath.abs(pDotDotDot[i]));
+		}
+		return max_dotdotdot;
+	}
+
+
+	static final double C = 1.0/3.0;
+	
+	private void doUpdating(final double timeStep, final double timeStepSquare, double[] p, double[] pDot, double[] pDotDot, int length){
+		updateP2(timeStep, timeStepSquare, p, length, pDot, pDotDot);
 		
 		// normalize to ensure stability
 		for (int i = 0; i < lineages; i ++){
-			double linSum = 0;
-			for (int j = 0; j < states; j++){
-				if (p[states*i+j]>=0.0){
-					linSum += p[states*i+j];
-				}else{
-					System.err.println(Arrays.toString(p));
-					System.exit(0);
-				}
-			}
-			for (int j = 0; j < states; j++){
-				p[states*i+j] /= linSum;
-			}
+			normalise(i, p);
 		}
 	}
 	    
+	private void normalise(final int i, final double[] p) {
+		final int k = states*i;
+		double linSum = 0;
+		
+		for (int j = 0; j < states; j++){
+			if (p[k+j]>=0.0){
+				linSum += p[k+j];
+			}else{
+				System.err.println(Arrays.toString(p));
+				System.exit(0);
+			}
+		}
+		for (int j = 0; j < states; j++){
+			p[k+j] /= linSum;
+		}
+	}
+
+	private void updateP2(final double timeStep, final double timeStepSquare, final double[] p, final int length, final double[] pDot,
+			final double[] pDotDot) {
+		for (int i = 0; i < length; i++)
+			p[i] += pDot[i]*timeStep + pDotDot[i]*timeStepSquare;	
+	}
+
 	public void computeDerivatives (double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length) {
 		
     	double migrates;
     	// Compute the sum of line state probabilities for each state
      	sumStates = new double[states];
      	if (hasMultiplicator){
-	    	for (int i = 0; i<lineages; i++)
-	    		for (int j = 0; j<states; j++)
-					sumStates[j] += multiplicator[i]*p[states*i+j]; 
+	    	for (int i = 0; i<lineages; i++) {
+	    		int k = states * i;
+	    		for (int j = 0; j<states; j++) {
+					sumStates[j] += multiplicator[i]*p[k+j]; 
+	    		}
+	    	}
      	}else{
-	    	for (int i = 0; i<lineages; i++)
-	    		for (int j = 0; j<states; j++)
-					sumStates[j] += p[states*i+j];      		
+	    	for (int i = 0; i<lineages; i++) {
+	    		int k = states * i;
+	    		for (int j = 0; j<states; j++) {
+					sumStates[j] += p[k+j];
+	    		}
+	    	}
      	}
     		
     	// Caluclate the change in the lineage state probabilities for every lineage in every state

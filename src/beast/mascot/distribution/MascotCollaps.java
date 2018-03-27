@@ -162,7 +162,7 @@ public class MascotCollaps extends StructuredTreeDistribution {
 			        	for (int i = 0; i < linProbs.length; i++) linProbs_tmp[i] = linProbs[i];		        	
 			        	
 			        	linProbs[linProbs.length-1] = 0;
-			        	euler.calculateValues(nextEventTime, linProbs_tmp, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt);		        	
+			        	euler.calculateValues(nextEventTime, linProbs_tmp, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt, linProbs.length + 1);		        	
 		        		
 			            for (int i = 0; i < linProbs.length; i++) linProbs[i] = linProbs_tmp[i]; 
 			            

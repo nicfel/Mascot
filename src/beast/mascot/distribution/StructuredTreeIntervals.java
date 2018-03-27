@@ -3,6 +3,7 @@ package beast.mascot.distribution;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -134,41 +135,49 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
     @SuppressWarnings("unchecked")
 	@Override
     protected void restore() {
-//        double[] tmp = storedIntervals;
-//        storedIntervals = intervals;
-//        intervals = tmp;
-//
-//        int[] tmp2 = storedLineageCounts;
-//        storedLineageCounts = lineageCounts;
-//        lineageCounts = tmp2;
-//
-//        int tmp3 = storedIntervalCount;
-//        storedIntervalCount = intervalCount;
-//        intervalCount = tmp3;
-//        
-//    	lineagesAdded = new List[intervalCount];
-//    	for (int i = 0; i < intervalCount; i++) {
-//    		if (storedLineagesAdded[i] != null) {
-//    			List<Node> nodeList = new ArrayList<>();
-//    			int nodeCount = storedLineagesAdded[i].size();
-//    			for (int n = 0; n < nodeCount; n++) {
-//    				nodeList.add(storedLineagesAdded[i].get(n).copy());
-//    			}
-//    			lineagesAdded[i] = nodeList;
-//    		}
-//    	}
-//    	
-//    	lineagesRemoved = new List[intervals.length];
-//    	for (int i = 0; i < intervalCount; i++) {
-//    		if (storedLineagesRemoved[i] != null) {
-//	    		List<Node> nodeList = new ArrayList<>();
-//	    		int nodeCount = storedLineagesRemoved[i].size();
-//	    		for (int n = 0; n < nodeCount; n++) {
-//	    			nodeList.add(storedLineagesRemoved[i].get(n).copy());
-//	    		}
-//	    		lineagesRemoved[i] = nodeList;
-//    		}
-//    	}
+        intervalsKnown = false;
+        Arrays.fill(intervalIsDirty, true);
+        lastIntervalDirty = true;
+        super.store();
+        if (true)
+        	return;
+
+    	
+        double[] tmp = storedIntervals;
+        storedIntervals = intervals;
+        intervals = tmp;
+
+        int[] tmp2 = storedLineageCounts;
+        storedLineageCounts = lineageCounts;
+        lineageCounts = tmp2;
+
+        int tmp3 = storedIntervalCount;
+        storedIntervalCount = intervalCount;
+        intervalCount = tmp3;
+        
+    	lineagesAdded = new List[intervalCount];
+    	for (int i = 0; i < intervalCount; i++) {
+    		if (storedLineagesAdded[i] != null) {
+    			List<Node> nodeList = new ArrayList<>();
+    			int nodeCount = storedLineagesAdded[i].size();
+    			for (int n = 0; n < nodeCount; n++) {
+    				nodeList.add(storedLineagesAdded[i].get(n).copy());
+    			}
+    			lineagesAdded[i] = nodeList;
+    		}
+    	}
+    	
+    	lineagesRemoved = new List[intervals.length];
+    	for (int i = 0; i < intervalCount; i++) {
+    		if (storedLineagesRemoved[i] != null) {
+	    		List<Node> nodeList = new ArrayList<>();
+	    		int nodeCount = storedLineagesRemoved[i].size();
+	    		for (int n = 0; n < nodeCount; n++) {
+	    			nodeList.add(storedLineagesRemoved[i].get(n).copy());
+	    		}
+	    		lineagesRemoved[i] = nodeList;
+    		}
+    	}
 
 
         
@@ -176,7 +185,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
 //        lineagesAdded = storedLineagesAdded;        
 //        lineagesRemoved = storedLineagesRemoved;
         
-//        setIntervalsClean();
+        setIntervalsClean();
         super.restore();
         
     }
@@ -198,16 +207,23 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
 
     @Override
     protected void store() {
-//    	// stores the lineage Counts per intervall and the intervalls in the arrays stored...
-//        System.arraycopy(lineageCounts, 0, storedLineageCounts, 0, lineageCounts.length);
-//        System.arraycopy(intervals, 0, storedIntervals, 0, intervals.length);
-//        storedIntervalCount = intervalCount;
-//        
-//        // Create new deep copies for storedLineagsAdded/Removed
-//        storedLineagesAdded = deepCopyLineagesAdded();
-//        storedLineagesRemoved = deepCopyLineagesRemoved();
-//       
-//        setIntervalsClean();
+        intervalsKnown = false;
+        Arrays.fill(intervalIsDirty, true);
+        lastIntervalDirty = true;
+        super.restore();
+        if (true)
+        	return;
+
+        // stores the lineage Counts per intervall and the intervalls in the arrays stored...
+        System.arraycopy(lineageCounts, 0, storedLineageCounts, 0, lineageCounts.length);
+        System.arraycopy(intervals, 0, storedIntervals, 0, intervals.length);
+        storedIntervalCount = intervalCount;
+        
+        // Create new deep copies for storedLineagsAdded/Removed
+        storedLineagesAdded = deepCopyLineagesAdded();
+        storedLineagesRemoved = deepCopyLineagesRemoved();
+       
+        setIntervalsClean();
         super.store();
     }    
     

@@ -169,7 +169,7 @@ public class GLM extends Dynamics implements Loggable {
 		for (int j = 0; j < dimensionInput.get(); j++){
 			for (int i = 0; i < intTimes.length; i++){
 		    	double[] Ne = NeGLMInput.get().getRates(i);
-				out.print(1/Ne[j] + "\t");
+				out.print(Ne[j] + "\t");
 			}			
 		}
 	}

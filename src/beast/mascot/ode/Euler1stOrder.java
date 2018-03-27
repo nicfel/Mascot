@@ -5,7 +5,7 @@ import java.util.Arrays;
 
 import org.apache.commons.math3.util.FastMath;
 
-public class Euler2ndOrder {
+public class Euler1stOrder {
 
 	double epsilon;
 	double max_step;
@@ -25,7 +25,7 @@ public class Euler2ndOrder {
 	int iterations;
 
 	
-	public Euler2ndOrder(double[][] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+	public Euler1stOrder(double[][] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
@@ -38,7 +38,7 @@ public class Euler2ndOrder {
     	hasMultiplicator = false;
 	}
 	
-	public Euler2ndOrder(double[][] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+	public Euler1stOrder(double[][] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
@@ -52,7 +52,7 @@ public class Euler2ndOrder {
     	hasMultiplicator = false;
 	}
 
-	public Euler2ndOrder(int[] multiplicator, double[][] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+	public Euler1stOrder(int[] multiplicator, double[][] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
@@ -66,7 +66,7 @@ public class Euler2ndOrder {
     	hasMultiplicator = true; 
 	}
 	
-	public Euler2ndOrder(int[] multiplicator, double[][] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+	public Euler1stOrder(int[] multiplicator, double[][] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
@@ -88,32 +88,30 @@ public class Euler2ndOrder {
 			pDot = new double[pDot.length];
 			computeDerivatives(p, pDot, pDotDot, pDotDotDot);
 			computeSecondDerivate(p, pDot, pDotDot);
-			approximateThirdDerivate(p, pDot, pDotDot, pDotDotDot);
-			duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot);
+//			approximateThirdDerivate(p, pDot, pDotDot, pDotDotDot);
+			duration = updateP(duration, p,  pDot, pDotDot);
 			
 				
 		}			
 	}	
 	
-	private double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
+	private double updateP (double duration, double[] p, double[] pDot, double[] pDotDot){
 		double max_dotdotdot = 0.0;
 		for (int i = 0; i < (p.length-1); i++){
-			if (FastMath.abs(pDotDotDot[i]) > max_dotdotdot)
-				max_dotdotdot = FastMath.abs(pDotDotDot[i]);
+			if (FastMath.abs(pDotDot[i]) > max_dotdotdot)
+				max_dotdotdot = FastMath.abs(pDotDot[i]);
 		}
 				
 		double timeStep = FastMath.min(FastMath.pow((epsilon*6/max_dotdotdot), 1.0/3), FastMath.min(duration, max_step));
 
 		iterations=0;
-		double timeStepSquare = timeStep*timeStep*0.5;
 		for (int i = 0; i < (p.length-1); i++){
-			double new_val = p[i] + pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
+			double new_val = p[i] + pDot[i]*timeStep;
 			double diff = FastMath.abs(new_val - p[i]);
 			while (new_val > 1 || new_val < 0 || diff>0.2){
 				iterations++;
 				timeStep *= 0.9;
-				timeStepSquare = timeStep*timeStep*0.5;
-				new_val = p[i] + pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
+				new_val = p[i] + pDot[i]*timeStep;
 				diff = FastMath.abs(new_val - p[i]);
 				if (iterations>100){
 					System.err.println("too many iterations, return negative infinity");
@@ -122,16 +120,16 @@ public class Euler2ndOrder {
 				}
 			}			
 		}
-		doUpdating(timeStep, timeStepSquare, p, pDot, pDotDot);
+		doUpdating(timeStep, p, pDot);
 		duration -= timeStep;
 		return duration;
 		
 		
 	}
 	
-	private void doUpdating(double timeStep, double timeStepSquare, double[] p, double[] pDot, double[] pDotDot){
+	private void doUpdating(double timeStep, double[] p, double[] pDot){
 		for (int i = 0; i < p.length; i++)
-			p[i] += pDot[i]*timeStep + pDotDot[i]*timeStepSquare;	
+			p[i] += pDot[i]*timeStep;	
 		// normalize to ensure stability
 		for (int i = 0; i < lineages; i ++){
 			double linSum = 0;

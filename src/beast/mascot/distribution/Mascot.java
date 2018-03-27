@@ -75,10 +75,6 @@ public class Mascot extends StructuredTreeDistribution {
     
     
     //Arrays for integration
-	double[] linProbs_tmp; 
-	double[] linProbs_tmpdt; 
-	double[] linProbs_tmpddt; 
-	double[] linProbs_tmpdddt;    	
 
 	
 	// maximum integration error tolerance
@@ -110,14 +106,17 @@ public class Mascot extends StructuredTreeDistribution {
         migrationRates = dynamicsInput.get().getBackwardsMigration(ratesInterval);
 		indicators = dynamicsInput.get().getIndicators(ratesInterval); 
 		
-		
+		double[] linProbs_tmpdt = new double[nrSamples*states+1]; ; 
+		double[] linProbs_tmpddt = new double[nrSamples*states+1]; ; 
+		double[] linProbs_tmpdddt = new double[nrSamples*states+1]; ;    	
+
     	if (useMemVersion.get()){
 	    	// initialize arrays for integration
 	    	linProbs = new double[nrSamples*states+1]; 
-	    	linProbs_tmp = new double[nrSamples*states+1]; 
-	    	linProbs_tmpdt = new double[nrSamples*states+1]; 
-	    	linProbs_tmpddt = new double[nrSamples*states+1]; 
-	    	linProbs_tmpdddt = new double[nrSamples*states+1];    
+//	    	linProbs_tmp = new double[nrSamples*states+1]; 
+//	    	linProbs_tmpdt = new double[nrSamples*states+1]; 
+//	    	linProbs_tmpddt = new double[nrSamples*states+1]; 
+//	    	linProbs_tmpdddt = new double[nrSamples*states+1];    
     	}
 
         
@@ -208,19 +207,7 @@ public class Mascot extends StructuredTreeDistribution {
 		        		linProbs[i] = linProbs_for_ode[i]; 
 	        	}else {
 	        		if (useMemVersion.get()){
-		        		Euler2ndOrderMem euler;
-		        		
-		        		if (dynamicsInput.get().hasIndicators)
-		        			euler = new Euler2ndOrderMem(migrationRates, indicators, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
-		        		else
-		        			euler = new Euler2ndOrderMem(migrationRates, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
-		        		
-	        	
-			        	linProbs[nrLineages*coalescentRates.length] = 0;
-			        	euler.calculateValues(nextEventTime, linProbs, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt);		        	
-			        	
-			            logP += linProbs[nrLineages*coalescentRates.length];
-	        			
+	        			logP += doEuler(nextEventTime, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt);	        			
 	        		}else{
 		        		Euler2ndOrder euler;
 		        		
@@ -230,9 +217,9 @@ public class Mascot extends StructuredTreeDistribution {
 		        			euler = new Euler2ndOrder(migrationRates, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
 		        		
 			        	double[] linProbs_tmp = new double[linProbs.length+1]; 
-			        	double[] linProbs_tmpdt = new double[linProbs.length+1]; 
-			        	double[] linProbs_tmpddt = new double[linProbs.length+1]; 
-			        	double[] linProbs_tmpdddt = new double[linProbs.length+1]; 
+			        	linProbs_tmpdt = new double[linProbs.length+1]; 
+			        	linProbs_tmpddt = new double[linProbs.length+1]; 
+			        	linProbs_tmpdddt = new double[linProbs.length+1]; 
 			        	
 			        	for (int i = 0; i < linProbs.length; i++) linProbs_tmp[i] = linProbs[i];		        	
 			        	
@@ -294,6 +281,21 @@ public class Mascot extends StructuredTreeDistribution {
         first = false;
 		return logP;  	
     }       
+    
+    private double doEuler(double nextEventTime, double[] linProbs_tmpdt, double[] linProbs_tmpddt, double[] linProbs_tmpdddt){
+		Euler2ndOrderMem euler;
+		
+		if (dynamicsInput.get().hasIndicators)
+			euler = new Euler2ndOrderMem(migrationRates, indicators, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
+		else
+			euler = new Euler2ndOrderMem(migrationRates, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
+
+    	linProbs[nrLineages*coalescentRates.length] = 0;
+    	euler.calculateValues(nextEventTime, linProbs, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt);		        	
+    	
+        return linProbs[nrLineages*coalescentRates.length];
+
+    }
     
     private double normalizeLineages(){
     	if (linProbs==null)

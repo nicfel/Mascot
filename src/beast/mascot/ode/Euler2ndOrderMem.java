@@ -114,24 +114,21 @@ public class Euler2ndOrderMem {
 			max_dotdotdot = FastMath.max(max_dotdotdot, FastMath.abs(pDotDotDot[i]));
 		}
 		
-		double[] tmp_p = new double[dimension];
 				
 		double timeStep = FastMath.min(FastMath.pow((epsilon*6/max_dotdotdot), 1.0/3), FastMath.min(duration, max_step));
 
 		iterations=0;
 		double timeStepSquare = timeStep*timeStep*0.5;
 		
-		boolean repeat = false;
+		double new_val;
 
 		for (int i = 0; i < dimension; i++){
-			tmp_p[i] = p[i] + pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
-//				double diff = FastMath.abs(new_val - p[i]);
-			while (tmp_p[i] > 1 || tmp_p[i] < 0){
-				repeat = true;
+			new_val = p[i] + pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
+			while (new_val > 1 || new_val < 0){
 				iterations++;
 				timeStep *= 0.5;
 				timeStepSquare = timeStep*timeStep*0.5;
-				tmp_p[i] = p[i] + pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
+				new_val = p[i] + pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
 				if (iterations>100){
 					System.err.println("too many iterations, return negative infinity");
 					p[dimension] = Double.NEGATIVE_INFINITY;
@@ -139,13 +136,9 @@ public class Euler2ndOrderMem {
 				}
 			}			
 		}
-		if (repeat){
-			for (int i = 0; i < dimension; i++){
-				p[i] += pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
-			}	
-		}else{
-			System.arraycopy( tmp_p, 0, p , 0, tmp_p.length );
-		}
+		for (int i = 0; i < dimension; i++){
+			p[i] += pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
+		}	
 		p[dimension] = p[dimension] + pDot[dimension]*timeStep + pDotDot[dimension]*timeStepSquare;
 		
 		duration -= timeStep;

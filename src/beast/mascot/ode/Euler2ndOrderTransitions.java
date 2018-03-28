@@ -13,8 +13,8 @@ public class Euler2ndOrderTransitions  {
 	double max_step;
 	
 	double[] migration_rates;
-	int n;
-	int[][] indicators;
+	int n, n2;
+	int[] indicators;
 	double[] coalescent_rates;
 	double probs;
     int lineages;
@@ -38,12 +38,13 @@ public class Euler2ndOrderTransitions  {
     	hasIndicators = false;
 	}
 	
-	public Euler2ndOrderTransitions(double[] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+	public Euler2ndOrderTransitions(double[] migration_rates, int[] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
         n = (int)(Math.sqrt(migration_rates.length) + 0.5);
         this.indicators = indicators;
+        n2 = indicators.length / 2;
         this.coalescent_rates = coalescent_rates;
         this.lineages = lineages;
         this.states = states;
@@ -329,9 +330,9 @@ public class Euler2ndOrderTransitions  {
     		
     		
     		for (int j = 0; j < indicators.length; j++){
-    			migrates = p[currlin+indicators[j][0]]*migration_rates[indicators[j][0] * n + indicators[j][1]];
-    			pDot[currlin+indicators[j][1]] += migrates;
-    			pDot[currlin+indicators[j][0]] -= migrates;  			
+    			migrates = p[currlin+indicators[j*n2+0]]*migration_rates[indicators[j*n2+0] * n + indicators[j*n2+1]];
+    			pDot[currlin+indicators[j*n2+1]] += migrates;
+    			pDot[currlin+indicators[j*n2+0]] -= migrates;  			
     		}
     		
     		for (int j = 0; j < states; j++){    			
@@ -361,10 +362,10 @@ public class Euler2ndOrderTransitions  {
 	    	for (int j = 0; j < states; j++){ // initial value
 	    		for (int k = 0; k < indicators.length; k++){
 	    			migrates 
-	    				= p[lineages*states + i*states*states + j*states+indicators[k][0]]
-	    						*migration_rates[indicators[k][0] * n + indicators[j][1]];
-	    			pDot[lineages*states + i*states*states + j*states+indicators[k][1]] += migrates;
-	    			pDot[lineages*states + i*states*states + j*states+indicators[k][0]] -= migrates;  			
+	    				= p[lineages*states + i*states*states + j*states+indicators[k*n2+0]]
+	    						*migration_rates[indicators[k*n2+0] * n + indicators[j*n2+1]];
+	    			pDot[lineages*states + i*states*states + j*states+indicators[k*n2+1]] += migrates;
+	    			pDot[lineages*states + i*states*states + j*states+indicators[k*n2+0]] -= migrates;  			
 	    		}
 	    	}// j
     	}
@@ -390,9 +391,9 @@ public class Euler2ndOrderTransitions  {
     		
     		// Calculate the probability of a lineage changing states
     		for (int j = 0; j < indicators.length; j++){
-    			migrates = pDot[currlin+indicators[j][0]]*migration_rates[indicators[j][0] * n + indicators[j][1]];
-    			pDotDot[currlin+indicators[j][1]] += migrates;
-    			pDotDot[currlin+indicators[j][0]] -= migrates;  			
+    			migrates = pDot[currlin+indicators[j*n2+0]]*migration_rates[indicators[j*n2+0] * n + indicators[j*n2+1]];
+    			pDotDot[currlin+indicators[j*n2+1]] += migrates;
+    			pDotDot[currlin+indicators[j*n2+0]] -= migrates;  			
     		}
 
     		    		
@@ -431,16 +432,16 @@ public class Euler2ndOrderTransitions  {
     	for (int i = 0; i < lineages; i++){
 	    	for (int j = 0; j < states; j++){ // initial value
 	    		for (int k = 0; k < indicators.length; k++){
-	    			double psource = pDot[lineages*states + i*states*states + j*states+indicators[k][0]];
+	    			double psource = pDot[lineages*states + i*states*states + j*states+indicators[k*n2+0]];
 	    			if (psource>0.0){
-		    			migrates = psource*migration_rates[indicators[k][0] * n + indicators[k][1]];
+		    			migrates = psource*migration_rates[indicators[k*n2+0] * n + indicators[k*n2+1]];
 //		    			if ((lineages*states + i*states*states + j*states+indicators[k][0])==5652)
 //		    				System.out.println("mig + " + migrates + " " + pDotDot[lineages*states + i*states*states + j*states+indicators[k][0]] + " " + pDot[lineages*states + i*states*states + j*states+indicators[k][0]]);
 //		    			if ((lineages*states + i*states*states + j*states+indicators[k][1])==5652)
 //		    				System.out.println("mig - " + migrates + " " + pDotDot[lineages*states + i*states*states + j*states+indicators[k][1]] + " " + pDot[lineages*states + i*states*states + j*states+indicators[k][0]]);
 		    				
-		    			pDotDot[lineages*states + i*states*states + j*states+indicators[k][1]] += migrates;
-		    			pDotDot[lineages*states + i*states*states + j*states+indicators[k][0]] -= migrates;  
+		    			pDotDot[lineages*states + i*states*states + j*states+indicators[k*n2+1]] += migrates;
+		    			pDotDot[lineages*states + i*states*states + j*states+indicators[k*n2+0]] -= migrates;  
 	    			}
 	    		}
 	    	}// j
@@ -463,9 +464,9 @@ public class Euler2ndOrderTransitions  {
         		}
     		}
     		for (int j = 0; j < indicators.length; j++){
-    			migrates = pDotDot[currlin+indicators[j][0]]*migration_rates[indicators[j][0] * n + indicators[j][1]];
-    			pDotDotDot[currlin+indicators[j][1]] += migrates;
-    			pDotDotDot[currlin+indicators[j][0]] -= migrates;  			
+    			migrates = pDotDot[currlin+indicators[j*n2+0]]*migration_rates[indicators[j*n2+0] * n + indicators[j*n2+1]];
+    			pDotDotDot[currlin+indicators[j*n2+1]] += migrates;
+    			pDotDotDot[currlin+indicators[j*n2+0]] -= migrates;  			
     		}
 
        	}// lineages  
@@ -474,9 +475,9 @@ public class Euler2ndOrderTransitions  {
     	for (int i = 0; i < lineages; i++){
 	    	for (int j = 0; j < states; j++){ // initial value
 	    		for (int k = 0; k < indicators.length; k++){
-	    			migrates = pDotDot[lineages*states + i*states*states + j*states+indicators[k][0]]*migration_rates[indicators[k][0] * n + indicators[k][1]];
-	    			pDotDotDot[lineages*states + i*states*states + j*states+indicators[k][1]] += migrates;
-	    			pDotDotDot[lineages*states + i*states*states + j*states+indicators[k][0]] -= migrates;  			
+	    			migrates = pDotDot[lineages*states + i*states*states + j*states+indicators[k*n2+0]]*migration_rates[indicators[k*n2+0] * n + indicators[k*n2+1]];
+	    			pDotDotDot[lineages*states + i*states*states + j*states+indicators[k*n2+1]] += migrates;
+	    			pDotDotDot[lineages*states + i*states*states + j*states+indicators[k*n2+0]] -= migrates;  			
 	    		}
 	    	}// j
     	}

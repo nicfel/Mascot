@@ -54,7 +54,7 @@ public abstract class Dynamics extends CalculationNode  {
 	 * @param i
 	 * @return
 	 */
-	public int[][] getIndicators(int i){
+	public int[] getIndicators(int i){
 		return null;
 	}
 

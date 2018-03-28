@@ -11,9 +11,9 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	double max_step;
 	
 	double[] migration_rates; // flattened square matrix of migration rates
-	int n; // dimension of migration rate matrix
+	int n, n2; // dimension of migration rate matrix and indicators matrix
 	int[] multiplicator;
-	int[][] indicators;
+	int[] indicators;
 	double[] coalescent_rates;
 	double probs;
     int lineages;
@@ -43,12 +43,13 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     	iterations=0;	
 	}
 	@Override
-	public void initWithIndicators(double[] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+	public void initWithIndicators(double[] migration_rates, int[] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
         n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
         this.indicators = indicators;
+        n2 = indicators.length / 2;
         this.coalescent_rates = coalescent_rates;
         this.lineages = lineages;
         this.states = states;
@@ -75,6 +76,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
+        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
         this.coalescent_rates = coalescent_rates;
         this.lineages = lineages;
         this.states = states;
@@ -86,11 +88,13 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     	iterations=0;
 	}
 	
-	public Euler2ndOrder(double[] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+	public Euler2ndOrder(double[] migration_rates, int[] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
+        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
         this.indicators = indicators;
+        n2 = indicators.length / 2;
         this.coalescent_rates = coalescent_rates;
         this.lineages = lineages;
         this.states = states;
@@ -106,6 +110,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
+        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
         this.multiplicator = multiplicator;
         this.coalescent_rates = coalescent_rates;
         this.lineages = lineages;
@@ -118,12 +123,14 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     	iterations=0;
 	}
 	
-	public Euler2ndOrder(int[] multiplicator, double[] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+	public Euler2ndOrder(int[] multiplicator, double[] migration_rates, int[] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
         this.multiplicator = multiplicator;
+        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
         this.indicators = indicators;
+        n2 = indicators.length / 2;
         this.coalescent_rates = coalescent_rates;
         this.lineages = lineages;
         this.states = states;
@@ -288,8 +295,8 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     	// Calculate the probability of a lineage changing states
     	if (hasIndicators){
 			for (int j = 0; j < indicators.length; j++){
-				int source = indicators[j][0];
-				int sink = indicators[j][1];
+				int source = indicators[j * n2 + 0];
+				int sink = indicators[j * n2 + 1];
 				double mrate = migration_rates[source * n + sink];
 		    	for (int i = 0; i<lineages; i++){
 					migrates = p[states*i+source]*mrate;
@@ -358,8 +365,8 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		// Calculate the probability of a lineage changing states
 		if (hasIndicators){
 			for (int j = 0; j < indicators.length; j++){
-				int source = indicators[j][0];
-				int sink = indicators[j][1];
+				int source = indicators[j * n2 + 0];
+				int sink = indicators[j * n2 + 1];
 				double mrate = migration_rates[source * n + sink];
 		    	for (int i = 0; i<lineages; i++){
 					migrates = pDot[states*i+source]*mrate;
@@ -403,8 +410,8 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		// Calculate the probability of a lineage changing states
     	if (hasIndicators){
 			for (int j = 0; j < indicators.length; j++){
-				int source = indicators[j][0];
-				int sink = indicators[j][1];
+				int source = indicators[j * n2 + 0];
+				int sink = indicators[j * n2 + 1];
 				double mrate = migration_rates[source * n + sink];
 		    	for (int i = 0; i<lineages; i++){
 					migrates = pDotDot[states*i+source]*mrate;

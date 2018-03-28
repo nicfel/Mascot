@@ -48,7 +48,7 @@ public class MascotCollaps extends StructuredTreeDistribution {
 
     // current rates         
     private double[] migrationRates;
-    private int[][] indicators;
+    private int[] indicators;
     private double[] coalescentRates; 	
 
     

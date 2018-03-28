@@ -334,7 +334,7 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 	}
 
 	@Override
-	public int[][] getIndicators(int i) {
+	public int[] getIndicators(int i) {
 		int nrTrue = 0;
 		for (int j = 0; j < indicatorInput.get().getDimension(); j++)
 			if (indicatorInput.get().getArrayValue(j) > 0.5)
@@ -343,7 +343,7 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		if (migrationType == MigrationType.symmetric)
 			nrTrue*=2;
 		
-		int[][] m = new int[nrTrue][2];
+		int[] m = new int[nrTrue*2];
     	int c = 0;
     	int mi = 0;
 		
@@ -354,8 +354,8 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = 0; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-		    					m[mi][0] = a;
-		    					m[mi][1] = b;
+		    					m[mi * nrTrue + 0] = a;
+		    					m[mi * nrTrue + 1] = b;
 		    					mi++;
 		    				}
 		    				c++;
@@ -367,11 +367,11 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = a+1; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-		    					m[mi][0] = a;
-		    					m[mi][1] = b;
+		    					m[mi * nrTrue + 0] = a;
+		    					m[mi * nrTrue + 1] = b;
 		    					mi++;
-		    					m[mi][0] = b;
-		    					m[mi][1] = a;
+		    					m[mi * nrTrue + 0] = b;
+		    					m[mi * nrTrue + 1] = a;
 		    					mi++;
 		    				}
 		    				c++;
@@ -385,8 +385,8 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = 0; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-		    					m[mi][0] = a;
-		    					m[mi][1] = b;
+		    					m[mi * nrTrue + 0] = a;
+		    					m[mi * nrTrue + 1] = b;
 		    					mi++;
 		    				}
 		    				c++;
@@ -398,11 +398,11 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = a+1; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-		    					m[mi][0] = a;
-		    					m[mi][1] = b;
+		    					m[mi * nrTrue + 0] = a;
+		    					m[mi * nrTrue + 1] = b;
 		    					mi++;
-		    					m[mi][0] = b;
-		    					m[mi][1] = a;
+		    					m[mi * nrTrue + 0] = b;
+		    					m[mi * nrTrue + 1] = a;
 		    					mi++;
 		    				}
 		    				c++;

@@ -300,7 +300,7 @@ public class StructuredTreeLoggerCollaps extends Tree implements Loggable {
 
     // current rates         
     private double[] migrationRates;
-    private int[][] indicators;
+    private int[] indicators;
     private double[] coalescentRates; 	
 
     

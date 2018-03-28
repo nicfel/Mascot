@@ -5,12 +5,13 @@ import java.util.Arrays;
 
 import org.apache.commons.math3.util.FastMath;
 
-public class Euler2ndOrder {
+public class Euler2ndOrder implements Euler2ndOrderBase {
 
 	double epsilon;
 	double max_step;
 	
-	double[][] migration_rates;
+	double[] migration_rates; // flattened square matrix of migration rates
+	int n; // dimension of migration rate matrix
 	int[] multiplicator;
 	int[][] indicators;
 	double[] coalescent_rates;
@@ -24,8 +25,53 @@ public class Euler2ndOrder {
 	
 	int iterations;
 
+	public Euler2ndOrder() {};
+	@Override
+	public void init(double[] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+		this.max_step = max_step;
+		this.epsilon = epsilon;
+        this.migration_rates = migration_rates;
+        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
+        this.coalescent_rates = coalescent_rates;
+        this.lineages = lineages;
+        this.states = states;
+        this.dimension = this.lineages*this.states;
+    	sumStates = new double[states];    	
+    	hasIndicators = false;
+    	hasMultiplicator = false;
+    	
+    	iterations=0;	
+	}
+	@Override
+	public void initWithIndicators(double[] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+		this.max_step = max_step;
+		this.epsilon = epsilon;
+        this.migration_rates = migration_rates;
+        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
+        this.indicators = indicators;
+        this.coalescent_rates = coalescent_rates;
+        this.lineages = lineages;
+        this.states = states;
+        this.dimension = this.lineages*this.states;
+    	sumStates = new double[states];
+    	hasIndicators = true;
+    	hasMultiplicator = false;
+    	
+    	iterations=0;
+	}
 	
-	public Euler2ndOrder(double[][] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+    double [] linProbs_tmpdt;
+    double [] linProbs_tmpddt;
+    double [] linProbs_tmpdddt;
+
+	@Override
+	public void setup(int maxSize) {
+		linProbs_tmpdt = new double[maxSize];
+		linProbs_tmpddt = new double[maxSize];
+		linProbs_tmpdddt = new double[maxSize];		
+	}
+
+	public Euler2ndOrder(double[] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
@@ -40,7 +86,7 @@ public class Euler2ndOrder {
     	iterations=0;
 	}
 	
-	public Euler2ndOrder(double[][] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+	public Euler2ndOrder(double[] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
@@ -56,7 +102,7 @@ public class Euler2ndOrder {
     	iterations=0;
 	}
 
-	public Euler2ndOrder(int[] multiplicator, double[][] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+	public Euler2ndOrder(int[] multiplicator, double[] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
@@ -72,7 +118,7 @@ public class Euler2ndOrder {
     	iterations=0;
 	}
 	
-	public Euler2ndOrder(int[] multiplicator, double[][] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
+	public Euler2ndOrder(int[] multiplicator, double[] migration_rates, int[][] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
 		this.max_step = max_step;
 		this.epsilon = epsilon;
         this.migration_rates = migration_rates;
@@ -89,6 +135,13 @@ public class Euler2ndOrder {
     	iterations=0;
 	}
 
+	@Override
+	public void calculateValues(double duration, double[] p, int length){
+		double[] pDot = linProbs_tmpdt; 
+		double[] pDotDot = linProbs_tmpddt; 
+		double[] pDotDotDot = linProbs_tmpdddt;
+		calculateValues(duration, p, pDot, pDotDot, pDotDotDot, length);
+	}
 	
 	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
 		clearArray(pDotDot, length);
@@ -237,7 +290,7 @@ public class Euler2ndOrder {
 			for (int j = 0; j < indicators.length; j++){
 				int source = indicators[j][0];
 				int sink = indicators[j][1];
-				double mrate = migration_rates[source][sink];
+				double mrate = migration_rates[source * n + sink];
 		    	for (int i = 0; i<lineages; i++){
 					migrates = p[states*i+source]*mrate;
 					pDot[states*i+sink] += migrates;
@@ -253,8 +306,8 @@ public class Euler2ndOrder {
         			for (int k = j+1; k < states; k++){    
         				
     					// the probability of lineage i being in state j is p[i*nr_states +j]
-    					migrates = p[currlin+k]*migration_rates[k][j] -
-    							pj*migration_rates[j][k];
+    					migrates = p[currlin+k]*migration_rates[k * n + j] -
+    							pj*migration_rates[j * n + k];
     					pDot[currlin+j] += migrates;
     					pDot[currlin+k] -= migrates;
         			}// j    			 
@@ -307,7 +360,7 @@ public class Euler2ndOrder {
 			for (int j = 0; j < indicators.length; j++){
 				int source = indicators[j][0];
 				int sink = indicators[j][1];
-				double mrate = migration_rates[source][sink];
+				double mrate = migration_rates[source * n + sink];
 		    	for (int i = 0; i<lineages; i++){
 					migrates = pDot[states*i+source]*mrate;
 					pDotDot[states*i+sink] += migrates;
@@ -323,8 +376,8 @@ public class Euler2ndOrder {
         			for (int k = j+1; k < states; k++){    
         				
     					// the probability of lineage i being in state j is p[i*nr_states +j]
-    					migrates = pDot[currlin+k]*migration_rates[k][j] -
-    							pj*migration_rates[j][k];
+    					migrates = pDot[currlin+k]*migration_rates[k * n + j] -
+    							pj*migration_rates[j * n + k];
     					pDotDot[currlin+j] += migrates;
     					pDotDot[currlin+k] -= migrates;
         			}// j    			 
@@ -352,7 +405,7 @@ public class Euler2ndOrder {
 			for (int j = 0; j < indicators.length; j++){
 				int source = indicators[j][0];
 				int sink = indicators[j][1];
-				double mrate = migration_rates[source][sink];
+				double mrate = migration_rates[source * n + sink];
 		    	for (int i = 0; i<lineages; i++){
 					migrates = pDotDot[states*i+source]*mrate;
 					pDotDotDot[states*i+sink] += migrates;
@@ -362,7 +415,7 @@ public class Euler2ndOrder {
     	}else{
 			for (int j = 0; j < states; j++){
 				for (int k = 0; k < states; k++){  
-					double mrate = migration_rates[j][k];
+					double mrate = migration_rates[j * n + k];
 			    	for (int i = 0; i<lineages; i++){
 						migrates = pDotDot[states*i+j]*mrate;
 						pDotDotDot[states*i+k] += migrates;

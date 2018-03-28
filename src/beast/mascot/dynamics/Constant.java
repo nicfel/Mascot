@@ -132,8 +132,9 @@ public class Constant extends Dynamics implements Loggable  {
     }
     
 	@Override    
-    public double[][] getBackwardsMigration(int i){
-    	double[][] m = new double[NeInput.get().getDimension()][NeInput.get().getDimension()];
+    public double[] getBackwardsMigration(int i){
+		int n = NeInput.get().getDimension();
+    	double[] m = new double[n * n];
     	
     	if (isBackwardsMigration){
     		if (migrationType == MigrationType.asymmetric){
@@ -141,7 +142,7 @@ public class Constant extends Dynamics implements Loggable  {
 		    	for (int a = 0; a < NeInput.get().getDimension(); a++){
 		    		for (int b = 0; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
-		    				m[a][b] = b_mInput.get().getArrayValue(c);
+		    				m[a * n + b] = b_mInput.get().getArrayValue(c);
 		    				c++;
 		    			}
 		    		}
@@ -151,8 +152,8 @@ public class Constant extends Dynamics implements Loggable  {
 		    	for (int a = 0; a < NeInput.get().getDimension(); a++){
 		    		for (int b = a+1; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
-		    				m[a][b] = b_mInput.get().getArrayValue(c);
-		    				m[b][a] = b_mInput.get().getArrayValue(c);
+		    				m[a * n + b] = b_mInput.get().getArrayValue(c);
+		    				m[b * n + a] = b_mInput.get().getArrayValue(c);
 		    				c++;
 		    			}
 		    		}
@@ -164,7 +165,7 @@ public class Constant extends Dynamics implements Loggable  {
 		    	for (int a = 0; a < NeInput.get().getDimension(); a++){
 		    		for (int b = 0; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
-		    				m[a][b] = f_mInput.get().getArrayValue(c)
+		    				m[a * n + b] = f_mInput.get().getArrayValue(c)
 		    						*NeInput.get().getArrayValue(b)
 		    							/NeInput.get().getArrayValue(a);
 		    				c++;
@@ -176,10 +177,10 @@ public class Constant extends Dynamics implements Loggable  {
 		    	for (int a = 0; a < NeInput.get().getDimension(); a++){
 		    		for (int b = a+1; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
-		    				m[a][b] = f_mInput.get().getArrayValue(c)
+		    				m[a * n + b] = f_mInput.get().getArrayValue(c)
 		    						*NeInput.get().getArrayValue(b)
 		    							/NeInput.get().getArrayValue(a);
-		    				m[b][a] = f_mInput.get().getArrayValue(c)
+		    				m[b * n + a] = f_mInput.get().getArrayValue(c)
 		    						*NeInput.get().getArrayValue(a)
 		    							/NeInput.get().getArrayValue(b);
 		    				c++;

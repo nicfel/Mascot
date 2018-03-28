@@ -102,14 +102,15 @@ public class GLM extends Dynamics implements Loggable {
     }
     
 	@Override    
-    public double[][] getBackwardsMigration(int i){
+    public double[] getBackwardsMigration(int i){
 		int intervalNr;
     	if (i >= rateShiftsInput.get().getDimension())
     		intervalNr = rateShiftsInput.get().getDimension()-1;
     	else
     		intervalNr = i;
 
-    	double[][] m = new double[dimensionInput.get()][dimensionInput.get()];
+    	int n = dimensionInput.get();
+    	double[] m = new double[n * n];
 		double[] mig = migrationGLMInput.get().getRates(intervalNr);
 		double[] Ne = NeGLMInput.get().getRates(intervalNr);
 		
@@ -117,7 +118,7 @@ public class GLM extends Dynamics implements Loggable {
 		for (int a = 0; a < dimensionInput.get(); a++){
 			for (int b = 0; b < dimensionInput.get(); b++){
 				if (a!=b){
-					m[b][a] = FastMath.min( 
+					m[b * n + a] = FastMath.min( 
 							Ne[a]*mig[c]/Ne[b],
 							maxRateInput.get());
 					c++;

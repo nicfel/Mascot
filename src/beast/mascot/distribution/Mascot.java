@@ -18,6 +18,7 @@ import beast.evolution.tree.Node;
 import beast.evolution.tree.coalescent.IntervalType;
 import beast.mascot.dynamics.Dynamics;
 import beast.mascot.ode.Euler2ndOrder;
+import beast.mascot.ode.Euler2ndOrderBase;
 import beast.mascot.ode.MascotODE;
 
 
@@ -44,7 +45,7 @@ public class Mascot extends StructuredTreeDistribution {
     private int nrLineages;   
 
     // current rates         
-    private double[][] migrationRates;
+    private double[] migrationRates;
     private int[][] indicators;
     private double[] coalescentRates; 	
 
@@ -74,6 +75,7 @@ public class Mascot extends StructuredTreeDistribution {
 	// maximum integration error tolerance
     private double maxTolerance = 1e-3;            
     private boolean recalculateLogP;
+	Euler2ndOrderBase euler;
 
     @Override
     public void initAndValidate(){    	
@@ -95,16 +97,12 @@ public class Mascot extends StructuredTreeDistribution {
     	int MAX_SIZE = intCount * states;
     	linProbs_for_ode = new double[MAX_SIZE];
     	linProbs_tmp = new double[MAX_SIZE];
-    	linProbs_tmpdt = new double[MAX_SIZE];
-    	linProbs_tmpddt = new double[MAX_SIZE];
-    	linProbs_tmpdddt = new double[MAX_SIZE];
     	
+    	euler = new Euler2ndOrder();
+    	euler.setup(MAX_SIZE);
     }
     double [] linProbs_for_ode;
     double [] linProbs_tmp;
-    double [] linProbs_tmpdt;
-    double [] linProbs_tmpddt;
-    double [] linProbs_tmpdddt;
 
     public double calculateLogP() {
     	// newly calculate tree intervals
@@ -253,11 +251,10 @@ public class Mascot extends StructuredTreeDistribution {
     }
 
 	private double doEuler(double nextEventTime) {
-		Euler2ndOrder euler;
 		if (dynamicsInput.get().hasIndicators)
-			euler = new Euler2ndOrder(migrationRates, indicators, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
+			euler.initWithIndicators(migrationRates, indicators, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
 		else
-			euler = new Euler2ndOrder(migrationRates, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
+			euler.init(migrationRates, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
 
 //		double[] linProbs_tmp = new double[linProbs.length+1];
 //		double[] linProbs_tmpdt = new double[linProbs.length+1];
@@ -269,7 +266,7 @@ public class Mascot extends StructuredTreeDistribution {
 		linProbs_tmp[linProbs.length] = 0;
 
 		linProbs[linProbs.length-1] = 0;
-		euler.calculateValues(nextEventTime, linProbs_tmp, linProbs_tmpdt, linProbs_tmpddt, linProbs_tmpdddt, linProbs.length + 1);
+		euler.calculateValues(nextEventTime, linProbs_tmp, linProbs.length + 1);
 
 		//for (int i = 0; i < linProbs.length; i++) linProbs[i] = linProbs_tmp[i];
 		System.arraycopy(linProbs_tmp,0,linProbs,0,linProbs.length);

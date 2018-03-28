@@ -289,7 +289,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     private int nrLineages;   
 
     // current rates         
-    private double[][] migrationRates;
+    private double[] migrationRates;
     private int[][] indicators;
     private double[] coalescentRates; 	
 

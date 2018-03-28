@@ -12,7 +12,8 @@ import beast.core.Description;
 @Description("Describes the derivates of lineage state probabilities for LISCO as described in Mueller et al., 2016")
 public class MascotODE implements FirstOrderDifferentialEquations {
 
-	double[][] migration_rates;
+	double[] migration_rates;
+	int n; // dimension of migration rate matrix
 	double[] coalescent_rates;
 	double probs;
     int lineages;
@@ -22,8 +23,9 @@ public class MascotODE implements FirstOrderDifferentialEquations {
     boolean belowzero = false;
 
     // constructor
-    public MascotODE(double[][] migration_rates, double[] coalescent_rates, int lineages , int states){
+    public MascotODE(double[] migration_rates, double[] coalescent_rates, int lineages , int states){
         this.migration_rates = migration_rates;
+        n = (int) (Math.sqrt(migration_rates.length) + 0.5);
         this.coalescent_rates = coalescent_rates;
         this.lineages = lineages;
         this.states = states;
@@ -80,8 +82,8 @@ public class MascotODE implements FirstOrderDifferentialEquations {
     				if (j != k){
     					    					
     					// the probability of lineage i being in state j is p[i*nr_states +j]
-    					migrates += p[states*i+k]*migration_rates[k][j] -
-    									p[states*i+j]*migration_rates[j][k];
+    					migrates += p[states*i+k]*migration_rates[k * n + j] -
+    									p[states*i+j]*migration_rates[j * n + k];
     				}
     			}// j    			 
     			

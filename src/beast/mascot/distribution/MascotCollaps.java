@@ -47,7 +47,7 @@ public class MascotCollaps extends StructuredTreeDistribution {
     private int nrLineages;   
 
     // current rates         
-    private double[][] migrationRates;
+    private double[] migrationRates;
     private int[][] indicators;
     private double[] coalescentRates; 	
 
@@ -202,9 +202,9 @@ public class MascotCollaps extends StructuredTreeDistribution {
         		System.exit(0);
         	}else{
         		coalescentRates = new double[1];
-        		migrationRates = new double[1][1];
+        		migrationRates = new double[1];
         		coalescentRates[0] = 1/(2*ancestralNeInput.get().getValue());
-                migrationRates[0][0] = 0.0;
+                migrationRates[0] = 0.0;
         		nextTreeEvent -= collapsTime;
         		nextRateShift -= collapsTime;
  	       		collapsTime = Double.POSITIVE_INFINITY;

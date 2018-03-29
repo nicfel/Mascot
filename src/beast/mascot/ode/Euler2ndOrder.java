@@ -22,7 +22,9 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	double[] sumStates;
 	boolean hasIndicators;
 	boolean hasMultiplicator;
-	
+	double[] tCR;
+	double[] sumDotStates;
+
 	int iterations;
 
 	public Euler2ndOrder() {};
@@ -36,7 +38,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
         this.lineages = lineages;
         this.states = states;
         this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];    	
+    	sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];   	
     	hasIndicators = false;
     	hasMultiplicator = false;
     	
@@ -54,7 +56,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
         this.lineages = lineages;
         this.states = states;
         this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];
+    	sumStates = new double[states];tCR = new double[states];
     	hasIndicators = true;
     	hasMultiplicator = false;
     	
@@ -81,7 +83,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
         this.lineages = lineages;
         this.states = states;
         this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];    	
+    	sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];   	
     	hasIndicators = false;
     	hasMultiplicator = false;
     	
@@ -99,7 +101,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
         this.lineages = lineages;
         this.states = states;
         this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];
+    	sumStates = new double[states];tCR = new double[states];
     	hasIndicators = true;
     	hasMultiplicator = false;
     	
@@ -116,7 +118,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
         this.lineages = lineages;
         this.states = states;
         this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];    	
+    	sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];   	
     	hasIndicators = false;
     	hasMultiplicator = true; 
     	
@@ -135,7 +137,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
         this.lineages = lineages;
         this.states = states;
         this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];    	
+    	sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];   	
     	hasIndicators = true;
     	hasMultiplicator = true;   
     	
@@ -158,21 +160,38 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		clearArray(pDotDot, length);
 		clearArray(pDotDotDot, length);
 
-		while (duration > 0){
-	    	iterations++;
-			//pDot = new double[length];
-			clearArray(pDot, length);
-			computeDerivatives(p, pDot, pDotDot, pDotDotDot, length);
-			computeSecondDerivate(p, pDot, pDotDot, length);
-			approximateThirdDerivate(p, pDot, pDotDot, pDotDotDot, length);
-			duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot, length - 1);
-			
-			if (iterations>10000){
-				System.err.println("too many iterations, erturn negative infinity");
-				p[length-1] = Double.NEGATIVE_INFINITY;
-				break;
-			}
+		if (hasMultiplicator) {
+			while (duration > 0){
+		    	iterations++;
+				//pDot = new double[length];
+				clearArray(pDot, length);
+				computeDerivativesWithMultiplicator(p, pDot, pDotDot, pDotDotDot, length);
+				computeSecondDerivateWithMultiplicator(p, pDot, pDotDot, length);
+				approximateThirdDerivate(pDotDot, pDotDotDot, length);
+				duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot, length - 1);
 				
+				if (iterations>10000){
+					System.err.println("too many iterations, erturn negative infinity");
+					p[length-1] = Double.NEGATIVE_INFINITY;
+					break;
+				}
+			}			
+		} else {
+			while (duration > 0){
+		    	iterations++;
+				//pDot = new double[length];
+				clearArray(pDot, length);
+				computeDerivatives(p, pDot, pDotDot, pDotDotDot, length);
+				computeSecondDerivate(p, pDot, pDotDot, length);
+				approximateThirdDerivate(pDotDot, pDotDotDot, length);
+				duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot, length - 1);
+				
+				if (iterations>10000){
+					System.err.println("too many iterations, erturn negative infinity");
+					p[length-1] = Double.NEGATIVE_INFINITY;
+					break;
+				}
+			}
 		}			
 	}	
 	
@@ -201,6 +220,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 				diff = FastMath.abs(new_val - p[i]);
 			}			
 		}
+		
 		doUpdating(timeStep, timeStepSquare, p, pDot, pDotDot, length + 1);
 		duration -= timeStep;
 		return duration;
@@ -228,63 +248,252 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	}
 	    
 	private void normalise(final int i, final double[] p) {
-		final int k = states*i;
+		int k = states*i;
 		double linSum = 0;
 		
+		int u = k;
 		for (int j = 0; j < states; j++){
-			if (p[k+j]>=0.0){
-				linSum += p[k+j];
-			}else{
+			final double x = p[u++];
+			linSum += x;
+			if (x<0.0){
 				System.err.println(Arrays.toString(p));
 				System.exit(0);
 			}
 		}
+		u = k;
 		for (int j = 0; j < states; j++){
-			p[k+j] /= linSum;
+			p[u++] /= linSum;
 		}
 	}
 
 	private void updateP2(final double timeStep, final double timeStepSquare, final double[] p, final int length, final double[] pDot,
 			final double[] pDotDot) {
-		for (int i = 0; i < length; i++)
-			p[i] += pDot[i]*timeStep + pDotDot[i]*timeStepSquare;	
+		for (int i = 0; i < length; i++) {
+			p[i] += pDot[i] * timeStep
+			     + pDotDot[i] * timeStepSquare;
+		}
 	}
 
 	public void computeDerivatives (double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length) {
 		
     	double migrates;
     	// Compute the sum of line state probabilities for each state
-     	sumStates = new double[states];
-     	if (hasMultiplicator){
-	    	for (int i = 0; i<lineages; i++) {
-	    		int k = states * i;
-	    		for (int j = 0; j<states; j++) {
-					sumStates[j] += multiplicator[i]*p[k+j]; 
-	    		}
-	    	}
-     	}else{
-	    	for (int i = 0; i<lineages; i++) {
-	    		int k = states * i;
-	    		for (int j = 0; j<states; j++) {
-					sumStates[j] += p[k+j];
-	    		}
-	    	}
-     	}
+     	clearArray(sumStates, states);
+    	for (int i = 0; i<lineages; i++) {
+    		int k = states * i;
+    		for (int j = 0; j<states; j++) {
+				sumStates[j] += p[k++];
+    		}
+    	}
     		
-    	// Caluclate the change in the lineage state probabilities for every lineage in every state
+    	// Calculate the change in the lineage state probabilities for every lineage in every state
+		//double[] tCR =  new double[states];
     	for (int i = 0; i<lineages; i++){
-    		double[] tCR =  new double[states];
+    		double sumCoal = 0;
+    		int currlin = states*i;
+    		int k = currlin;
+    		for (int j = 0; j<states; j++){
+    			tCR[j] = coalescent_rates[j] * (sumStates[j] - p[k]);
+    			sumCoal += p[k] * tCR[j];
+    			k++;
+    		}
+     		pDot[length-1] -= sumCoal;
+     		k = currlin;
+    		for (int j = 0; j < states; j++){    			
+    			// Calculate the Derivate of p:
+    			double coal = sumCoal - tCR[j];
+    			pDotDot[k] = coal;
+    			pDotDotDot[k] = coal;
+    			pDot[k] +=	p[k] * coal;
+    			k++;
+    		}// j
+
+    	}
+    	
+    	
+    	// Calculate the probability of a lineage changing states
+    	if (hasIndicators){
+			for (int j = 0; j < indicators.length/2; j++){
+				int source = indicators[j * n2 + 0];
+				int sink = indicators[j * n2 + 1];
+				double mrate = migration_rates[source * n + sink];
+				int k = source;
+				int m = sink;
+		    	for (int i = 0; i<lineages; i++){
+					migrates = p[k] * mrate;
+					pDot[m] += migrates;
+					pDot[k] -= migrates;  			
+		    		k += states;
+		    		m += states;
+		    	}
+	    	}    
+    	}else{
+        	for (int i = 0; i<lineages; i++){
+        		int currlin = states*i;
+        		int u = currlin;
+        		// Calculate the probability of a lineage changing states
+        		for (int j = 0; j < states; j++){
+            		int v = currlin + j + 1;
+        			double pj = p[u];
+        			for (int k = j+1; k < states; k++){    
+        				
+    					// the probability of lineage i being in state j is p[i*nr_states +j]
+    					migrates = p[v]*migration_rates[k * n + j] -
+    							pj*migration_rates[j * n + k];
+    					pDot[u] += migrates;
+    					pDot[v] -= migrates;
+    					v++;
+        			}// j
+        			u++;
+        		}// j
+        	}// lineages       		
+    	}
+    	
+		pDot[length-1]  /= 2;
+
+    }
+        
+    public void computeSecondDerivate (double[] p, double[] pDot, double[] pDotDot, int length){  
+    	clearArray(sumDotStates, states);
+    	for (int i = 0; i<lineages; i++) {
+    		int k = states * i;
+    		for (int j = 0; j<states; j++) {
+    			sumDotStates[j] += pDot[k++];
+    		}
+    	}
+	
+    	// Calculate the change in the lineage state probabilities for every lineage in every state
+    	for (int i = 0; i<lineages; i++){    		
+    		double pCoalRate = 0.0;    		
+    		int currlin = states*i;
+    		int k = currlin;
+    		for (int j = 0; j<states; j++) {
+    			pCoalRate += coalescent_rates[j] * (pDot[k]* (sumStates[j] - p[k]) + p[k]* (sumDotStates[j] - pDot[k]));
+    			k++;
+    		}
+    		
+    		k = currlin;
+    		for (int j = 0; j<states; j++) {
+    			pDotDot[k] *= pDot[k];
+    			k++;
+    		}
+    		
+   			pDotDot[length-1] -= pCoalRate;    			
+
+    		k = currlin;
+    		for (int j = 0; j<states; j++) {
+    			pDotDot[k] += p[k] * (pCoalRate - coalescent_rates[j] * (sumDotStates[j] - pDot[k]));
+    			k++;
+    		}// j    		
+    	}// lineages 
+    	
+		double migrates;
+		
+		
+		// Calculate the probability of a lineage changing states
+		if (hasIndicators){
+			for (int j = 0; j < indicators.length/2; j++){
+				int source = indicators[j * n2 + 0];
+				int sink = indicators[j * n2 + 1];
+				double mrate = migration_rates[source * n + sink];
+		    	for (int i = 0; i<lineages; i++){
+					migrates = pDot[states*i+source]*mrate;
+					pDotDot[states*i+sink] += migrates;
+					pDotDot[states*i+source] -= migrates;  			
+		    	}
+	    	}    
+		}else{
+        	for (int i = 0; i<lineages; i++){
+        		int currlin = states*i;
+        		int u = currlin;
+        		// Calculate the probability of a lineage changing states
+        		for (int j = 0; j < states; j++){
+        			double pj = pDot[u];
+        			int v = currlin + j + 1;
+        			for (int k = j+1; k < states; k++){    
+        				
+    					// the probability of lineage i being in state j is p[i*nr_states +j]
+    					migrates = pDot[v]*migration_rates[k * n + j] -
+    							pj*migration_rates[j * n + k];
+    					pDotDot[u] += migrates;
+    					pDotDot[v] -= migrates;
+    					v++;
+        			}// j    	
+        			u++;
+        		}// j
+        	}// lineages    
+			
+		}
+		pDotDot[length-1] /= 2;
+    }
+    
+    public void approximateThirdDerivate (double[] pDotDot, double[] pDotDotDot, int length){
+    	
+    	
+    	double migrates;
+    	// Calculate the change in the lineage state probabilities for every lineage in every state
+    	for (int i = 0; i<lineages; i++){    		
+    		// Calculate the probability of a lineage changing states
+    		int currlin = states*i;
+    		int k = currlin;
+    		for (int j = 0; j<states; j++) {
+    			pDotDotDot[k] *= pDotDot[k];
+    			k++;
+    		}
+    	}
+    	
+		// Calculate the probability of a lineage changing states
+    	if (hasIndicators){
+			for (int j = 0; j < indicators.length/2; j++){
+				int source = indicators[j * n2 + 0];
+				int sink = indicators[j * n2 + 1];
+				double mrate = migration_rates[source * n + sink];
+		    	for (int i = 0; i<lineages; i++){
+					migrates = pDotDot[states*i+source]*mrate;
+					pDotDotDot[states*i+sink] += migrates;
+					pDotDotDot[states*i+source] -= migrates;  			
+		    	}
+	    	}    
+    	}else{
+			for (int j = 0; j < states; j++){
+				for (int k = 0; k < states; k++){  
+					double mrate = migration_rates[j * n + k];
+					int u = j;
+					int v = k;
+			    	for (int i = 0; i<lineages; i++){
+						migrates = pDotDot[u]*mrate;
+						pDotDotDot[v] += migrates;
+						pDotDotDot[u] -= migrates;
+						u += states;
+						v += states;
+	    			} 			
+				}
+	    	}
+    	}
+    }
+
+	public void computeDerivativesWithMultiplicator(double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length) {
+		
+    	double migrates;
+    	// Compute the sum of line state probabilities for each state
+     	clearArray(sumStates, states);
+    	for (int i = 0; i<lineages; i++) {
+    		int k = states * i;
+    		for (int j = 0; j<states; j++) {
+				sumStates[j] += multiplicator[i]*p[k+j]; 
+    		}
+    	}
+    		
+    	// Calculate the change in the lineage state probabilities for every lineage in every state
+		//double[] tCR =  new double[states];
+    	for (int i = 0; i<lineages; i++){
     		double sumCoal = 0;
     		int currlin = states*i;
     		for (int j = 0; j<states; j++){
     			tCR[j] = coalescent_rates[j] *  (sumStates[j] - p[currlin+j]);
     			sumCoal += p[currlin+j]*tCR[j];
     		}
-         	if (hasMultiplicator){
-         		pDot[length-1] -= multiplicator[i]*sumCoal;
-         	}else{
-         		pDot[length-1] -= sumCoal;        		
-         	}
+       		pDot[length-1] -= multiplicator[i]*sumCoal;
     		for (int j = 0; j < states; j++){    			
     			// Calculate the Derivate of p:
     			double coal = sumCoal - tCR[j];
@@ -330,19 +539,14 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 
     }
         
-    public void computeSecondDerivate (double[] p, double[] pDot, double[] pDotDot, int length){  
-    	double[] sumDotStates = new double[states];
-    	if (hasMultiplicator){
-	    	for (int i = 0; i<lineages; i++)
-	    		for (int j = 0; j<states; j++)
-	    			sumDotStates[j] += multiplicator[i]*pDot[states*i+j];   
-    	}else{
-	    	for (int i = 0; i<lineages; i++)
-	    		for (int j = 0; j<states; j++)
-	    			sumDotStates[j] += pDot[states*i+j];   
-    	}
+    public void computeSecondDerivateWithMultiplicator(double[] p, double[] pDot, double[] pDotDot, int length){  
+    	//double[] sumDotStates = new double[states];;
+    	clearArray(sumDotStates, states);
+    	for (int i = 0; i<lineages; i++)
+    		for (int j = 0; j<states; j++)
+    			sumDotStates[j] += multiplicator[i]*pDot[states*i+j];   
 	
-    	// Caluclate the change in the lineage state probabilities for every lineage in every state
+    	// Calculate the change in the lineage state probabilities for every lineage in every state
     	for (int i = 0; i<lineages; i++){    		
     		double pCoalRate = 0.0;    		
     		int currlin = states*i;
@@ -352,11 +556,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     		for (int j = 0; j<states; j++)
     			pDotDot[currlin+j] *= pDot[currlin+j];
     		
-    		if (hasMultiplicator){
-    			pDotDot[length-1] -= multiplicator[i]*pCoalRate;
-    		}else{
-    			pDotDot[length-1] -= pCoalRate;    			
-    		}    		
+   			pDotDot[length-1] -= multiplicator[i]*pCoalRate;
 
     		for (int j = 0; j<states; j++){
     			pDotDot[currlin+j] += p[currlin+j]*(pCoalRate - coalescent_rates[j] * (sumDotStates[j] - pDot[currlin+j]));
@@ -399,44 +599,6 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		pDotDot[length-1] /= 2;
     }
     
-    public void approximateThirdDerivate (double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
-    	
-    	
-    	double migrates;
-    	// Caluclate the change in the lineage state probabilities for every lineage in every state
-    	for (int i = 0; i<lineages; i++){    		
-    		// Calculate the probability of a lineage changing states
-    		int currlin = states*i;
-    		for (int j = 0; j<states; j++)
-    			pDotDotDot[currlin+j] *= pDotDot[currlin+j];
-    	}
-    	
-		// Calculate the probability of a lineage changing states
-    	if (hasIndicators){
-			for (int j = 0; j < indicators.length/2; j++){
-				int source = indicators[j * n2 + 0];
-				int sink = indicators[j * n2 + 1];
-				double mrate = migration_rates[source * n + sink];
-		    	for (int i = 0; i<lineages; i++){
-					migrates = pDotDot[states*i+source]*mrate;
-					pDotDotDot[states*i+sink] += migrates;
-					pDotDotDot[states*i+source] -= migrates;  			
-		    	}
-	    	}    
-    	}else{
-			for (int j = 0; j < states; j++){
-				for (int k = 0; k < states; k++){  
-					double mrate = migration_rates[j * n + k];
-			    	for (int i = 0; i<lineages; i++){
-						migrates = pDotDot[states*i+j]*mrate;
-						pDotDotDot[states*i+k] += migrates;
-						pDotDotDot[states*i+j] -= migrates;  			
-	    			} 			
-				}
-	    	}
-    	}
-    }
-
-}
+ }
 
 

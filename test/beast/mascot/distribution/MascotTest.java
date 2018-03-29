@@ -67,8 +67,8 @@ public class MascotTest  {
 		
 		mascot.initByName("structuredTreeIntervals", st, "dynamics", constant);
 		
-		
-		Assert.assertTrue(mascot.calculateLogP()==-6.870390751933608);
+		double logP = mascot.calculateLogP();
+		Assert.assertEquals(logP,-6.870390751933608, 1e-15);
 		
 
 	}

@@ -150,6 +150,10 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		calculateValues(duration, p, pDot, pDotDot, pDotDotDot, length);
 	}
 	
+	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
+		calculateValues(duration, p, pDot, pDotDot, pDotDotDot, pDot.length);
+	}
+	
 	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
 		clearArray(pDotDot, length);
 		clearArray(pDotDotDot, length);
@@ -294,7 +298,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     	
     	// Calculate the probability of a lineage changing states
     	if (hasIndicators){
-			for (int j = 0; j < indicators.length; j++){
+			for (int j = 0; j < indicators.length/2; j++){
 				int source = indicators[j * n2 + 0];
 				int sink = indicators[j * n2 + 1];
 				double mrate = migration_rates[source * n + sink];
@@ -364,7 +368,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		
 		// Calculate the probability of a lineage changing states
 		if (hasIndicators){
-			for (int j = 0; j < indicators.length; j++){
+			for (int j = 0; j < indicators.length/2; j++){
 				int source = indicators[j * n2 + 0];
 				int sink = indicators[j * n2 + 1];
 				double mrate = migration_rates[source * n + sink];
@@ -409,7 +413,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     	
 		// Calculate the probability of a lineage changing states
     	if (hasIndicators){
-			for (int j = 0; j < indicators.length; j++){
+			for (int j = 0; j < indicators.length/2; j++){
 				int source = indicators[j * n2 + 0];
 				int sink = indicators[j * n2 + 1];
 				double mrate = migration_rates[source * n + sink];

@@ -19,23 +19,23 @@
 
 # Profiling
 #PROFILING=-g -pg
-PROFILING=-g
+#PROFILING=-g
 
 # Compiler warnings
 WARN=-Wall -Wsign-compare
 
-CPPFLAGS = -O3
-CC = g++
-CFLAGS = -Wall -g -O3 $(WARN) -I../../ -I/Library/Java/JavaVirtualMachines/jdk1.8.0_73.jdk/Contents/Home/include -I/Library/Java/JavaVirtualMachines/jdk1.8.0_73.jdk/Contents/Home/include/darwin
+CPPFLAGS = -Ofast -ffast-math
+CC = gcc
+CFLAGS = -Wall -Ofast -ffast-math $(WARN) -I../../ -I/Library/Java/JavaVirtualMachines/jdk1.8.0_73.jdk/Contents/Home/include -I/Library/Java/JavaVirtualMachines/jdk1.8.0_73.jdk/Contents/Home/include/darwin
 LINKFLAGS = -L. $(PROFILING)
 LIBS=-lm
 PROG=mascot
-OBJS=beast_mascot_ode_Euler2ndOrderNative.o 
-#Euler2ndOrder.o Euler2ndOrderCPU.o
+OBJS=beast_mascot_ode_Euler2ndOrderNative.o Euler2ndOrder.o Euler2ndOrderCPU.o
 
 all: $(OBJS)
 #		g++ -dynamiclib -o mascot.jnilib $(OBJS)
-		gcc -lc++ -lm -Wl -O3  -shared -o mascot.so $(OBJS)
+#		gcc -lc++ -lm -Wl -O3  -shared -o mascot.so $(OBJS)
+		gcc -lc++ -lm -Wl -O3  -shared -o libmascot.jnilib $(OBJS)
 
 
 $(PROG): $(OBJS)

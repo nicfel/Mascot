@@ -80,12 +80,12 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
     /**
      * The lineages in each interval (stored by node ref).
      */
-    protected List<Node>[] lineagesAdded;
-    protected List<Node>[] lineagesRemoved;
+    protected List<Integer>[] lineagesAdded;
+    protected List<Integer>[] lineagesRemoved;
     
     // Added these so can restore when needed for structured models
-    protected List<Node>[] storedLineagesAdded;
-    protected List<Node>[] storedLineagesRemoved;
+    protected List<Integer>[] storedLineagesAdded;
+    protected List<Integer>[] storedLineagesRemoved;
     
     //private List<Node>[] lineages;
 
@@ -135,12 +135,12 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
     @SuppressWarnings("unchecked")
 	@Override
     protected void restore() {
-        intervalsKnown = false;
-        Arrays.fill(intervalIsDirty, true);
-        lastIntervalDirty = true;
-        super.store();
-        if (true)
-        	return;
+//        intervalsKnown = false;
+//        Arrays.fill(intervalIsDirty, true);
+//        lastIntervalDirty = true;
+//        super.store();
+//        if (true)
+//        	return;
 
     	
         double[] tmp = storedIntervals;
@@ -155,31 +155,35 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         storedIntervalCount = intervalCount;
         intervalCount = tmp3;
         
-    	lineagesAdded = new List[intervalCount];
     	for (int i = 0; i < intervalCount; i++) {
     		if (storedLineagesAdded[i] != null) {
-    			List<Node> nodeList = new ArrayList<>();
-    			int nodeCount = storedLineagesAdded[i].size();
-    			for (int n = 0; n < nodeCount; n++) {
-    				nodeList.add(storedLineagesAdded[i].get(n).copy());
+    			if (lineagesAdded[i] == null) {
+    				lineagesAdded[i] = new ArrayList<>();
     			}
-    			lineagesAdded[i] = nodeList;
+    			List<Integer> nodeList = storedLineagesAdded[i];
+    			nodeList.clear();
+    			for (Integer l : lineagesAdded[i]) {
+    				nodeList.add(l);
+    			}
+    		} else {
+    			lineagesAdded[i] = null;
     		}
     	}
     	
-    	lineagesRemoved = new List[intervals.length];
     	for (int i = 0; i < intervalCount; i++) {
     		if (storedLineagesRemoved[i] != null) {
-	    		List<Node> nodeList = new ArrayList<>();
-	    		int nodeCount = storedLineagesRemoved[i].size();
-	    		for (int n = 0; n < nodeCount; n++) {
-	    			nodeList.add(storedLineagesRemoved[i].get(n).copy());
-	    		}
-	    		lineagesRemoved[i] = nodeList;
+    			if (lineagesRemoved[i] == null) {
+    				lineagesRemoved[i] = new ArrayList<>();
+    			}
+	    		List<Integer> nodeList = lineagesRemoved[i];
+	    		nodeList.clear();
+	    		for (Integer l : storedLineagesRemoved[i]) {
+	    			nodeList.add(l);
+	    		};
+    		} else {
+    			lineagesRemoved[i] = null;
     		}
     	}
-
-
         
 //       // Added these last two for struct coalescent models
 //        lineagesAdded = storedLineagesAdded;        
@@ -197,9 +201,9 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         	System.out.print("[");
         	if (lineagesRemoved[i]!=null)
         		for (int j = 0; j < lineagesRemoved[i].size(); j++)
-        			System.out.print(lineagesRemoved[i].get(j).getNr() + " ,");
+        			System.out.print(lineagesRemoved[i].get(j)/*.getNr()*/ + " ,");
         	
-        	System.out.print(lineagesAdded[i].get(0).getNr() + " ,");
+        	System.out.print(lineagesAdded[i].get(0)/*.getNr()*/ + " ,");
         	System.out.print("]");
        }
     	System.out.print("\n");
@@ -207,12 +211,12 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
 
     @Override
     protected void store() {
-        intervalsKnown = false;
-        Arrays.fill(intervalIsDirty, true);
-        lastIntervalDirty = true;
-        super.restore();
-        if (true)
-        	return;
+//        intervalsKnown = false;
+//        Arrays.fill(intervalIsDirty, true);
+//        lastIntervalDirty = true;
+//        super.restore();
+//        if (true)
+//        	return;
 
         // stores the lineage Counts per intervall and the intervalls in the arrays stored...
         System.arraycopy(lineageCounts, 0, storedLineageCounts, 0, lineageCounts.length);
@@ -220,46 +224,73 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         storedIntervalCount = intervalCount;
         
         // Create new deep copies for storedLineagsAdded/Removed
-        storedLineagesAdded = deepCopyLineagesAdded();
-        storedLineagesRemoved = deepCopyLineagesRemoved();
-       
+    	for (int i = 0; i < intervalCount; i++) {
+    		if (lineagesAdded[i] != null) {
+    			if (storedLineagesAdded[i] == null) {
+    				storedLineagesAdded[i] = new ArrayList<>();
+    			}
+    			List<Integer> nodeList = storedLineagesAdded[i];
+    			nodeList.clear();
+    			for (Integer l : lineagesAdded[i]) {
+    				nodeList.add(l);
+    			}
+    		} else {
+    			storedLineagesAdded[i] = null;
+    		}
+    	}
+    	
+    	for (int i = 0; i < intervalCount; i++) {
+    		if (lineagesRemoved[i] != null) {
+    			if (storedLineagesRemoved[i] == null) {
+    				storedLineagesRemoved[i] = new ArrayList<>();
+    			}
+	    		List<Integer> nodeList = storedLineagesRemoved[i];
+	    		nodeList.clear();
+	    		for (Integer l : lineagesRemoved[i]) {
+	    			nodeList.add(l);
+	    		};
+    		} else {
+    			storedLineagesRemoved[i] = null;
+    		}
+    	}
+
         setIntervalsClean();
         super.store();
     }    
     
-    @SuppressWarnings("unchecked")
-	public List<Node>[] deepCopyLineagesAdded() {
-    	List<Node>[] newList = new List[intervalCount];
-    	for (int i = 0; i < intervalCount; i++) {
-    		if (lineagesAdded[i] != null) {
-    			List<Node> nodeList = new ArrayList<>();
-    			int nodeCount = lineagesAdded[i].size();
-    			for (int n = 0; n < nodeCount; n++) {
-    				nodeList.add(lineagesAdded[i].get(n).copy());
-    			}
-    			newList[i] = nodeList;
-    		}
-    	}
-    	return newList;
-    	
-    }
-    
-    @SuppressWarnings("unchecked")
-	public List<Node>[] deepCopyLineagesRemoved() {    	
-    	List<Node>[] newList = new List[intervals.length];
-    	for (int i = 0; i < intervalCount; i++) {
-    		if (lineagesRemoved[i] != null) {
-	    		List<Node> nodeList = new ArrayList<>();
-	    		int nodeCount = lineagesRemoved[i].size();
-	    		for (int n = 0; n < nodeCount; n++) {
-	    			nodeList.add(lineagesRemoved[i].get(n).copy());
-	    		}
-	    		newList[i] = nodeList;
-	    		}
-    	}
-    	return newList;
-    	
-    }
+//    @SuppressWarnings("unchecked")
+//	public List<Integer>[] deepCopyLineagesAdded() {
+//    	List<Integer>[] newList = new List[intervalCount];
+//    	for (int i = 0; i < intervalCount; i++) {
+//    		if (lineagesAdded[i] != null) {
+//    			List<Integer> nodeList = new ArrayList<>();
+//    			int nodeCount = lineagesAdded[i].size();
+//    			for (int n = 0; n < nodeCount; n++) {
+//    				nodeList.add(lineagesAdded[i].get(n));//.copy());
+//    			}
+//    			newList[i] = nodeList;
+//    		}
+//    	}
+//    	return newList;
+//    	
+//    }
+//    
+//    @SuppressWarnings("unchecked")
+//	public List<Integer>[] deepCopyLineagesRemoved() {    	
+//    	List<Integer>[] newList = new List[intervals.length];
+//    	for (int i = 0; i < intervalCount; i++) {
+//    		if (lineagesRemoved[i] != null) {
+//	    		List<Integer> nodeList = new ArrayList<>();
+//	    		int nodeCount = lineagesRemoved[i].size();
+//	    		for (int n = 0; n < nodeCount; n++) {
+//	    			nodeList.add(lineagesRemoved[i].get(n));//.copy());
+//	    		}
+//	    		newList[i] = nodeList;
+//	    		}
+//    	}
+//    	return newList;
+//    	
+//    }
 
     
     public int getSampleCount() {
@@ -337,7 +368,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         return lineageCounts[i];
     }
     
-    public List<Node> getLineagesAdded(int i) {
+    public List<Integer> getLineagesAdded(int i) {
         if (!intervalsKnown) {
             calculateIntervals();
         }
@@ -345,7 +376,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         return lineagesAdded[i];
     }
     
-    public List<Node> getLineagesRemoved(int index) {
+    public List<Integer> getLineagesRemoved(int index) {
         if (!intervalsKnown) {
             calculateIntervals();
         }
@@ -410,7 +441,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
     }    
   
     protected void setIntervalsClean(){
-        intervalIsDirty = new boolean[treeInput.get().getNodeCount()];
+        intervalIsDirty = new boolean[tree.getNodeCount()];
         lastIntervalDirty = false;
     }
 
@@ -456,10 +487,10 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
             storedLineagesRemoved = new List[nodeCount];
             
         } else {
-            for (List<Node> l : lineagesAdded) {
+            for (List<Integer> l : lineagesAdded) {
             	if (l != null) l.clear();
             }
-            for (List<Node> l : lineagesRemoved) {
+            for (List<Integer> l : lineagesRemoved) {
             	if (l != null) l.clear();
             }
         }
@@ -561,13 +592,13 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
     }
 
     protected void addLineage(int interval, Node node) {
-        if (lineagesAdded[interval] == null) lineagesAdded[interval] = new ArrayList<Node>();
-        lineagesAdded[interval].add(node);
+        if (lineagesAdded[interval] == null) lineagesAdded[interval] = new ArrayList<>();
+        lineagesAdded[interval].add(node.getNr());
     }
 
     protected void removeLineage(int interval, Node node) {
-        if (lineagesRemoved[interval] == null) lineagesRemoved[interval] = new ArrayList<Node>();
-        lineagesRemoved[interval].add(node);
+        if (lineagesRemoved[interval] == null) lineagesRemoved[interval] = new ArrayList<>();
+        lineagesRemoved[interval].add(node.getNr());
     }
 
 
@@ -643,11 +674,11 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
     	if (i == 0){
     		times[0] = 0.0;
     	}else{
-    		List<Node> addedNodes = getLineagesAdded(i-1);
-    		times[0] = addedNodes.get(0).getHeight();
+    		List<Integer> addedNodes = getLineagesAdded(i-1);
+    		times[0] = tree.getNode(addedNodes.get(0)).getHeight();
     	}
-		List<Node> addedNodes = getLineagesAdded(i);
-		times[1] = addedNodes.get(0).getHeight();
+		List<Integer> addedNodes = getLineagesAdded(i);
+		times[1] = tree.getNode(addedNodes.get(0)).getHeight();
 		
 		return times;   	
     }
@@ -661,21 +692,21 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         
         for (int i = 0; i < intervalCount; i++){
         	if(IntervalType.SAMPLE == getIntervalType(i)){
-        		List<Node> incomingLines = getLineagesAdded(i);
-        		for (Node l : incomingLines) {
-        			activeLineages.add(l.getNr());
+        		List<Integer> incomingLines = getLineagesAdded(i);
+        		for (Integer l : incomingLines) {
+        			activeLineages.add(l);//.getNr());
         		}
         	}
 
        	
         	if(IntervalType.COALESCENT == getIntervalType(i)){
-        		List<Node> daughter = getLineagesRemoved(i);
+        		List<Integer> daughter = getLineagesRemoved(i);
             	
             	if (daughter.size() > 2) {
             		System.err.println("Multifurcation");
         		}
-        		int d1 = activeLineages.indexOf(daughter.get(0).getNr());
-        		int d2 = activeLineages.indexOf(daughter.get(1).getNr());
+        		int d1 = activeLineages.indexOf(daughter.get(0));//.getNr());
+        		int d2 = activeLineages.indexOf(daughter.get(1));//.getNr());
         		int j = i;
         		boolean swap = false;
         		
@@ -684,8 +715,8 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         			j++;
                 	if(IntervalType.COALESCENT == getIntervalType(j)){
                 		daughter = getLineagesRemoved(j);
-                		d1 = activeLineages.indexOf(daughter.get(0).getNr());
-                		d2 = activeLineages.indexOf(daughter.get(1).getNr());
+                		d1 = activeLineages.indexOf(daughter.get(0));//.getNr());
+                		d2 = activeLineages.indexOf(daughter.get(1));//.getNr());
                 	}
             		swap = true;
         		} 
@@ -699,8 +730,8 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
 	        			activeLineages.remove(d2);
 	        			activeLineages.remove(d1);
 	        		}
-	        		List<Node> incomingLines = getLineagesAdded(i);
-	        		activeLineages.add(incomingLines.get(0).getNr());
+	        		List<Integer> incomingLines = getLineagesAdded(i);
+	        		activeLineages.add(incomingLines.get(0));//.getNr());
         		}
         		// Add parent
         		if (j == intervalCount){
@@ -720,10 +751,10 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         		    /**
         		     * The lineages in each interval (stored by node ref).
         		     */
-        		    List<Node> lineageAdded = lineagesAdded[j];
+        		    List<Integer> lineageAdded = lineagesAdded[j];
         		    lineagesAdded[j] = lineagesAdded[i];
         		    lineagesAdded[i] = lineageAdded;
-        		    List<Node> lineageRemoved = lineagesRemoved[j];
+        		    List<Integer> lineageRemoved = lineagesRemoved[j];
         		    lineagesRemoved[j] = lineagesRemoved[i];
         		    lineagesRemoved[i] = lineageRemoved;
         			i--;

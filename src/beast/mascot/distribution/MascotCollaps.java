@@ -16,6 +16,7 @@ import beast.core.Input;
 import beast.core.parameter.RealParameter;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TraitSet;
+import beast.evolution.tree.TreeInterface;
 import beast.evolution.tree.coalescent.IntervalType;
 import beast.mascot.dynamics.Dynamics;
 import beast.mascot.ode.Euler2ndOrder;
@@ -76,10 +77,13 @@ public class MascotCollaps extends StructuredTreeDistribution {
 	
 	// maximum integration error tolerance
     private double maxTolerance = 1e-3;            
-    private boolean recalculateLogP;    
+    private boolean recalculateLogP;  
+    TreeInterface tree;
             
     @Override
-    public void initAndValidate(){    	
+    public void initAndValidate(){
+    	tree = treeInput.get();
+    	
     	treeIntervalsInput.get().calculateIntervals();       
     	stateProbabilities = new DoubleMatrix[treeIntervalsInput.get().getSampleCount()];
         nrSamples = treeIntervalsInput.get().getSampleCount() + 1;    
@@ -259,7 +263,7 @@ public class MascotCollaps extends StructuredTreeDistribution {
     }
     
     private void sample(int currTreeInterval, int currRatesInterval) {
-		List<Node> incomingLines = treeIntervalsInput.get().getLineagesAdded(currTreeInterval);
+		List<Integer> incomingLines = treeIntervalsInput.get().getLineagesAdded(currTreeInterval);
 		int newLength = linProbs.length + incomingLines.size()*states;
 		
 		double[] linProbsNew = new double[newLength];
@@ -277,9 +281,9 @@ public class MascotCollaps extends StructuredTreeDistribution {
 		 * that gives the type of that taxon
 		 */
 		if (dynamicsInput.get().typeTraitInput.get()!=null){
-			for (Node l : incomingLines) {
-				activeLineages.add(l.getNr());
-				int sampleState = dynamicsInput.get().getValue(l.getID());
+			for (Integer l : incomingLines) {
+				activeLineages.add(l);//.getNr());
+				int sampleState = dynamicsInput.get().getValue(tree.getNode(l).getID());
 				
 				if (sampleState>= dynamicsInput.get().getDimension()){
 					System.err.println("sample discovered with higher state than dimension");
@@ -296,9 +300,9 @@ public class MascotCollaps extends StructuredTreeDistribution {
 				}
 			}				
 		}else{
-			for (Node l : incomingLines) {
-				activeLineages.add(l.getNr());
-				String sampleID = l.getID();
+			for (Integer l : incomingLines) {
+				activeLineages.add(l);//.getNr());
+				String sampleID = tree.getNode(l).getID();
 				int sampleState = 0;
 				if (states > 1){				
 					String[] splits = sampleID.split("_");
@@ -320,7 +324,7 @@ public class MascotCollaps extends StructuredTreeDistribution {
     }
     
     private double coalesce(int currTreeInterval, int currRatesInterval) {
-		List<Node> coalLines = treeIntervalsInput.get().getLineagesRemoved(currTreeInterval);
+		List<Integer> coalLines = treeIntervalsInput.get().getLineagesRemoved(currTreeInterval);
     	if (coalLines.size() > 2) {
 			System.err.println("Unsupported coalescent at non-binary node");
 			System.exit(0);
@@ -332,10 +336,10 @@ public class MascotCollaps extends StructuredTreeDistribution {
     		return Double.NaN;
 		}
 		
-    	final int daughterIndex1 = activeLineages.indexOf(coalLines.get(0).getNr());
-		final int daughterIndex2 = activeLineages.indexOf(coalLines.get(1).getNr());
+    	final int daughterIndex1 = activeLineages.indexOf(coalLines.get(0));//.getNr());
+		final int daughterIndex2 = activeLineages.indexOf(coalLines.get(1));//.getNr());
 		if (daughterIndex1 == -1 || daughterIndex2 == -1) {
-			System.out.println(coalLines.get(0).getNr() + " " + coalLines.get(1).getNr() + " " + activeLineages);
+			System.out.println(coalLines.get(0)/*.getNr()*/ + " " + coalLines.get(1)/*.getNr()*/ + " " + activeLineages);
 			System.out.println("daughter lineages at coalescent event not found");
 			return Double.NaN;
 		}
@@ -360,14 +364,14 @@ public class MascotCollaps extends StructuredTreeDistribution {
 				lambda.put(i, 1/states);			
 		}
         
-        activeLineages.add(coalLines.get(0).getParent().getNr());        
+        activeLineages.add(tree.getNode(coalLines.get(0)).getParent().getNr());        
         
         // get the node state probabilities
 		DoubleMatrix pVec = new DoubleMatrix();
 		pVec.copy(lambda);
 		pVec = pVec.div(pVec.sum());
 		
-		stateProbabilities[coalLines.get(0).getParent().getNr() - nrSamples] = pVec;
+		stateProbabilities[tree.getNode(coalLines.get(0)).getParent().getNr() - nrSamples] = pVec;
 		
 		double[] linProbsNew  = new double[linProbs.length - states];
 		

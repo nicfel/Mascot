@@ -19,6 +19,7 @@ import beast.evolution.tree.coalescent.IntervalType;
 import beast.mascot.dynamics.Dynamics;
 import beast.mascot.ode.Euler2ndOrder;
 import beast.mascot.ode.Euler2ndOrderBase;
+import beast.mascot.ode.Euler2ndOrderNative;
 import beast.mascot.ode.MascotODE;
 
 
@@ -98,7 +99,8 @@ public class Mascot extends StructuredTreeDistribution {
     	linProbs_for_ode = new double[MAX_SIZE];
     	linProbs_tmp = new double[MAX_SIZE];
     	
-    	euler = new Euler2ndOrder();
+    	Euler2ndOrderNative.loadLibrary();
+    	euler = new Euler2ndOrderNative();
     	euler.setup(MAX_SIZE);
     }
     double [] linProbs_for_ode;

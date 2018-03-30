@@ -171,7 +171,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 				duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot, length - 1);
 				
 				if (iterations>10000){
-					System.err.println("too many iterations, erturn negative infinity");
+					System.err.println("too many iterations, return negative infinity");
 					p[length-1] = Double.NEGATIVE_INFINITY;
 					break;
 				}
@@ -187,7 +187,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 				duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot, length - 1);
 				
 				if (iterations>10000){
-					System.err.println("too many iterations, erturn negative infinity");
+					System.err.println("too many iterations, return negative infinity");
 					p[length-1] = Double.NEGATIVE_INFINITY;
 					break;
 				}

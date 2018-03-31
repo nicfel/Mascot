@@ -3,7 +3,6 @@ package beast.mascot.distribution;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 import org.apache.commons.math3.ode.FirstOrderIntegrator;
@@ -14,7 +13,6 @@ import beast.core.CalculationNode;
 import beast.core.Citation;
 import beast.core.Description;
 import beast.core.Input;
-import beast.evolution.tree.Node;
 import beast.evolution.tree.TreeInterface;
 import beast.evolution.tree.coalescent.IntervalType;
 import beast.mascot.dynamics.Dynamics;
@@ -55,6 +53,8 @@ public class Mascot extends StructuredTreeDistribution {
     // Set up for lineage state probabilities
     private ArrayList<Integer> activeLineages;
 	private double[] linProbs;
+	private double[] linProbsNew;
+	private int linProbsLength;
 	private int states;
 	
     // store the linProbs, multiplicators and logP's at coalescent points in jagged arrays from last time
@@ -106,6 +106,8 @@ public class Mascot extends StructuredTreeDistribution {
     	int MAX_SIZE = intCount * states;
     	linProbs_for_ode = new double[MAX_SIZE];
     	linProbs_tmp = new double[MAX_SIZE];
+    	linProbs = new double[MAX_SIZE];
+    	linProbsNew = new double[MAX_SIZE];
     	
     	Euler2ndOrderNative.loadLibrary();
     	euler = new Euler2ndOrderNative();
@@ -132,7 +134,8 @@ public class Mascot extends StructuredTreeDistribution {
         activeLineages = new ArrayList<Integer>();
         logP = 0;
         nrLineages = 0;
-        linProbs = new double[0];// initialize the tree and rates interval counter
+        //linProbs = new double[0];// initialize the tree and rates interval counter
+        linProbsLength = 0;
         int treeInterval = 0, ratesInterval = 0;        
      	double nextEventTime = 0.0;
 		coalescentRates = dynamicsInput.get().getCoalescentRate(ratesInterval);  
@@ -225,7 +228,7 @@ public class Mascot extends StructuredTreeDistribution {
 	                }                
 		            //for (int i = 0; i<linProbs.length; i++)
 		        	//	linProbs[i] = linProbs_for_ode[i];
-		            System.arraycopy(linProbs_for_ode, 0, linProbs, 0, linProbs.length);
+		            System.arraycopy(linProbs_for_ode, 0, linProbs, 0, linProbsLength);
 	        	}else {
 	        		logP += doEuler(nextEventTime);
 	        	}        	
@@ -240,7 +243,7 @@ public class Mascot extends StructuredTreeDistribution {
 	        	}
  	       		
  	       		if (treeIntervalsInput.get().getIntervalType(treeInterval) == IntervalType.SAMPLE) { 	       			
- 	       			if (linProbs.length > 0)
+ 	       			if (linProbsLength > 0)
  	       				logP += normalizeLineages();								// normalize all lineages before event
 	       			nrLineages++;													// sampling event increases the number of lineages by one
  	       			sample(treeInterval, ratesInterval);							// calculate the likelihood of the sampling event if sampling rate is given
@@ -275,28 +278,28 @@ public class Mascot extends StructuredTreeDistribution {
     
 	private double doEuler(double nextEventTime) {
 		//for (int i = 0; i < linProbs.length; i++) linProbs_tmp[i] = linProbs[i];
-		if (linProbs_tmp.length != linProbs.length + 1) {
-			linProbs_tmp= new double[linProbs.length + 1];
+		if (linProbs_tmp.length != linProbsLength + 1) {
+			linProbs_tmp= new double[linProbsLength + 1];
 		}
-		System.arraycopy(linProbs,0,linProbs_tmp,0,linProbs.length);
-		linProbs_tmp[linProbs.length] = 0;
+		System.arraycopy(linProbs,0,linProbs_tmp,0,linProbsLength);
+		linProbs_tmp[linProbsLength] = 0;
 
-		linProbs[linProbs.length-1] = 0;
+		linProbs[linProbsLength-1] = 0;
 		
 
 		if (dynamicsInput.get().hasIndicators) {
 			euler.initWithIndicators(migrationRates, indicators, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
-			euler.calculateValues(nextEventTime, linProbs_tmp, linProbs.length + 1);
+			euler.calculateValues(nextEventTime, linProbs_tmp, linProbsLength + 1);
 		} else {
-			euler.initAndcalculateValues(migrationRates, coalescentRates, nrLineages, coalescentRates.length, epsilonInput.get(), maxStepInput.get(), nextEventTime, linProbs_tmp, linProbs.length + 1);
+			euler.initAndcalculateValues(migrationRates, coalescentRates, nrLineages, coalescentRates.length, epsilonInput.get(), maxStepInput.get(), nextEventTime, linProbs_tmp, linProbsLength + 1);
 		}
 		
 		//		System.out.println(Arrays.toString(linProbs));		
 
 		//for (int i = 0; i < linProbs.length; i++) linProbs[i] = linProbs_tmp[i];
-		System.arraycopy(linProbs_tmp,0,linProbs,0,linProbs.length);
+		System.arraycopy(linProbs_tmp,0,linProbs,0,linProbsLength);
 
-		return linProbs_tmp[linProbs.length];
+		return linProbs_tmp[linProbsLength];
 	}
 
 	
@@ -338,15 +341,15 @@ public class Mascot extends StructuredTreeDistribution {
     
     private void sample(int currTreeInterval, int currRatesInterval) {
 		int incomingLines = treeIntervalsInput.get().getLineagesAdded(currTreeInterval);
-		int newLength = linProbs.length + 1 * states;
+		int newLength = linProbsLength + 1 * states;
 		
-		double [] linProbsNew = new double[newLength];
-		System.arraycopy(linProbs, 0, linProbsNew, 0, linProbs.length);
+		//double [] linProbsNew = new double[newLength];
+//		System.arraycopy(linProbs, 0, linProbsNew, 0, linProbsLength);
 //		for (int i = 0; i < linProbs.length; i++)
 //			linProbsNew[i] = linProbs[i];
 		
 		
-		int currPosition = linProbs.length;
+		int currPosition = linProbsLength;
 		
 		/*
 		 * If there is no trait given as Input, the model will simply assume that
@@ -365,10 +368,10 @@ public class Mascot extends StructuredTreeDistribution {
 				
 				for (int i = 0; i < states; i++){
 					if (i == sampleState){
-						linProbsNew[currPosition] = 1.0;currPosition++;
+						linProbs[currPosition] = 1.0;currPosition++;
 					}
 					else{
-						linProbsNew[currPosition] = 0.0;currPosition++;
+						linProbs[currPosition] = 0.0;currPosition++;
 					}
 				}
 			}				
@@ -383,17 +386,19 @@ public class Mascot extends StructuredTreeDistribution {
 				}
 				for (int i = 0; i < states; i++){
 					if (i == sampleState){
-						linProbsNew[currPosition] = 1.0;currPosition++;
+						linProbs[currPosition] = 1.0;currPosition++;
 					}
 					else{
-						linProbsNew[currPosition] = 0.0;currPosition++;
+						linProbs[currPosition] = 0.0;currPosition++;
 					}
 				}
 			}	
 		}
-		linProbs = linProbsNew;
+		linProbsLength = newLength;
 		// store the node
-		storeNode(currTreeInterval, currRatesInterval, linProbs, logP, activeLineages);
+        if (!saveRamInput.get()) {
+        	storeNode(currTreeInterval, currRatesInterval, linProbs, logP, activeLineages);
+        }
     }
     
     private double coalesce(int currTreeInterval, int currRatesInterval) {
@@ -443,7 +448,7 @@ public class Mascot extends StructuredTreeDistribution {
 		
 		stateProbabilities[tree.getNode(coalLines0).getParent().getNr() - nrSamples] = pVec;
 		
-		double[] linProbsNew  = new double[linProbs.length - states];
+		//double[] linProbsNew  = new double[linProbsLength - states];
 		
 		int linCount = 0;		
 		// add all lineages execpt the daughter lineage to the new p array
@@ -460,7 +465,10 @@ public class Mascot extends StructuredTreeDistribution {
 			linProbsNew[linCount*states + j] = pVec.get(j);
 		}
 		// set p to pnew
+		double [] tmp = linProbs;
 		linProbs = linProbsNew;	
+		linProbsNew = linProbs;
+		linProbsLength = linProbsLength - states;
 		
 		
 		//Remove daughter lineages from the line state probs
@@ -468,7 +476,7 @@ public class Mascot extends StructuredTreeDistribution {
 			// remove the daughter lineages from the active lineages
 			activeLineages.remove(daughterIndex1);
 			activeLineages.remove(daughterIndex2);			
-		}else{
+		} else {
 			// remove the daughter lineages from the active lineages
 			activeLineages.remove(daughterIndex2);
 			activeLineages.remove(daughterIndex1);			
@@ -480,7 +488,9 @@ public class Mascot extends StructuredTreeDistribution {
 		}				
 		
 		// store the node
-		storeNode(currTreeInterval, currRatesInterval, linProbs, logP + Math.log(lambda.sum()), activeLineages);
+        if (!saveRamInput.get()) {
+        	storeNode(currTreeInterval, currRatesInterval, linProbs, logP + Math.log(lambda.sum()), activeLineages);
+        }
 		
 		if (lambda.sum()==0)
 			return Double.NEGATIVE_INFINITY;

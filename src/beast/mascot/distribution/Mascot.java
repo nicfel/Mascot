@@ -80,6 +80,8 @@ public class Mascot extends StructuredTreeDistribution {
 	Euler2ndOrderBase euler;
 	TreeInterface tree;
 
+	int [] nodeType;
+
     @Override
     public void initAndValidate(){
     	tree = treeInput.get();
@@ -109,6 +111,12 @@ public class Mascot extends StructuredTreeDistribution {
     	euler = new Euler2ndOrderNative();
     	//euler = new Euler2ndOrder();
     	euler.setup(MAX_SIZE);
+    	
+    	nodeType = new int[tree.getNodeCount()];
+    	for (int i = 0; i < tree.getLeafNodeCount(); i++) {
+    		nodeType[i] = dynamicsInput.get().getValue(tree.getNode(i).getID());
+    	}
+
     }
     
     double [] linProbs_for_ode;
@@ -266,50 +274,6 @@ public class Mascot extends StructuredTreeDistribution {
     int storedNrLineages = -1;
     
 	private double doEuler(double nextEventTime) {
-		if (dynamicsInput.get().hasIndicators)
-			euler.initWithIndicators(migrationRates, indicators, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
-		else {
-//			boolean needsInit = false;
-//			if (storedNrLineages != nrLineages) {
-//				storedNrLineages = nrLineages;
-//				needsInit = true;
-//			}
-//			if (storedMigrationRates.length == 0 || storedMigrationRates.length != migrationRates.length) {
-//				storedMigrationRates = new double[migrationRates.length];
-//				System.arraycopy(migrationRates, 0, storedMigrationRates, 0, migrationRates.length);
-//				needsInit = true;
-//			} else {
-//				for (int i = 0; i < migrationRates.length; i++) {
-//					if (storedMigrationRates[i] != migrationRates[i]) {
-//						System.arraycopy(migrationRates, 0, storedMigrationRates, 0, migrationRates.length);
-//						needsInit = true;
-//						i = migrationRates.length;
-//					}
-//				}
-//			}
-//			if (storedCoalescentRates.length != coalescentRates.length) {
-//				storedCoalescentRates = new double[coalescentRates.length];
-//				System.arraycopy(coalescentRates, 0, storedCoalescentRates, 0, coalescentRates.length);
-//				needsInit = true;
-//			} else {
-//				for (int i = 0; i < coalescentRates.length; i++) {
-//					if (storedCoalescentRates[i] != coalescentRates[i]) {
-//						System.arraycopy(coalescentRates, 0, storedCoalescentRates, 0, coalescentRates.length);
-//						needsInit = true;
-//						i = coalescentRates.length;
-//					}
-//				}
-//			}
-//			if (needsInit) {
-				euler.init(migrationRates, coalescentRates, nrLineages, coalescentRates.length, epsilonInput.get(), maxStepInput.get());
-//			}
-		}
-// System.out.println(Arrays.toString(migrationRates) + " " + Arrays.toString(coalescentRates) + " " + nrLineages + " " +coalescentRates.length  + " " +  epsilonInput.get()  + " " + maxStepInput.get());
-//		double[] linProbs_tmp = new double[linProbs.length+1];
-//		double[] linProbs_tmpdt = new double[linProbs.length+1];
-//		double[] linProbs_tmpddt = new double[linProbs.length+1];
-//		double[] linProbs_tmpdddt = new double[linProbs.length+1];
-
 		//for (int i = 0; i < linProbs.length; i++) linProbs_tmp[i] = linProbs[i];
 		if (linProbs_tmp.length != linProbs.length + 1) {
 			linProbs_tmp= new double[linProbs.length + 1];
@@ -319,8 +283,15 @@ public class Mascot extends StructuredTreeDistribution {
 
 		linProbs[linProbs.length-1] = 0;
 		
-//		System.out.println(Arrays.toString(linProbs));		
-		euler.calculateValues(nextEventTime, linProbs_tmp, linProbs.length + 1);
+
+		if (dynamicsInput.get().hasIndicators) {
+			euler.initWithIndicators(migrationRates, indicators, coalescentRates, nrLineages , coalescentRates.length, epsilonInput.get(), maxStepInput.get());
+			euler.calculateValues(nextEventTime, linProbs_tmp, linProbs.length + 1);
+		} else {
+			euler.initAndcalculateValues(migrationRates, coalescentRates, nrLineages, coalescentRates.length, epsilonInput.get(), maxStepInput.get(), nextEventTime, linProbs_tmp, linProbs.length + 1);
+		}
+		
+		//		System.out.println(Arrays.toString(linProbs));		
 
 		//for (int i = 0; i < linProbs.length; i++) linProbs[i] = linProbs_tmp[i];
 		System.arraycopy(linProbs_tmp,0,linProbs,0,linProbs.length);
@@ -366,14 +337,13 @@ public class Mascot extends StructuredTreeDistribution {
     }
     
     private void sample(int currTreeInterval, int currRatesInterval) {
-		List<Integer> incomingLines = treeIntervalsInput.get().getLineagesAdded(currTreeInterval);
-		int newLength = linProbs.length + incomingLines.size()*states;
+		int incomingLines = treeIntervalsInput.get().getLineagesAdded(currTreeInterval);
+		int newLength = linProbs.length + 1 * states;
 		
-		double[] linProbsNew = new double[newLength];
-		
-		
-		for (int i = 0; i < linProbs.length; i++)
-			linProbsNew[i] = linProbs[i];
+		double [] linProbsNew = new double[newLength];
+		System.arraycopy(linProbs, 0, linProbsNew, 0, linProbs.length);
+//		for (int i = 0; i < linProbs.length; i++)
+//			linProbsNew[i] = linProbs[i];
 		
 		
 		int currPosition = linProbs.length;
@@ -384,9 +354,9 @@ public class Mascot extends StructuredTreeDistribution {
 		 * that gives the type of that taxon
 		 */
 		if (dynamicsInput.get().typeTraitInput.get()!=null){
-			for (Integer l : incomingLines) {
+			Integer l = incomingLines; {
 				activeLineages.add(l);//.getNr());
-				int sampleState = dynamicsInput.get().getValue(tree.getNode(l).getID());
+				int sampleState = nodeType[l];//dynamicsInput.get().getValue(tree.getNode(l).getID());
 				
 				if (sampleState>= dynamicsInput.get().getDimension()){
 					System.err.println("sample discovered with higher state than dimension");
@@ -403,7 +373,7 @@ public class Mascot extends StructuredTreeDistribution {
 				}
 			}				
 		}else{
-			for (Integer l : incomingLines) {
+			Integer l = incomingLines; {
 				activeLineages.add(l);//.getNr());
 				String sampleID = tree.getNode(l).getID();
 				int sampleState = 0;
@@ -427,22 +397,24 @@ public class Mascot extends StructuredTreeDistribution {
     }
     
     private double coalesce(int currTreeInterval, int currRatesInterval) {
-		List<Integer> coalLines = treeIntervalsInput.get().getLineagesRemoved(currTreeInterval);
-    	if (coalLines.size() > 2) {
-			System.err.println("Unsupported coalescent at non-binary node");
-			System.exit(0);
-		}
-    	if (coalLines.size() < 2) {
-    		System.out.println();
-    		System.out.println("WARNING: Less than two lineages found at coalescent event!");
-    		System.out.println();
-    		return Double.NaN;
-		}
+//		List<Integer> coalLines = treeIntervalsInput.get().getLineagesRemoved(currTreeInterval);
+//    	if (coalLines.size() > 2) {
+//			System.err.println("Unsupported coalescent at non-binary node");
+//			System.exit(0);
+//		}
+//    	if (coalLines.size() < 2) {
+//    		System.out.println();
+//    		System.out.println("WARNING: Less than two lineages found at coalescent event!");
+//    		System.out.println();
+//    		return Double.NaN;
+//		}
+    	int coalLines0 = treeIntervalsInput.get().getLineagesRemoved(currTreeInterval,0);
+    	int coalLines1 = treeIntervalsInput.get().getLineagesRemoved(currTreeInterval,1);
 		
-    	final int daughterIndex1 = activeLineages.indexOf(coalLines.get(0));//.getNr());
-		final int daughterIndex2 = activeLineages.indexOf(coalLines.get(1));//.getNr());
+    	final int daughterIndex1 = activeLineages.indexOf(coalLines0);//.getNr());
+		final int daughterIndex2 = activeLineages.indexOf(coalLines1);//.getNr());
 		if (daughterIndex1 == -1 || daughterIndex2 == -1) {
-			System.out.println(coalLines.get(0)/*.getNr()*/ + " " + coalLines.get(1)/*.getNr()*/ + " " + activeLineages);
+			System.out.println(coalLines0/*.getNr()*/ + " " + coalLines1/*.getNr()*/ + " " + activeLineages);
 			System.out.println("daughter lineages at coalescent event not found");
 			return Double.NaN;
 		}
@@ -462,14 +434,14 @@ public class Mascot extends StructuredTreeDistribution {
 			}
         }
         
-        activeLineages.add(tree.getNode(coalLines.get(0)).getParent().getNr());        
+        activeLineages.add(tree.getNode(coalLines0).getParent().getNr());        
         
         // get the node state probabilities
 		DoubleMatrix pVec = new DoubleMatrix();
 		pVec.copy(lambda);
 		pVec = pVec.div(pVec.sum());
 		
-		stateProbabilities[tree.getNode(coalLines.get(0)).getParent().getNr() - nrSamples] = pVec;
+		stateProbabilities[tree.getNode(coalLines0).getParent().getNr() - nrSamples] = pVec;
 		
 		double[] linProbsNew  = new double[linProbs.length - states];
 		

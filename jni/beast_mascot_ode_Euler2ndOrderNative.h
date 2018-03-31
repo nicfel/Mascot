@@ -39,6 +39,14 @@ JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_initWithIndicat
 JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_calculateValues
   (JNIEnv *, jobject, jdouble, jdoubleArray, jint);
 
+/*
+ * Class:     beast_mascot_ode_Euler2ndOrderNative
+ * Method:    initAndcalculateValues
+ * Signature: ([D[DIIDDD[DI)V
+ */
+JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_initAndcalculateValues
+  (JNIEnv *, jobject, jdoubleArray, jdoubleArray, jint, jint, jdouble, jdouble, jdouble, jdoubleArray, jint);
+
 #ifdef __cplusplus
 }
 #endif

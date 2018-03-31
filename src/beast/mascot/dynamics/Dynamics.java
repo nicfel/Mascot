@@ -2,6 +2,7 @@
 package beast.mascot.dynamics;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -60,8 +61,8 @@ public abstract class Dynamics extends CalculationNode  {
 
 
 	HashMap<String, Integer> traitToType = new HashMap<>(); 
-	HashMap<Integer, String> reverseTraitToType; 
-
+	HashMap<Integer, String> reverseTraitToType;
+	
     @Override
     public void initAndValidate() {    	
     	if (typeTraitInput.get()!=null){
@@ -81,13 +82,14 @@ public abstract class Dynamics extends CalculationNode  {
     			traitToType.put(unique.get(i), i);
     		for (int i = 0; i < unique.size(); i++)
     			reverseTraitToType.put(i, unique.get(i));
+
     	}
     	
     	if (dimensionInput.get()>1 && dimensionInput.get()<traitToType.size())
             throw new IllegalArgumentException("dimension is not -1 (undefined) and smaller " +
             		"than the number of different traits");
 
-    	
+    
     }
     
     /**
@@ -127,7 +129,7 @@ public abstract class Dynamics extends CalculationNode  {
 	public int getValue(String id) {
 		return traitToType.get(typeTraitInput.get().getStringValue(id));	
 	}
-	
+		
 	public String getStringStateValue(int state){
 		return reverseTraitToType.get(state);
 	}

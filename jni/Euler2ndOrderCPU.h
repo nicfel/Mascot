@@ -45,11 +45,10 @@ public:
 
 private:
 	void calculateValues(double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length);
-	void clearArray(double * v, int n);
 	double updateP (double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length);
 	double maxAbs(double * pDotDotDot, int length);
 	void normalise(const int i, double * p);
-	void updateP2(const double timeStep, const double timeStepSquare, double * p, const int length, const double * pDot, const double * pDotDot);
+	void updateP2(const double timeStep, const double timeStepSquare, double * p, const int length, double * pDot, double * pDotDot);
 	void computeDerivatives (double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length);
 	void calcSumStates(double  * sumStates, const double * p);
 	void computeSecondDerivate (double * p, double * pDot, double * pDotDot, int length);

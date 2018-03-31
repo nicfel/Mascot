@@ -263,15 +263,11 @@ public class MascotCollaps extends StructuredTreeDistribution {
     }
     
     private void sample(int currTreeInterval, int currRatesInterval) {
-		List<Integer> incomingLines = treeIntervalsInput.get().getLineagesAdded(currTreeInterval);
-		int newLength = linProbs.length + incomingLines.size()*states;
+		int incomingLines = treeIntervalsInput.get().getLineagesAdded(currTreeInterval);
+		int newLength = linProbs.length + 1*states;
 		
-		double[] linProbsNew = new double[newLength];
-		
-		
-		for (int i = 0; i < linProbs.length; i++)
-			linProbsNew[i] = linProbs[i];
-		
+		double[] linProbsNew = new double[newLength];				
+		System.arraycopy(linProbs, 0, linProbsNew, 0, linProbs.length);
 		
 		int currPosition = linProbs.length;
 		
@@ -281,7 +277,7 @@ public class MascotCollaps extends StructuredTreeDistribution {
 		 * that gives the type of that taxon
 		 */
 		if (dynamicsInput.get().typeTraitInput.get()!=null){
-			for (Integer l : incomingLines) {
+			int l = incomingLines; {
 				activeLineages.add(l);//.getNr());
 				int sampleState = dynamicsInput.get().getValue(tree.getNode(l).getID());
 				
@@ -300,7 +296,7 @@ public class MascotCollaps extends StructuredTreeDistribution {
 				}
 			}				
 		}else{
-			for (Integer l : incomingLines) {
+			int l = incomingLines; {
 				activeLineages.add(l);//.getNr());
 				String sampleID = tree.getNode(l).getID();
 				int sampleState = 0;
@@ -324,22 +320,23 @@ public class MascotCollaps extends StructuredTreeDistribution {
     }
     
     private double coalesce(int currTreeInterval, int currRatesInterval) {
-		List<Integer> coalLines = treeIntervalsInput.get().getLineagesRemoved(currTreeInterval);
-    	if (coalLines.size() > 2) {
-			System.err.println("Unsupported coalescent at non-binary node");
-			System.exit(0);
-		}
-    	if (coalLines.size() < 2) {
-    		System.out.println();
-    		System.out.println("WARNING: Less than two lineages found at coalescent event!");
-    		System.out.println();
-    		return Double.NaN;
-		}
+		int coalLines0 = treeIntervalsInput.get().getLineagesRemoved(currTreeInterval, 0);
+		int coalLines1 = treeIntervalsInput.get().getLineagesRemoved(currTreeInterval, 1);
+//    	if (coalLines.size() > 2) {
+//			System.err.println("Unsupported coalescent at non-binary node");
+//			System.exit(0);
+//		}
+//    	if (coalLines.size() < 2) {
+//    		System.out.println();
+//    		System.out.println("WARNING: Less than two lineages found at coalescent event!");
+//    		System.out.println();
+//    		return Double.NaN;
+//		}
 		
-    	final int daughterIndex1 = activeLineages.indexOf(coalLines.get(0));//.getNr());
-		final int daughterIndex2 = activeLineages.indexOf(coalLines.get(1));//.getNr());
+    	final int daughterIndex1 = activeLineages.indexOf(coalLines0);//.getNr());
+		final int daughterIndex2 = activeLineages.indexOf(coalLines1);//.getNr());
 		if (daughterIndex1 == -1 || daughterIndex2 == -1) {
-			System.out.println(coalLines.get(0)/*.getNr()*/ + " " + coalLines.get(1)/*.getNr()*/ + " " + activeLineages);
+			System.out.println(coalLines0/*.getNr()*/ + " " + coalLines1/*.getNr()*/ + " " + activeLineages);
 			System.out.println("daughter lineages at coalescent event not found");
 			return Double.NaN;
 		}
@@ -364,14 +361,14 @@ public class MascotCollaps extends StructuredTreeDistribution {
 				lambda.put(i, 1/states);			
 		}
         
-        activeLineages.add(tree.getNode(coalLines.get(0)).getParent().getNr());        
+        activeLineages.add(tree.getNode(coalLines0).getParent().getNr());        
         
         // get the node state probabilities
 		DoubleMatrix pVec = new DoubleMatrix();
 		pVec.copy(lambda);
 		pVec = pVec.div(pVec.sum());
 		
-		stateProbabilities[tree.getNode(coalLines.get(0)).getParent().getNr() - nrSamples] = pVec;
+		stateProbabilities[tree.getNode(coalLines0).getParent().getNr() - nrSamples] = pVec;
 		
 		double[] linProbsNew  = new double[linProbs.length - states];
 		

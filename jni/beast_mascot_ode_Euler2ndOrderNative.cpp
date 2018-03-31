@@ -53,3 +53,23 @@ JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_calculateValues
   	instance->calculateValues(duration, p, length);
   	(env)->SetDoubleArrayRegion(pArray, 0, length, p);
 }
+
+
+/*
+ * Class:     beast_mascot_ode_Euler2ndOrderNative
+ * Method:    initAndcalculateValues
+ * Signature: ([D[DIIDDD[DI)V
+ */
+JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_initAndcalculateValues
+(JNIEnv *env, jobject obj, jdoubleArray migration_ratesArray, jdoubleArray coalescent_ratesArray, jint lineages, jint states, jdouble epsilon, jdouble max_step,
+		jdouble duration, jdoubleArray pArray, jint length) {
+  	jdouble * migration_rates = (env)->GetDoubleArrayElements(migration_ratesArray, 0);
+  	jdouble * coalescent_rates = (env)->GetDoubleArrayElements(coalescent_ratesArray, 0);
+  	int rateCount = env->GetArrayLength(migration_ratesArray);
+
+	instance->init(migration_rates, rateCount, coalescent_rates, lineages, states, epsilon, max_step);
+
+	jdouble * p = (env)->GetDoubleArrayElements(pArray, 0);
+  	instance->calculateValues(duration, p, length);
+  	(env)->SetDoubleArrayRegion(pArray, 0, length, p);
+}

@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cfloat>
 #include <iostream>
+#include <immintrin.h>
 using namespace std;
 
 inline double min(const double x, const double y) {return x < y ? x : y;}
@@ -86,9 +87,9 @@ void Euler2ndOrderCPU::setup(int maxSize) {
 		linProbs_tmpdt = new double[maxSize];
 		linProbs_tmpddt = new double[maxSize];
 		linProbs_tmpdddt = new double[maxSize];
-		clearArray(linProbs_tmpdt, maxSize);
-		clearArray(linProbs_tmpddt, maxSize);
-		clearArray(linProbs_tmpdddt, maxSize);
+		memset(linProbs_tmpdt, 0, maxSize * sizeof(double));
+		memset(linProbs_tmpddt, 0, maxSize * sizeof(double));
+		memset(linProbs_tmpdddt, 0, maxSize * sizeof(double));
 		fprintf(stderr,"Reserving %d\n", maxSize);
 	}
 
@@ -106,14 +107,14 @@ void Euler2ndOrderCPU::calculateValues(double duration, double * p, int length) 
 //	}
 
 void Euler2ndOrderCPU::calculateValues(double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length) {
-		clearArray(pDotDot, length);
-		clearArray(pDotDotDot, length);
+		memset(pDotDot, 0, length * sizeof(double));
+		memset(pDotDotDot, 0, length * sizeof(double));
 
 		if (hasMultiplicator) {
 			while (duration > 0) {
 				iterations++;
 				//pDot = new double[length];
-				clearArray(pDot, length);
+				memset(pDot, 0, length * sizeof(double));
 				computeDerivativesWithMultiplicator(p, pDot, pDotDot, pDotDotDot, length);
 				computeSecondDerivateWithMultiplicator(p, pDot, pDotDot, length);
 				approximateThirdDerivate(pDotDot, pDotDotDot, length);
@@ -129,7 +130,7 @@ void Euler2ndOrderCPU::calculateValues(double duration, double * p, double * pDo
 			while (duration > 0) {
 				iterations++;
 				//pDot = new double[length];
-				clearArray(pDot, length);
+				memset(pDot, 0, length * sizeof(double));
 				computeDerivatives(p, pDot, pDotDot, pDotDotDot, length);
 				computeSecondDerivate(p, pDot, pDotDot, length);
 				approximateThirdDerivate(pDotDot, pDotDotDot, length);
@@ -144,11 +145,6 @@ void Euler2ndOrderCPU::calculateValues(double duration, double * p, double * pDo
 		}
 	}
 
-void Euler2ndOrderCPU::clearArray(double * v, int n) {
-		for (int i = 0; i < n; i++) {
-			v[i] = 0.0;
-		}
-	}
 
 
 double Euler2ndOrderCPU::updateP (double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length) {
@@ -193,12 +189,11 @@ double Euler2ndOrderCPU::maxAbs(double * pDotDotDot, int length) {
 
 void Euler2ndOrderCPU::normalise(const int i, double * p) {
 		const int k = states * i;
-		double linSum = 0;
 
+		double linSum = 0;
 		int u = k;
 		for (int j = 0; j < states; j++) {
-			const double x = p[u++];
-			linSum += x;
+			linSum += p[u++];
 //			if (x < 0.0) {
 //				System.err.println(Arrays.toString(p));
 //				System.exit(0);
@@ -210,11 +205,11 @@ void Euler2ndOrderCPU::normalise(const int i, double * p) {
 		}
 	}
 
-void Euler2ndOrderCPU::updateP2(const double timeStep, const double timeStepSquare, double * p, const int length, const double * pDot,
-			const double * pDotDot) {
+void Euler2ndOrderCPU::updateP2(const double timeStep, const double timeStepSquare, double * p, const int length, double * pDot,
+			double * pDotDot) {
 		for (int i = 0; i < length; i++) {
-			p[i] += pDot[i] * timeStep
-			+ pDotDot[i] * timeStepSquare;
+			p[i] += pDot[i] * timeStep;
+			p[i] += pDotDot[i] * timeStepSquare;
 		}
 	}
 
@@ -222,7 +217,7 @@ void Euler2ndOrderCPU::computeDerivatives (double * p, double * pDot, double * p
 
 		double migrates;
 		// Compute the sum of line state probabilities for each state
-		clearArray(sumStates, states);
+		memset(sumStates, 0, states * sizeof(double));
 		calcSumStates(sumStates, p);
 
 		// Calculate the change in the lineage state probabilities for every lineage in every state
@@ -300,7 +295,7 @@ void Euler2ndOrderCPU::calcSumStates(double  * sumStates, const double * p) {
 	}
 
 void Euler2ndOrderCPU::computeSecondDerivate (double * p, double * pDot, double * pDotDot, int length) {
-		clearArray(sumDotStates, states);
+		memset(sumDotStates, 0, states * sizeof(double));
 		calcSumStates(sumDotStates, pDot);
 
 		// Calculate the change in the lineage state probabilities for every lineage in every state
@@ -416,7 +411,7 @@ void Euler2ndOrderCPU::computeDerivativesWithMultiplicator(double * p, double * 
 
 		double migrates;
 		// Compute the sum of line state probabilities for each state
-		clearArray(sumStates, states);
+		memset(sumStates, 0, states * sizeof(double));
 		{
 			int u = 0;
 			for (int i = 0; i<lineages; i++) {
@@ -482,7 +477,8 @@ void Euler2ndOrderCPU::computeDerivativesWithMultiplicator(double * p, double * 
 
 void Euler2ndOrderCPU::computeSecondDerivateWithMultiplicator(double * p, double * pDot, double * pDotDot, int length) {
 		//double * sumDotStates = new double[states];;
-		clearArray(sumDotStates, states);
+		memset(sumDotStates, 0, states * sizeof(double));
+
 		for (int i = 0; i<lineages; i++)
 		for (int j = 0; j<states; j++)
 		sumDotStates[j] += multiplicator[i]*pDot[states*i+j];

@@ -484,8 +484,8 @@ public class StructuredTreeLoggerCollaps extends Tree implements Loggable {
     }
     
     private void sample(int currTreeInterval, int currRatesInterval) {
-		List<Integer> incomingLines = mascotInput.get().treeIntervalsInput.get().getLineagesAdded(currTreeInterval);
-		int newLength = linProbs.length + incomingLines.size()*states;
+		int incomingLines = mascotInput.get().treeIntervalsInput.get().getLineagesAdded(currTreeInterval);
+		int newLength = linProbs.length + 1*states;
 		
 		double[] linProbsNew = new double[newLength];
 		
@@ -502,7 +502,7 @@ public class StructuredTreeLoggerCollaps extends Tree implements Loggable {
 		 * that gives the type of that taxon
 		 */
 		if (mascotInput.get().dynamicsInput.get().typeTraitInput.get()!=null){
-			for (Integer l : incomingLines) {
+			int l = incomingLines; {
 				activeLineages.add(l);//.getNr());
 				int sampleState = mascotInput.get().dynamicsInput.get().getValue(tree.getNode(l).getID());
 				
@@ -521,7 +521,7 @@ public class StructuredTreeLoggerCollaps extends Tree implements Loggable {
 				}
 			}				
 		}else{
-			for (Integer l : incomingLines) {
+			int l = incomingLines; {
 				activeLineages.add(l);//.getNr());
 				String sampleID = tree.getNode(l).getID();
 				int sampleState = 0;
@@ -545,22 +545,23 @@ public class StructuredTreeLoggerCollaps extends Tree implements Loggable {
     }
     
     private double coalesce(int currTreeInterval, int currRatesInterval) {
-		List<Integer> coalLines = mascotInput.get().treeIntervalsInput.get().getLineagesRemoved(currTreeInterval);
-    	if (coalLines.size() > 2) {
-			System.err.println("Unsupported coalescent at non-binary node");
-			System.exit(0);
-		}
-    	if (coalLines.size() < 2) {
-    		System.out.println();
-    		System.out.println("WARNING: Less than two lineages found at coalescent event!");
-    		System.out.println();
-    		return Double.NaN;
-		}
+		int coalLines0 = mascotInput.get().treeIntervalsInput.get().getLineagesRemoved(currTreeInterval, 0);
+		int coalLines1 = mascotInput.get().treeIntervalsInput.get().getLineagesRemoved(currTreeInterval, 1);
+//    	if (coalLines.size() > 2) {
+//			System.err.println("Unsupported coalescent at non-binary node");
+//			System.exit(0);
+//		}
+//    	if (coalLines.size() < 2) {
+//    		System.out.println();
+//    		System.out.println("WARNING: Less than two lineages found at coalescent event!");
+//    		System.out.println();
+//    		return Double.NaN;
+//		}
 		
-    	final int daughterIndex1 = activeLineages.indexOf(coalLines.get(0));//.getNr());
-		final int daughterIndex2 = activeLineages.indexOf(coalLines.get(1));//.getNr());
+    	final int daughterIndex1 = activeLineages.indexOf(coalLines0);//.getNr());
+		final int daughterIndex2 = activeLineages.indexOf(coalLines1);//.getNr());
 		if (daughterIndex1 == -1 || daughterIndex2 == -1) {
-			System.out.println(coalLines.get(0)/*.getNr()*/ + " " + coalLines.get(1)/*.getNr()*/ + " " + activeLineages);
+			System.out.println(coalLines0/*.getNr()*/ + " " + coalLines1/*.getNr()*/ + " " + activeLineages);
 			System.out.println("daughter lineages at coalescent event not found");
 			return Double.NaN;
 		}
@@ -585,14 +586,14 @@ public class StructuredTreeLoggerCollaps extends Tree implements Loggable {
 				lambda.put(i, 1/states);			
 		}
         
-        activeLineages.add(tree.getNode(coalLines.get(0)).getParent().getNr());        
+        activeLineages.add(tree.getNode(coalLines0).getParent().getNr());        
         
         // get the node state probabilities
 		DoubleMatrix pVec = new DoubleMatrix();
 		pVec.copy(lambda);
 		pVec = pVec.div(pVec.sum());
 				
-		stateProbabilities[tree.getNode(coalLines.get(0)).getParent().getNr() - nrSamples] = pVec;
+		stateProbabilities[tree.getNode(coalLines0).getParent().getNr() - nrSamples] = pVec;
 		
 		double[] linProbsNew  = new double[linProbs.length - states];
 		
@@ -630,8 +631,8 @@ public class StructuredTreeLoggerCollaps extends Tree implements Loggable {
 			return Double.NEGATIVE_INFINITY;
 		}				
 				
-		leftID[tree.getNode(coalLines.get(0)).getParent().getNr() - nrSamples] = tree.getNode(coalLines.get(0)).getParent().getLeft().getNr();
-		rightID[tree.getNode(coalLines.get(0)).getParent().getNr() - nrSamples] = tree.getNode(coalLines.get(0)).getParent().getRight().getNr();	
+		leftID[tree.getNode(coalLines0).getParent().getNr() - nrSamples] = tree.getNode(coalLines0).getParent().getLeft().getNr();
+		rightID[tree.getNode(coalLines0).getParent().getNr() - nrSamples] = tree.getNode(coalLines0).getParent().getRight().getNr();	
 		
 		if (coalescentRates.length>1){
 			if (lambda.sum()==0)

@@ -21,6 +21,10 @@ public class Euler2ndOrderNative implements Euler2ndOrderBase {
 	
 	@Override
 	native public void calculateValues(double duration, double[] p, int length);
+	
+	@Override
+	native public void initAndcalculateValues(double[] migration_rates, double[] coalescent_rates,
+			int lineages, int states, double epsilon, double max_step, double duration, double[] p, int length);
 
 
 	

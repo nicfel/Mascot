@@ -11,6 +11,7 @@
 #include "Euler2ndOrder.h"
 
 class Euler2ndOrderCPU : public Euler2ndOrder {
+protected:
 	double epsilon;
 	double max_step;
 
@@ -38,10 +39,10 @@ class Euler2ndOrderCPU : public Euler2ndOrder {
 public:
 	Euler2ndOrderCPU();
 	virtual ~Euler2ndOrderCPU();
-	void setup(int maxSize);
-	void init(double * migration_rates, int n, double * coalescent_rates, int lineages, int states, double epsilon, double max_step);
-	void initWithIndicators(double * migration_rates, int * indicators, double * coalescent_rates, int lineages, int states, double epsilon, double max_step);
-	void calculateValues(double duration, double * p, int length);
+	virtual void setup(int maxSize, int states, double epsilon, double max_step);
+	virtual void init(double * migration_rates, int n, double * coalescent_rates, int lineages);
+	virtual void initWithIndicators(double * migration_rates, int * indicators, double * coalescent_rates, int lineages);
+	virtual void calculateValues(double duration, double * p, int length);
 
 private:
 	void calculateValues(double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length);
@@ -57,5 +58,39 @@ private:
 	void computeSecondDerivateWithMultiplicator(double * p, double * pDot, double * pDotDot, int length);
 
 };
+
+#define sub(X) \
+class X : public Euler2ndOrderCPU {\
+public: X();\
+virtual ~X();\
+void setup(int maxSize, int states, double epsilon, double max_step);\
+void init(double * migration_rates, int n, double * coalescent_rates, int lineages);\
+void initWithIndicators(double * migration_rates, int * indicators, double * coalescent_rates, int lineages);\
+void calculateValues(double duration, double * p, int length);\
+\
+private:\
+void calculateValues(double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length);\
+double updateP (double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length);\
+double maxAbs(double * pDotDotDot, int length);\
+void normalise(const int i, double * p);\
+void updateP2(const double timeStep, const double timeStepSquare, double * p, const int length, double * pDot, double * pDotDot);\
+void computeDerivatives (double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length);\
+void calcSumStates(double  * sumStates, const double * p);\
+void computeSecondDerivate (double * p, double * pDot, double * pDotDot, int length);\
+void approximateThirdDerivate (double * pDotDot, double * pDotDotDot, int length);\
+void computeDerivativesWithMultiplicator(double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length);\
+void computeSecondDerivateWithMultiplicator(double * p, double * pDot, double * pDotDot, int length);\
+\
+};
+
+sub(Euler2ndOrderCPU2);
+sub(Euler2ndOrderCPU3);
+sub(Euler2ndOrderCPU4);
+sub(Euler2ndOrderCPU5);
+sub(Euler2ndOrderCPU6);
+sub(Euler2ndOrderCPU7);
+sub(Euler2ndOrderCPU8);
+sub(Euler2ndOrderCPU9);
+sub(Euler2ndOrderCPU10);
 
 #endif /* EULER2NDORDERCPU_H_ */

@@ -12,9 +12,9 @@ class Euler2ndOrder {
 public:
 	Euler2ndOrder();
 	virtual ~Euler2ndOrder();
-	void setup(int maxSize);
-	void init(double * migration_rates, int n, double * coalescent_rates, int lineages, int states, double epsilon, double max_step);
-	void initWithIndicators(double * migration_rates, int * indicators, double * coalescent_rates, int lineages, int states, double epsilon, double max_step);
+	void setup(int maxSize, int states, double epsilon, double max_step);
+	void init(double * migration_rates, int n, double * coalescent_rates, int lineages);
+	void initWithIndicators(double * migration_rates, int * indicators, double * coalescent_rates, int lineages);
 	void calculateValues(double duration, double * p, int length);
 
 };

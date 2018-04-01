@@ -8,8 +8,8 @@ using namespace std;
 inline double min(const double x, const double y) {return x < y ? x : y;}
 inline double max(const double x, const double y) {return x > y ? x : y;}
 
-Euler2ndOrderCPU::Euler2ndOrderCPU() {
-	fprintf(stderr, "Creating Euler2ndOrderCPU\n");
+Euler2ndOrderCPU5::Euler2ndOrderCPU5() {
+	fprintf(stderr, "Creating Euler2ndOrderCPU5\n");
 	max_step = 0 , epsilon = 0;
 	migration_rates = NULL; // flattened square matrix of migration rates
 	n = 0, n2 = 0;// dimension of migration rate matrix and indicators matrix
@@ -33,12 +33,12 @@ Euler2ndOrderCPU::Euler2ndOrderCPU() {
 	linProbs_tmpdddt = NULL;
 }
 
-Euler2ndOrderCPU::~Euler2ndOrderCPU() {
+Euler2ndOrderCPU5::~Euler2ndOrderCPU5() {
 }
 
 
 
-void Euler2ndOrderCPU::init(double * migration_rates, int rateCount, double * coalescent_rates, int lineages) {
+void Euler2ndOrderCPU5::init(double * migration_rates, int rateCount, double * coalescent_rates, int lineages) {
 
 //	fprintf(stderr,"x");
 		(*this).migration_rates = migration_rates;
@@ -63,7 +63,7 @@ void Euler2ndOrderCPU::init(double * migration_rates, int rateCount, double * co
 //		}
 	}
 
-void Euler2ndOrderCPU::initWithIndicators(double * migration_rates, int * indicators, double * coalescent_rates, int lineages) {
+void Euler2ndOrderCPU5::initWithIndicators(double * migration_rates, int * indicators, double * coalescent_rates, int lineages) {
 //		(*this).max_step = max_step;
 //		(*this).epsilon = epsilon;
 //		(*this).migration_rates = migration_rates;
@@ -82,7 +82,7 @@ void Euler2ndOrderCPU::initWithIndicators(double * migration_rates, int * indica
 	}
 
 
-void Euler2ndOrderCPU::setup(int maxSize, int states, double epsilon, double max_step) {
+void Euler2ndOrderCPU5::setup(int maxSize, int states, double epsilon, double max_step) {
 		linProbs_tmpdt = new double[maxSize];
 		linProbs_tmpddt = new double[maxSize];
 		linProbs_tmpdddt = new double[maxSize];
@@ -97,18 +97,18 @@ void Euler2ndOrderCPU::setup(int maxSize, int states, double epsilon, double max
 
 
 
-void Euler2ndOrderCPU::calculateValues(double duration, double * p, int length) {
+void Euler2ndOrderCPU5::calculateValues(double duration, double * p, int length) {
 		double * pDot = linProbs_tmpdt;
 		double * pDotDot = linProbs_tmpddt;
 		double * pDotDotDot = linProbs_tmpdddt;
 		calculateValues(duration, p, pDot, pDotDot, pDotDotDot, length);
 }
 
-//void Euler2ndOrderCPU::calculateValues(double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot) {
+//void Euler2ndOrderCPU5::calculateValues(double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot) {
 //		calculateValues(duration, p, pDot, pDotDot, pDotDotDot, pDot.length);
 //	}
 
-void Euler2ndOrderCPU::calculateValues(double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length) {
+void Euler2ndOrderCPU5::calculateValues(double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length) {
 		memset(pDotDot, 0, length * sizeof(double));
 		memset(pDotDotDot, 0, length * sizeof(double));
 
@@ -149,7 +149,7 @@ void Euler2ndOrderCPU::calculateValues(double duration, double * p, double * pDo
 
 
 
-double Euler2ndOrderCPU::updateP (double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length) {
+double Euler2ndOrderCPU5::updateP (double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length) {
 		const double max_dotdotdot = maxAbs(pDotDotDot, length);
 
 		//double timeStep = FastMath.min(FastMath.pow(epsilon*6/max_dotdotdot, C), FastMath.min(duration, max_step));
@@ -181,7 +181,7 @@ double Euler2ndOrderCPU::updateP (double duration, double * p, double * pDot, do
 
 
 
-double Euler2ndOrderCPU::maxAbs(double * pDotDotDot, int length) {
+double Euler2ndOrderCPU5::maxAbs(double * pDotDotDot, int length) {
 		double max_dotdotdot = 0.0;
 		for (int i = 0; i < length; i++) {
 			max_dotdotdot = max(max_dotdotdot, abs(pDotDotDot[i]));
@@ -189,13 +189,25 @@ double Euler2ndOrderCPU::maxAbs(double * pDotDotDot, int length) {
 		return max_dotdotdot;
 	}
 
-void Euler2ndOrderCPU::normalise(const int i, double * p) {
+void Euler2ndOrderCPU5::normalise(const int i, double * p) {
 		const int k = states * i;
 
 		double linSum = 0;
 		int u = k;
-		int q;
-		for (q = 0; q < states; q++) {
+		
+{
+			linSum += p[u++];
+		}
+{
+			linSum += p[u++];
+		}
+{
+			linSum += p[u++];
+		}
+{
+			linSum += p[u++];
+		}
+{
 			linSum += p[u++];
 		}
 		//			if (x < 0.0) {
@@ -203,12 +215,24 @@ void Euler2ndOrderCPU::normalise(const int i, double * p) {
 		//				System.exit(0);
 		//			}
 		u = k;
-		for (q = 0; q < states; q++) {
+{
+			p[u++] /= linSum;
+		}
+{
+			p[u++] /= linSum;
+		}
+{
+			p[u++] /= linSum;
+		}
+{
+			p[u++] /= linSum;
+		}
+{
 			p[u++] /= linSum;
 		}
 	}
 
-void Euler2ndOrderCPU::updateP2(const double timeStep, const double timeStepSquare, double * p, const int length, double * pDot,
+void Euler2ndOrderCPU5::updateP2(const double timeStep, const double timeStepSquare, double * p, const int length, double * pDot,
 			double * pDotDot) {
 		for (int i = 0; i < length; i++) {
 			p[i] += pDot[i] * timeStep;
@@ -216,7 +240,7 @@ void Euler2ndOrderCPU::updateP2(const double timeStep, const double timeStepSqua
 		}
 	}
 
-void Euler2ndOrderCPU::computeDerivatives (double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length) {
+void Euler2ndOrderCPU5::computeDerivatives (double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length) {
 
 		double migrates;
 		// Compute the sum of line state probabilities for each state
@@ -229,7 +253,32 @@ void Euler2ndOrderCPU::computeDerivatives (double * p, double * pDot, double * p
 
 			double sumCoal = 0;
 			int k = currlin;
-			for (j = 0; j < states; j++) {
+j = 0;
+{
+				tCR[j] = coalescent_rates[j] * (sumStates[j] - p[k]);
+				sumCoal += p[k] * tCR[j];
+				k++;
+			}
+j++;
+{
+				tCR[j] = coalescent_rates[j] * (sumStates[j] - p[k]);
+				sumCoal += p[k] * tCR[j];
+				k++;
+			}
+j++;
+{
+				tCR[j] = coalescent_rates[j] * (sumStates[j] - p[k]);
+				sumCoal += p[k] * tCR[j];
+				k++;
+			}
+j++;
+{
+				tCR[j] = coalescent_rates[j] * (sumStates[j] - p[k]);
+				sumCoal += p[k] * tCR[j];
+				k++;
+			}
+j++;
+{
 				tCR[j] = coalescent_rates[j] * (sumStates[j] - p[k]);
 				sumCoal += p[k] * tCR[j];
 				k++;
@@ -237,7 +286,44 @@ void Euler2ndOrderCPU::computeDerivatives (double * p, double * pDot, double * p
 			pDot[length-1] -= sumCoal;
 
 			k = currlin;
-			for (j = 0; j < states; j++) {
+j = 0;
+{
+				// Calculate the Derivate of p:
+				double coal = sumCoal - tCR[j];
+				pDotDot[k] = coal;
+				pDotDotDot[k] = coal;
+				pDot[k] += p[k] * coal;
+				k++;
+			} // j
+j++;
+{
+				// Calculate the Derivate of p:
+				double coal = sumCoal - tCR[j];
+				pDotDot[k] = coal;
+				pDotDotDot[k] = coal;
+				pDot[k] += p[k] * coal;
+				k++;
+			} // j
+j++;
+{
+				// Calculate the Derivate of p:
+				double coal = sumCoal - tCR[j];
+				pDotDot[k] = coal;
+				pDotDotDot[k] = coal;
+				pDot[k] += p[k] * coal;
+				k++;
+			} // j
+j++;
+{
+				// Calculate the Derivate of p:
+				double coal = sumCoal - tCR[j];
+				pDotDot[k] = coal;
+				pDotDotDot[k] = coal;
+				pDot[k] += p[k] * coal;
+				k++;
+			} // j
+j++;
+{
 				// Calculate the Derivate of p:
 				double coal = sumCoal - tCR[j];
 				pDotDot[k] = coal;
@@ -268,7 +354,64 @@ void Euler2ndOrderCPU::computeDerivatives (double * p, double * pDot, double * p
 			int u = 0;
 			for (int i = 0; i < lineages; i++) {
 				// Calculate the probability of a lineage changing states
-				for (j = 0; j < states; j++) {
+j = 0;
+{
+					int v = u;
+					double pj = p[u];
+					for (int k = j + 1; k < states; k++) {
+						v++;
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = p[v] * migration_rates[k * n + j] -
+						pj * migration_rates[j * n + k];
+						pDot[u] += migrates;
+						pDot[v] -= migrates;
+					} // j XXX
+					u++;
+				} // j
+j++;
+{
+					int v = u;
+					double pj = p[u];
+					for (int k = j + 1; k < states; k++) {
+						v++;
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = p[v] * migration_rates[k * n + j] -
+						pj * migration_rates[j * n + k];
+						pDot[u] += migrates;
+						pDot[v] -= migrates;
+					} // j XXX
+					u++;
+				} // j
+j++;
+{
+					int v = u;
+					double pj = p[u];
+					for (int k = j + 1; k < states; k++) {
+						v++;
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = p[v] * migration_rates[k * n + j] -
+						pj * migration_rates[j * n + k];
+						pDot[u] += migrates;
+						pDot[v] -= migrates;
+					} // j XXX
+					u++;
+				} // j
+j++;
+{
+					int v = u;
+					double pj = p[u];
+					for (int k = j + 1; k < states; k++) {
+						v++;
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = p[v] * migration_rates[k * n + j] -
+						pj * migration_rates[j * n + k];
+						pDot[u] += migrates;
+						pDot[v] -= migrates;
+					} // j XXX
+					u++;
+				} // j
+j++;
+{
 					int v = u;
 					double pj = p[u];
 					for (int k = j + 1; k < states; k++) {
@@ -288,7 +431,7 @@ void Euler2ndOrderCPU::computeDerivatives (double * p, double * pDot, double * p
 
 	}
 
-void Euler2ndOrderCPU::calcSumStates(double  * sumStates, const double * p) {
+void Euler2ndOrderCPU5::calcSumStates(double  * sumStates, const double * p) {
 		int u = 0;
 		for (int i = 0; i < lineages; i++) {
 			for (int j = 0; j < states; j++) {
@@ -297,7 +440,7 @@ void Euler2ndOrderCPU::calcSumStates(double  * sumStates, const double * p) {
 		}
 	}
 
-void Euler2ndOrderCPU::computeSecondDerivate (double * p, double * pDot, double * pDotDot, int length) {
+void Euler2ndOrderCPU5::computeSecondDerivate (double * p, double * pDot, double * pDotDot, int length) {
 		memset(sumDotStates, 0, states * sizeof(double));
 		calcSumStates(sumDotStates, pDot);
 
@@ -306,13 +449,55 @@ void Euler2ndOrderCPU::computeSecondDerivate (double * p, double * pDot, double 
 		for (int i = 0; i < lineages; i++) {
 			double pCoalRate = 0.0;
 			int k = currlin;
-			for (j = 0; j < states; j++) {
+j = 0;
+{
+				pCoalRate += coalescent_rates[j] * (pDot[k] * (sumStates[j] - 2 * p[k]) + p[k] * (sumDotStates[j]));
+				k++;
+			}
+j++;
+{
+				pCoalRate += coalescent_rates[j] * (pDot[k] * (sumStates[j] - 2 * p[k]) + p[k] * (sumDotStates[j]));
+				k++;
+			}
+j++;
+{
+				pCoalRate += coalescent_rates[j] * (pDot[k] * (sumStates[j] - 2 * p[k]) + p[k] * (sumDotStates[j]));
+				k++;
+			}
+j++;
+{
+				pCoalRate += coalescent_rates[j] * (pDot[k] * (sumStates[j] - 2 * p[k]) + p[k] * (sumDotStates[j]));
+				k++;
+			}
+j++;
+{
 				pCoalRate += coalescent_rates[j] * (pDot[k] * (sumStates[j] - 2 * p[k]) + p[k] * (sumDotStates[j]));
 				k++;
 			}
 
 			k = currlin;
-			for (j = 0; j < states; j++) {
+j = 0;
+{
+				pDotDot[k] = pDotDot[k] * pDot[k] + p[k] * (pCoalRate - coalescent_rates[j] * (sumDotStates[j] - pDot[k]));
+				k++;
+			}    			// j
+j++;
+{
+				pDotDot[k] = pDotDot[k] * pDot[k] + p[k] * (pCoalRate - coalescent_rates[j] * (sumDotStates[j] - pDot[k]));
+				k++;
+			}    			// j
+j++;
+{
+				pDotDot[k] = pDotDot[k] * pDot[k] + p[k] * (pCoalRate - coalescent_rates[j] * (sumDotStates[j] - pDot[k]));
+				k++;
+			}    			// j
+j++;
+{
+				pDotDot[k] = pDotDot[k] * pDot[k] + p[k] * (pCoalRate - coalescent_rates[j] * (sumDotStates[j] - pDot[k]));
+				k++;
+			}    			// j
+j++;
+{
 				pDotDot[k] = pDotDot[k] * pDot[k] + p[k] * (pCoalRate - coalescent_rates[j] * (sumDotStates[j] - pDot[k]));
 				k++;
 			}    			// j
@@ -340,7 +525,68 @@ void Euler2ndOrderCPU::computeSecondDerivate (double * p, double * pDot, double 
 			int u = 0;
 			for (int i = 0; i<lineages; i++) {
 				// Calculate the probability of a lineage changing states
-				for (j = 0; j < states; j++) {
+j = 0;
+{
+					double pj = pDot[u];
+					int v = u + 1;
+					for (int k = j+1; k < states; k++) {
+
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = pDot[v]*migration_rates[k * n + j] -
+						pj*migration_rates[j * n + k];
+						pDotDot[u] += migrates;
+						pDotDot[v] -= migrates;
+						v++;
+					}    			// j    	XXX
+					u++;
+				}    			// j
+j++;
+{
+					double pj = pDot[u];
+					int v = u + 1;
+					for (int k = j+1; k < states; k++) {
+
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = pDot[v]*migration_rates[k * n + j] -
+						pj*migration_rates[j * n + k];
+						pDotDot[u] += migrates;
+						pDotDot[v] -= migrates;
+						v++;
+					}    			// j    	XXX
+					u++;
+				}    			// j
+j++;
+{
+					double pj = pDot[u];
+					int v = u + 1;
+					for (int k = j+1; k < states; k++) {
+
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = pDot[v]*migration_rates[k * n + j] -
+						pj*migration_rates[j * n + k];
+						pDotDot[u] += migrates;
+						pDotDot[v] -= migrates;
+						v++;
+					}    			// j    	XXX
+					u++;
+				}    			// j
+j++;
+{
+					double pj = pDot[u];
+					int v = u + 1;
+					for (int k = j+1; k < states; k++) {
+
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = pDot[v]*migration_rates[k * n + j] -
+						pj*migration_rates[j * n + k];
+						pDotDot[u] += migrates;
+						pDotDot[v] -= migrates;
+						v++;
+					}    			// j    	XXX
+					u++;
+				}    			// j
+j++;
+{
 					double pj = pDot[u];
 					int v = u + 1;
 					for (int k = j+1; k < states; k++) {
@@ -360,7 +606,7 @@ void Euler2ndOrderCPU::computeSecondDerivate (double * p, double * pDot, double 
 		pDotDot[length-1] /= 2;
 	}
 
-void Euler2ndOrderCPU::approximateThirdDerivate (double * pDotDot, double * pDotDotDot, int length) {
+void Euler2ndOrderCPU5::approximateThirdDerivate (double * pDotDot, double * pDotDotDot, int length) {
 		double migrates;
 
 		// Calculate the change in the lineage state probabilities for every lineage in every state
@@ -383,7 +629,64 @@ void Euler2ndOrderCPU::approximateThirdDerivate (double * pDotDot, double * pDot
 //		} else {
 		int k;
 			for (int j = 0; j < states; j++) {
-				for (k = 0; k < states; k++) {
+k = 0;
+{
+					double mrate = migration_rates[j * n + k];
+					int u = j;
+					int v = k;
+					for (int i = 0; i<lineages; i++) {
+						migrates = pDotDot[u] * mrate;
+						pDotDotDot[v] += migrates;
+						pDotDotDot[u] -= migrates;
+						u += states;
+						v += states;
+					} // XXX
+
+				}
+k++;
+{
+					double mrate = migration_rates[j * n + k];
+					int u = j;
+					int v = k;
+					for (int i = 0; i<lineages; i++) {
+						migrates = pDotDot[u] * mrate;
+						pDotDotDot[v] += migrates;
+						pDotDotDot[u] -= migrates;
+						u += states;
+						v += states;
+					} // XXX
+
+				}
+k++;
+{
+					double mrate = migration_rates[j * n + k];
+					int u = j;
+					int v = k;
+					for (int i = 0; i<lineages; i++) {
+						migrates = pDotDot[u] * mrate;
+						pDotDotDot[v] += migrates;
+						pDotDotDot[u] -= migrates;
+						u += states;
+						v += states;
+					} // XXX
+
+				}
+k++;
+{
+					double mrate = migration_rates[j * n + k];
+					int u = j;
+					int v = k;
+					for (int i = 0; i<lineages; i++) {
+						migrates = pDotDot[u] * mrate;
+						pDotDotDot[v] += migrates;
+						pDotDotDot[u] -= migrates;
+						u += states;
+						v += states;
+					} // XXX
+
+				}
+k++;
+{
 					double mrate = migration_rates[j * n + k];
 					int u = j;
 					int v = k;
@@ -400,7 +703,7 @@ void Euler2ndOrderCPU::approximateThirdDerivate (double * pDotDot, double * pDot
 //		}
 	}
 
-void Euler2ndOrderCPU::computeDerivativesWithMultiplicator(double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length) {
+void Euler2ndOrderCPU5::computeDerivativesWithMultiplicator(double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length) {
 
 		double migrates;
 		int j;
@@ -425,7 +728,40 @@ void Euler2ndOrderCPU::computeDerivativesWithMultiplicator(double * p, double * 
 				sumCoal += p[currlin+j]*tCR[j];
 			}
 			pDot[length-1] -= multiplicator[i]*sumCoal;
-			for (j = 0; j < states; j++) {
+j = 0;
+{
+				// Calculate the Derivate of p:
+				double coal = sumCoal - tCR[j];
+				pDotDot[currlin+j] = coal;
+				pDotDotDot[currlin+j] = coal;
+				pDot[currlin+j] += p[currlin+j] * coal;
+			}		// j
+j++;
+{
+				// Calculate the Derivate of p:
+				double coal = sumCoal - tCR[j];
+				pDotDot[currlin+j] = coal;
+				pDotDotDot[currlin+j] = coal;
+				pDot[currlin+j] += p[currlin+j] * coal;
+			}		// j
+j++;
+{
+				// Calculate the Derivate of p:
+				double coal = sumCoal - tCR[j];
+				pDotDot[currlin+j] = coal;
+				pDotDotDot[currlin+j] = coal;
+				pDot[currlin+j] += p[currlin+j] * coal;
+			}		// j
+j++;
+{
+				// Calculate the Derivate of p:
+				double coal = sumCoal - tCR[j];
+				pDotDot[currlin+j] = coal;
+				pDotDotDot[currlin+j] = coal;
+				pDot[currlin+j] += p[currlin+j] * coal;
+			}		// j
+j++;
+{
 				// Calculate the Derivate of p:
 				double coal = sumCoal - tCR[j];
 				pDotDot[currlin+j] = coal;
@@ -451,7 +787,60 @@ void Euler2ndOrderCPU::computeDerivativesWithMultiplicator(double * p, double * 
 			for (int i = 0; i<lineages; i++) {
 				int currlin = states*i;
 				// Calculate the probability of a lineage changing states
-				for (j = 0; j < states; j++) {
+j = 0;
+{
+					double pj = p[currlin+j];
+					for (int k = j+1; k < states; k++) {
+
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = p[currlin+k]*migration_rates[k * n + j] -
+						pj*migration_rates[j * n + k];
+						pDot[currlin+j] += migrates;
+						pDot[currlin+k] -= migrates;
+					}		// j XXX
+
+				}		// j
+j++;
+{
+					double pj = p[currlin+j];
+					for (int k = j+1; k < states; k++) {
+
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = p[currlin+k]*migration_rates[k * n + j] -
+						pj*migration_rates[j * n + k];
+						pDot[currlin+j] += migrates;
+						pDot[currlin+k] -= migrates;
+					}		// j XXX
+
+				}		// j
+j++;
+{
+					double pj = p[currlin+j];
+					for (int k = j+1; k < states; k++) {
+
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = p[currlin+k]*migration_rates[k * n + j] -
+						pj*migration_rates[j * n + k];
+						pDot[currlin+j] += migrates;
+						pDot[currlin+k] -= migrates;
+					}		// j XXX
+
+				}		// j
+j++;
+{
+					double pj = p[currlin+j];
+					for (int k = j+1; k < states; k++) {
+
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = p[currlin+k]*migration_rates[k * n + j] -
+						pj*migration_rates[j * n + k];
+						pDot[currlin+j] += migrates;
+						pDot[currlin+k] -= migrates;
+					}		// j XXX
+
+				}		// j
+j++;
+{
 					double pj = p[currlin+j];
 					for (int k = j+1; k < states; k++) {
 
@@ -470,7 +859,7 @@ void Euler2ndOrderCPU::computeDerivativesWithMultiplicator(double * p, double * 
 
 	}
 
-void Euler2ndOrderCPU::computeSecondDerivateWithMultiplicator(double * p, double * pDot, double * pDotDot, int length) {
+void Euler2ndOrderCPU5::computeSecondDerivateWithMultiplicator(double * p, double * pDot, double * pDotDot, int length) {
 		//double * sumDotStates = new double[states];;
 		memset(sumDotStates, 0, states * sizeof(double));
 
@@ -517,7 +906,60 @@ void Euler2ndOrderCPU::computeSecondDerivateWithMultiplicator(double * p, double
 			for (int i = 0; i<lineages; i++) {
 				int currlin = states*i;
 				// Calculate the probability of a lineage changing states
-				for (j = 0; j < states; j++) {
+j = 0;
+{
+					double pj = pDot[currlin+j];
+					for (int k = j+1; k < states; k++) {
+
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = pDot[currlin+k]*migration_rates[k * n + j] -
+						pj*migration_rates[j * n + k];
+						pDotDot[currlin+j] += migrates;
+						pDotDot[currlin+k] -= migrates;
+					}		// j XXX
+
+				}		// j
+j++;
+{
+					double pj = pDot[currlin+j];
+					for (int k = j+1; k < states; k++) {
+
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = pDot[currlin+k]*migration_rates[k * n + j] -
+						pj*migration_rates[j * n + k];
+						pDotDot[currlin+j] += migrates;
+						pDotDot[currlin+k] -= migrates;
+					}		// j XXX
+
+				}		// j
+j++;
+{
+					double pj = pDot[currlin+j];
+					for (int k = j+1; k < states; k++) {
+
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = pDot[currlin+k]*migration_rates[k * n + j] -
+						pj*migration_rates[j * n + k];
+						pDotDot[currlin+j] += migrates;
+						pDotDot[currlin+k] -= migrates;
+					}		// j XXX
+
+				}		// j
+j++;
+{
+					double pj = pDot[currlin+j];
+					for (int k = j+1; k < states; k++) {
+
+						// the probability of lineage i being in state j is p[i*nr_states +j]
+						migrates = pDot[currlin+k]*migration_rates[k * n + j] -
+						pj*migration_rates[j * n + k];
+						pDotDot[currlin+j] += migrates;
+						pDotDot[currlin+k] -= migrates;
+					}		// j XXX
+
+				}		// j
+j++;
+{
 					double pj = pDot[currlin+j];
 					for (int k = j+1; k < states; k++) {
 

@@ -30,7 +30,16 @@ CFLAGS = -Wall -Ofast -ffast-math $(WARN) -I../../ -I/Library/Java/JavaVirtualMa
 LINKFLAGS = -L. $(PROFILING)
 LIBS=-lm
 PROG=mascot
-OBJS=beast_mascot_ode_Euler2ndOrderNative.o Euler2ndOrder.o Euler2ndOrderCPU.o
+OBJS=beast_mascot_ode_Euler2ndOrderNative.o Euler2ndOrder.o Euler2ndOrderCPU.o \
+	Euler2ndOrderCPU2.o\
+	Euler2ndOrderCPU3.o\
+	Euler2ndOrderCPU4.o\
+	Euler2ndOrderCPU5.o\
+	Euler2ndOrderCPU6.o\
+	Euler2ndOrderCPU7.o\
+	Euler2ndOrderCPU8.o\
+	Euler2ndOrderCPU9.o\
+	Euler2ndOrderCPU10.o
 
 all: $(OBJS)
 #		g++ -dynamiclib -o mascot.jnilib $(OBJS)

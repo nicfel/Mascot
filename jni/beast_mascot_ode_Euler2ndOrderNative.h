@@ -10,26 +10,26 @@ extern "C" {
 /*
  * Class:     beast_mascot_ode_Euler2ndOrderNative
  * Method:    setup
- * Signature: (I)V
+ * Signature: (IIDD)V
  */
 JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_setup
-  (JNIEnv *, jobject, jint);
+  (JNIEnv *, jobject, jint, jint, jdouble, jdouble);
 
 /*
  * Class:     beast_mascot_ode_Euler2ndOrderNative
  * Method:    init
- * Signature: ([D[DIIDD)V
+ * Signature: ([D[DI)V
  */
 JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_init
-  (JNIEnv *, jobject, jdoubleArray, jdoubleArray, jint, jint, jdouble, jdouble);
+  (JNIEnv *, jobject, jdoubleArray, jdoubleArray, jint);
 
 /*
  * Class:     beast_mascot_ode_Euler2ndOrderNative
  * Method:    initWithIndicators
- * Signature: ([D[I[DIIDD)V
+ * Signature: ([D[I[DI)V
  */
 JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_initWithIndicators
-  (JNIEnv *, jobject, jdoubleArray, jintArray, jdoubleArray, jint, jint, jdouble, jdouble);
+  (JNIEnv *, jobject, jdoubleArray, jintArray, jdoubleArray, jint);
 
 /*
  * Class:     beast_mascot_ode_Euler2ndOrderNative
@@ -42,10 +42,10 @@ JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_calculateValues
 /*
  * Class:     beast_mascot_ode_Euler2ndOrderNative
  * Method:    initAndcalculateValues
- * Signature: ([D[DIIDDD[DI)V
+ * Signature: ([D[DID[DI)V
  */
 JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_initAndcalculateValues
-  (JNIEnv *, jobject, jdoubleArray, jdoubleArray, jint, jint, jdouble, jdouble, jdouble, jdoubleArray, jint);
+  (JNIEnv *, jobject, jdoubleArray, jdoubleArray, jint, jdouble, jdoubleArray, jint);
 
 #ifdef __cplusplus
 }

@@ -12,9 +12,20 @@ Euler2ndOrderCPU * instance;
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_setup
-  (JNIEnv *env, jobject obj, jint maxSize){
-	instance = new Euler2ndOrderCPU();
-	instance->setup(maxSize);
+  (JNIEnv *env, jobject obj, jint maxSize, jint states, jdouble epsilon, jdouble max_step) {
+	switch (states) {
+	case 2: instance = new Euler2ndOrderCPU2();break;
+	case 3: instance = new Euler2ndOrderCPU3();break;
+	case 4: instance = new Euler2ndOrderCPU4();break;
+	case 5: instance = new Euler2ndOrderCPU5();break;
+	case 6: instance = new Euler2ndOrderCPU6();break;
+	case 7: instance = new Euler2ndOrderCPU7();break;
+	case 8: instance = new Euler2ndOrderCPU8();break;
+	case 9: instance = new Euler2ndOrderCPU9();break;
+	case 10: instance = new Euler2ndOrderCPU10();break;
+	default: instance = new Euler2ndOrderCPU();
+	}
+	instance->setup(maxSize, states, epsilon, max_step);
 	printf("Java_beast_mascot_ode_Euler2ndOrderNative_setup\n");
 	printf("maxSize = %d\n", maxSize);
 }
@@ -25,12 +36,12 @@ JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_setup
  * Signature: ([[D[DIIDD)V
  */
 JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_init
-  (JNIEnv *env, jobject obj, jdoubleArray migration_ratesArray, jdoubleArray coalescent_ratesArray, jint lineages, jint states, jdouble epsilon, jdouble max_step) {
+  (JNIEnv *env, jobject obj, jdoubleArray migration_ratesArray, jdoubleArray coalescent_ratesArray, jint lineages) {
   	jdouble * migration_rates = (env)->GetDoubleArrayElements(migration_ratesArray, 0);
   	jdouble * coalescent_rates = (env)->GetDoubleArrayElements(coalescent_ratesArray, 0);
   	int rateCount = env->GetArrayLength(migration_ratesArray);
 
-	instance->init(migration_rates, rateCount, coalescent_rates, lineages, states, epsilon, max_step);
+	instance->init(migration_rates, rateCount, coalescent_rates, lineages);
 }
 
 /*
@@ -39,7 +50,7 @@ JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_init
  * Signature: ([[D[[I[DIIDD)V
  */
 JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_initWithIndicators
-  (JNIEnv *env, jobject obj, jdoubleArray migration_ratesArray, jintArray indicatorsArray, jdoubleArray coalescent_ratesArray, jint lineages, jint states, jdouble epsilon, jdouble max_step) {
+  (JNIEnv *env, jobject obj, jdoubleArray migration_ratesArray, jintArray indicatorsArray, jdoubleArray coalescent_ratesArray, jint lineages) {
 }
 
 /*
@@ -61,13 +72,13 @@ JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_calculateValues
  * Signature: ([D[DIIDDD[DI)V
  */
 JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_initAndcalculateValues
-(JNIEnv *env, jobject obj, jdoubleArray migration_ratesArray, jdoubleArray coalescent_ratesArray, jint lineages, jint states, jdouble epsilon, jdouble max_step,
+(JNIEnv *env, jobject obj, jdoubleArray migration_ratesArray, jdoubleArray coalescent_ratesArray, jint lineages,
 		jdouble duration, jdoubleArray pArray, jint length) {
   	jdouble * migration_rates = (env)->GetDoubleArrayElements(migration_ratesArray, 0);
   	jdouble * coalescent_rates = (env)->GetDoubleArrayElements(coalescent_ratesArray, 0);
   	int rateCount = env->GetArrayLength(migration_ratesArray);
 
-	instance->init(migration_rates, rateCount, coalescent_rates, lineages, states, epsilon, max_step);
+	instance->init(migration_rates, rateCount, coalescent_rates, lineages);
 
 	jdouble * p = (env)->GetDoubleArrayElements(pArray, 0);
   	instance->calculateValues(duration, p, length);

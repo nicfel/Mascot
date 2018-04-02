@@ -68,6 +68,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
      * If interval was changed 
      */
     protected boolean[] intervalIsDirty;
+    int firstDirtyInterval;
 
     /**
      * The number of uncoalesced lineages within a particular interval.
@@ -115,6 +116,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
 
     @Override
     public void initAndValidate() {
+        intervalIsDirty = new boolean[treeInput.get().getNodeCount()];
     	calculateIntervals();
     }
 
@@ -539,7 +541,8 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
 //        	}
 //        }        
 //        }
-        intervalIsDirty = new boolean[nodeCount];
+        Arrays.fill(intervalIsDirty, false);
+        firstDirtyInterval = nodeCount;
 
         if (intervals == null || intervals.length != nodeCount) {
 //        	System.out.println("dfllfdlk");
@@ -548,7 +551,6 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
             lineageCounts = new int[nodeCount];
             lineagesAdded = new int[nodeCount];
             lineagesRemoved = new int[nodeCount * 2];
-            intervalIsDirty = new boolean[nodeCount];
             
             storedIntervals = new double[nodeCount];
             storedLineageCounts = new int[nodeCount];
@@ -599,6 +601,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
                     // to nodes that turned filthy when their parent changes
                     if (parent.isDirty()>0){
                     	intervalIsDirty[intervalCount] = true;
+                    	firstDirtyInterval = Math.min(firstDirtyInterval, intervalCount);
                     }else{
                     	intervalIsDirty[intervalCount] = false;                	
                     }
@@ -630,8 +633,10 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
 
         	double diff = finish - start;
         	
-        	if (diff != storedIntervals[intervalCount])
+        	if (diff != storedIntervals[intervalCount]) {
             	intervalIsDirty[intervalCount] = true;
+            	firstDirtyInterval = Math.min(intervalCount, firstDirtyInterval);
+        	}
        		
         	
         	if (lineagesAdded > 0) {

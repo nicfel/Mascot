@@ -4,7 +4,7 @@ package beast.mascot.distribution;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-
+import java.util.Comparator;
 
 import beast.core.CalculationNode;
 import beast.core.Description;
@@ -455,46 +455,6 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         lastIntervalDirty = false;
     }
 
- // A binary search based function to find the position
- // where item should be inserted in a[low..high]
- int binarySearch(int a[], int item, int low, int high)
- {
-     if (high <= low)
-         return (item > a[low])?  (low + 1): low;
-  
-     int mid = (low + high)/2;
-  
-     if (item == a[mid])
-         return mid+1;
-  
-     if (item > a[mid])
-         return binarySearch(a, item, mid+1, high);
-     return binarySearch(a, item, low, mid-1);
- }
-  
- // Function to sort an array a[] of size 'n'
- void insertionSort(int a[], int start, int end)
- {
-     int loc, selected;
-  
-     for (int i = start + 1; i < end; ++i)
-     {
-         int j = i - 1;
-         selected = a[i];
-  
-         // find location where selected should be inserted
-         loc = binarySearch(a, selected, start, j);
-  
-         // Move all elements after location to create space
-         while (j >= loc)
-         {
-             a[j+1] = a[j];
-             j--;
-         }
-         a[j+1] = selected;
-     }
- }
-
     /**
      * Recalculates all the intervals for the given beast.tree.
      */
@@ -510,37 +470,27 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
 		
         final int nodeCount = tree.getNodeCount();
 
-        double[] times = new double[nodeCount];
+        final double[] times = new double[nodeCount];
         int[] childCounts = new int[nodeCount];
 
         collectTimes(tree, times, childCounts);
 
-        int[] indices = new int[nodeCount];        
-
-        HeapSort.sort(times, indices);
+        Integer [] indices = new Integer[nodeCount];        
+        for (int i = 0; i < nodeCount; i++) {
+        	indices[i] = i;
+        }
+        //HeapSort.sort(times, indices);
+        Arrays.sort(indices, new Comparator<Integer>() {
+        	public int compare(Integer a,Integer b) {
+        	if (times[a] > times[b]) {
+        		return 1;
+        	} else if (times[a] < times[b]) {
+        		return -1;
+        	}
+        	return a.compareTo(b);
+        }});
         
-//        {
-//        // sort indices when at same height
-//        int start = 0;
-//        while (start < nodeCount) {
-//            double h = times[indices[start]];
-//            int end = start + 1;
-//            while (end < nodeCount && times[indices[end]] == h) {
-//            	end++;
-//            }
-//            if (end - start > 1) {
-//            	insertionSort(indices, start, end - 1);
-//            }
-//            start = end;        	
-//        }
-//        
-//        // sanity check
-//        for (int i = 0; i < nodeCount - 1; i++) {
-//        	if (times[indices[i]] > times[indices[i + 1]]) {
-//        		throw new RuntimeException();
-//        	}
-//        }        
-//        }
+
         Arrays.fill(intervalIsDirty, false);
         firstDirtyInterval = nodeCount;
 
@@ -663,6 +613,13 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
             // coalescent event
             numLines -= lineagesRemoved;
         }    
+        
+        for (int i = 0; i < firstDirtyInterval; i++) {
+        	if (lineagesAdded[i] != storedLineagesAdded[i]) {
+        		firstDirtyInterval = i;
+        		break;
+        	}
+        }
 //        print();
         intervalsKnown = true;
     }

@@ -453,6 +453,45 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         lastIntervalDirty = false;
     }
 
+ // A binary search based function to find the position
+ // where item should be inserted in a[low..high]
+ int binarySearch(int a[], int item, int low, int high)
+ {
+     if (high <= low)
+         return (item > a[low])?  (low + 1): low;
+  
+     int mid = (low + high)/2;
+  
+     if (item == a[mid])
+         return mid+1;
+  
+     if (item > a[mid])
+         return binarySearch(a, item, mid+1, high);
+     return binarySearch(a, item, low, mid-1);
+ }
+  
+ // Function to sort an array a[] of size 'n'
+ void insertionSort(int a[], int start, int end)
+ {
+     int loc, selected;
+  
+     for (int i = start + 1; i < end; ++i)
+     {
+         int j = i - 1;
+         selected = a[i];
+  
+         // find location where selected should be inserted
+         loc = binarySearch(a, selected, start, j);
+  
+         // Move all elements after location to create space
+         while (j >= loc)
+         {
+             a[j+1] = a[j];
+             j--;
+         }
+         a[j+1] = selected;
+     }
+ }
 
     /**
      * Recalculates all the intervals for the given beast.tree.
@@ -478,6 +517,28 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
 
         HeapSort.sort(times, indices);
         
+//        {
+//        // sort indices when at same height
+//        int start = 0;
+//        while (start < nodeCount) {
+//            double h = times[indices[start]];
+//            int end = start + 1;
+//            while (end < nodeCount && times[indices[end]] == h) {
+//            	end++;
+//            }
+//            if (end - start > 1) {
+//            	insertionSort(indices, start, end - 1);
+//            }
+//            start = end;        	
+//        }
+//        
+//        // sanity check
+//        for (int i = 0; i < nodeCount - 1; i++) {
+//        	if (times[indices[i]] > times[indices[i + 1]]) {
+//        		throw new RuntimeException();
+//        	}
+//        }        
+//        }
         intervalIsDirty = new boolean[nodeCount];
 
         if (intervals == null || intervals.length != nodeCount) {

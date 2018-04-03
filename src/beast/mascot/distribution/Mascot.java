@@ -29,7 +29,7 @@ public class Mascot extends StructuredTreeDistribution {
 	public Input<Double> epsilonInput = new Input<>("epsilon", "step size for the RK4 integration",0.001);
 	public Input<Double> maxStepInput = new Input<>("maxStep", "step size for the RK4 integration", Double.POSITIVE_INFINITY);
 //	public Input<Double> stepSizeInput = new Input<>("stepSize", "step size for the RK4 integration");
-	public Input<Boolean> saveRamInput = new Input<>("saveRamInput", "doesn't save intermediate steps", false);
+//	public Input<Boolean> saveRamInput = new Input<>("saveRamInput", "doesn't save intermediate steps", false);
 	
 
     
@@ -177,21 +177,20 @@ public class Mascot extends StructuredTreeDistribution {
         double nextTreeEvent = treeIntervals.getInterval(treeInterval);
         double nextRateShift = dynamics.getInterval(ratesInterval);
         
-      ArrayList<Integer> oldActiveLineages = new ArrayList<>();
         
       if (first > 0 && !dynamics.isDirtyCalculation() 
 				&& treeIntervals.firstDirtyInterval > 2) {
         // restore the likelihood to last known good place
+    	  int pos0 = -1, pos1 = -1;
         do {
-        	oldActiveLineages.clear();
-        	oldActiveLineages.addAll(activeLineages);
+//        	nextEventTime = Math.min(nextTreeEvent, nextRateShift);
         	
-        	nextEventTime = Math.min(nextTreeEvent, nextRateShift); 	 
+        	nextEventTime = nextTreeEvent;
 
-    		if (nextTreeEvent <= nextRateShift){
+//    		if (nextTreeEvent <= nextRateShift){
         		// Check if the last interval was reached
         		if (treeInterval == treeIntervals.intervalCount){
-        			Log.warning("Restoring to the finish!");
+        			// Log.warning("Restoring to the finish!");
         			logP = coalLogP[coalLogP.length-1];
         			return logP;
         		}
@@ -199,10 +198,19 @@ public class Mascot extends StructuredTreeDistribution {
         		if (treeIntervals.getCoalescentEvents(treeInterval) > 0) { // == IntervalType.COALESCENT) {        		
 	 	           	Integer coalLines0 = treeIntervals.getLineagesRemoved(treeInterval, 0);
 	 	           	Integer coalLines1 = treeIntervals.getLineagesRemoved(treeInterval, 1);
-	 	           	if (!activeLineages.remove(coalLines0) || !activeLineages.remove(coalLines1)) {
+	 	           	pos0 = activeLineages.indexOf(coalLines0);
+	 	           	pos1 = activeLineages.indexOf(coalLines1);
+	 	           	if (pos0 < 0 || pos1 < 0) {
 	 	           		System.out.println(coalLines0/*.getNr()*/ + " " + coalLines1/*.getNr()*/ + " " + activeLineages);
 	 	           		System.out.println("daughter lineages at coalescent event not found");
 	 	           		throw new RuntimeException("coalesceX went wrong at 1");
+	 	           	}
+	 	           	if (pos0 > pos1) {
+	 	           		activeLineages.remove(pos0);
+	 	           		activeLineages.remove(pos1);
+	 	           	} else {
+	 	           		activeLineages.remove(pos1);
+	 	           		activeLineages.remove(pos0);
 	 	           	}
 	 	            int newLineage = tree.getNode(coalLines0).getParent().getNr();
 	 	            activeLineages.add(newLineage);	 	           
@@ -214,36 +222,37 @@ public class Mascot extends StructuredTreeDistribution {
 	       		}	
  	       		
  	       	
- 	    		if (treeIntervals.intervalIsDirty(treeInterval+1) || isDirty) { //differ(activeLineages, coalActiveLineages.get(treeInterval))) {
- 	    		if (treeInterval != treeIntervals.firstDirtyInterval) {
- 	    			int h = 3;
- 	    			h++;
- 	    		}
+ 	    		if (treeIntervals.intervalIsDirty(treeInterval+1) || isDirty) { 
  	    			if (treeInterval <= 2) {
- 	        			//Log.warning("Reset @ " + first);
  	        			treeInterval = 0;
  	        			ratesInterval = 0;
  	        	        activeLineages = new ArrayList<Integer>();
  	        	        logP = 0;
- 	        	        //nrLineages = 0;
- 	        	        //linProbsLength = 0;
  	        	     	nextEventTime = 0.0;
  	        	        nextTreeEvent = treeIntervals.getInterval(treeInterval);
  	        	        nextRateShift = dynamics.getInterval(ratesInterval);        			
  	        			break; 	    				
  	    			}
  	    			
- 	    			
 // 	    			Log.warning.print("Restore I ");
+		 	        activeLineages.remove(activeLineages.size() - 1);	 	           
+ 	        		if (treeIntervals.getCoalescentEvents(treeInterval) > 0) { // == IntervalType.COALESCENT) {        		
+ 		 	           	Integer coalLines0 = treeIntervals.getLineagesRemoved(treeInterval, 0);
+ 		 	           	Integer coalLines1 = treeIntervals.getLineagesRemoved(treeInterval, 1);
+ 		 	           	if (pos0 > pos1) {
+ 		 	           		activeLineages.add(pos1, coalLines1);
+ 		 	           		activeLineages.add(pos0, coalLines0);
+ 		 	           	} else {
+ 		 	           		activeLineages.add(pos0, coalLines0);
+ 		 	           		activeLineages.add(pos1, coalLines1);
+ 		 	           	}
+ 		       		}	
+ 	    			
  	    			treeInterval++;
  	    			ratesInterval = restoreNode(treeInterval-2);
- 	    			activeLineages = oldActiveLineages;
-        			//nextTreeEvent = treeIntervals.getInterval(treeInterval);
  	    			nextTreeEvent = nextTreeEvents[treeInterval-1];
  	    			nextRateShift = nextRateShifts[treeInterval-1];
  	    			treeInterval--;
- 	        		//nextRateShift -= nextTreeEvent;   
- 	 	       		//treeInterval++;
  	    			break;
  	    		}
  	       		treeInterval++;
@@ -253,17 +262,11 @@ public class Mascot extends StructuredTreeDistribution {
         		} catch(Exception e) {
         			break;
         		}
-        	} else {
-        		ratesInterval++;
-        		coalescentRates = dynamics.getCoalescentRate(ratesInterval);  
-                migrationRates = dynamics.getBackwardsMigration(ratesInterval);
-        		indicators = dynamics.getIndicators(ratesInterval);  
-        		nextTreeEvent -= nextRateShift;
- 	       		nextRateShift = dynamics.getInterval(ratesInterval);
-        	}
-        	//if (logP == Double.NEGATIVE_INFINITY) {
-        	//	return logP;
-        	//}
+//        	} else {
+//        		ratesInterval++;
+//        		nextTreeEvent -= nextRateShift;
+// 	       		nextRateShift = dynamics.getInterval(ratesInterval);
+//        	}
         } while(nextTreeEvent <= Double.POSITIVE_INFINITY);
     }
 
@@ -463,9 +466,7 @@ public class Mascot extends StructuredTreeDistribution {
 		}
 		linProbsLength = newLength;
 		// store the node
-        if (!saveRamInput.get()) {
-        	storeNode(currTreeInterval, currRatesInterval, linProbs, logP, activeLineages, nextTreeEvent, nextRateShift, incomingLines);
-        }
+       	storeNode(currTreeInterval, currRatesInterval, linProbs, logP, activeLineages, nextTreeEvent, nextRateShift, incomingLines);
     }
           
     private double coalesce(int currTreeInterval, int currRatesInterval, double nextTreeEvent, double nextRateShift) {
@@ -545,9 +546,7 @@ public class Mascot extends StructuredTreeDistribution {
 		}				
 		
 		// store the node
-        if (!saveRamInput.get()) {
-        	storeNode(currTreeInterval, currRatesInterval, linProbs, logP + Math.log(lambda.sum()), activeLineages, nextTreeEvent, nextRateShift, lineageToAdd);
-        }
+        storeNode(currTreeInterval, currRatesInterval, linProbs, logP + Math.log(lambda.sum()), activeLineages, nextTreeEvent, nextRateShift, lineageToAdd);
 		
 		if (lambda.sum()==0)
 			return Double.NEGATIVE_INFINITY;
@@ -571,19 +570,11 @@ public class Mascot extends StructuredTreeDistribution {
     private void storeNode(int storingTreeInterval, int storingRatesInterval, double[] storeLinProbs,
     		double probability, ArrayList<Integer> storeActiveLineages, double nextTreeEvent, double nextRateShift,
     		int addedLineage) {
-        if (saveRamInput.get()) return;
-
-
     	coalRatesInterval[storingTreeInterval] = storingRatesInterval;
     	coalLinProbs[storingTreeInterval] = Arrays.copyOf(storeLinProbs, linProbsLength);
     	coalLogP[storingTreeInterval] = probability;
     	nextTreeEvents[storingTreeInterval] = nextTreeEvent;
     	nextRateShifts[storingTreeInterval] = nextRateShift;
-    	//ArrayList<Integer> tmp_activeLins = new ArrayList<>(storeActiveLineages);
-    	//coalActiveLineages.set(storingTreeInterval, tmp_activeLins);
-    	//treeIntervalNrs[storingTreeInterval] = storingTreeInterval;
-    	
-    	//lineagesAddded[storingTreeInterval] = addedLineage;
     }
         
     private int restoreNode(int restoringInterval){
@@ -591,17 +582,12 @@ public class Mascot extends StructuredTreeDistribution {
     	System.arraycopy(coalLinProbs[restoringInterval], 0, linProbs, 0, coalLinProbs[restoringInterval].length);
     	linProbsLength = coalLinProbs[restoringInterval].length;
     	logP = coalLogP[restoringInterval];    	
-    	//activeLineages = new ArrayList<>(coalActiveLineages.get(restoringInterval));
     	return coalRatesInterval[restoringInterval];
 
     }
     
     @Override
-	public void store(){
-    	if (saveRamInput.get()){
-    		super.store();
-    		return;
-    	}
+	public void store() {
     	// store the intermediate results
     	for (int i = 0; i < coalLinProbs.length; i++) {
     		double [] p = coalLinProbs[i];
@@ -619,56 +605,23 @@ public class Mascot extends StructuredTreeDistribution {
     	System.arraycopy(nextTreeEvents, 0, storedNextTreeEvents, 0, nextTreeEvents.length);
     	System.arraycopy(nextRateShifts, 0, storedNextRateShifts, 0, nextRateShifts.length);
  
-    	//System.arraycopy(lineagesAddded, 0, storedLineagesAddded, 0, lineagesAddded.length);
-
-//        storeActiveLineages = new ArrayList<>();
-//		for (int i= 0; i < coalActiveLineages.size(); i++){
-//			ArrayList<Integer> add = new ArrayList<>();
-//			for (int j = 0; j < coalActiveLineages.get(i).size(); j++)
-//				add.add(coalActiveLineages.get(i).get(j));
-//			storeActiveLineages.add(add);			
-//		}
-		
-//        storedFirst = first;
-    	// store the 
     	super.store();
     }
         
     @Override
 	public void restore(){
-    	if (saveRamInput.get()){
-    		super.restore();
-    		return;
-    	}
-
-    	// store the intermediate results
+    	// restore the intermediate results
     	double [] tmp = storeLogP;
     	storeLogP = coalLogP;
     	coalLogP = tmp;
     	
     	double [][] tmp3 = coalLinProbs;
     	coalLinProbs = storeLinProbs;
-    	storeLinProbs = tmp3; //Arrays.copyOf(storeLinProbs, storeLinProbs.length);
+    	storeLinProbs = tmp3;
 
     	int [] tmp2 = coalRatesInterval;
     	coalRatesInterval = storeRatesInterval;
     	storeRatesInterval = tmp2;
-    	
-    	//tmp2 = treeIntervalNrs;
-    	//treeIntervalNrs = storedTreeIntervalNrs;
-    	//storedTreeIntervalNrs = tmp2;
-    	
-    	//tmp2 = lineagesAddded;
-    	//lineagesAddded = storedLineagesAddded;
-    	//storedLineagesAddded = lineagesAddded;
-    	
-//    	coalActiveLineages = new ArrayList<>();
-//		for (int i= 0; i < storeActiveLineages.size(); i++){
-//			ArrayList<Integer> add = new ArrayList<>();
-//			for (int j = 0; j < storeActiveLineages.get(i).size(); j++)
-//				add.add(storeActiveLineages.get(i).get(j));
-//			coalActiveLineages.add(add);			
-//		}    	
     	
 		tmp = nextTreeEvents;
 		nextTreeEvents = storedNextTreeEvents;
@@ -678,8 +631,6 @@ public class Mascot extends StructuredTreeDistribution {
 		nextRateShifts = storedNextRateShifts;
 		storedNextRateShifts = tmp;
 
-//    	first = storedFirst;    	
-        // store the 
     	super.restore();
     }
 

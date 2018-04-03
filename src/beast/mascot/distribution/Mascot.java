@@ -3,7 +3,6 @@ package beast.mascot.distribution;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import org.jblas.DoubleMatrix;
 
@@ -64,7 +63,6 @@ public class Mascot extends StructuredTreeDistribution {
     private double[] storeLogP;
     private int[] storeRatesInterval;
     //private ArrayList<ArrayList<Integer>> storeActiveLineages;
-    private boolean storedFirst;
 
     
 	private double [] nextTreeEvents;
@@ -107,6 +105,7 @@ public class Mascot extends StructuredTreeDistribution {
 
     	// initialize storing arrays and ArrayLists
     	coalLinProbs = new double[intCount][];
+    	storeLinProbs = new double[intCount][0];
     	coalLogP = new double[intCount];
     	storeLogP = new double[intCount];
     	coalRatesInterval = new int[intCount];
@@ -199,20 +198,32 @@ public class Mascot extends StructuredTreeDistribution {
         		}
         		boolean isDirty = false;
         		if (treeIntervals.getIntervalType(treeInterval) == IntervalType.COALESCENT) {        		
-//	        		logP += normalizeLineages(linProbs);							// normalize all lineages before event		
  	        		nrLineages--;													// coalescent event reduces the number of lineages by one
- 	        		isDirty = coalesceX(treeInterval, ratesInterval);	  				// calculate the likelihood of the coalescent event
+ 	        		//isDirty = coalesceX(treeInterval, ratesInterval);	  				// calculate the likelihood of the coalescent event
+	 	           	Integer coalLines0 = treeIntervals.getLineagesRemoved(treeInterval, 0);
+	 	           	Integer coalLines1 = treeIntervals.getLineagesRemoved(treeInterval, 1);
+	 	           	if (!activeLineages.remove(coalLines0) || !activeLineages.remove(coalLines1)) {
+	 	           		System.out.println(coalLines0/*.getNr()*/ + " " + coalLines1/*.getNr()*/ + " " + activeLineages);
+	 	           		System.out.println("daughter lineages at coalescent event not found");
+	 	           		throw new RuntimeException("coalesceX went wrong at 1");
+	 	           	}
+	 	            int newLineage = tree.getNode(coalLines0).getParent().getNr();
+	 	            activeLineages.add(newLineage);	 	           
+	 	            isDirty = treeIntervals.storedLineagesAdded[treeInterval] != newLineage;
 	        	}
  	       		
  	       		if (treeIntervals.getIntervalType(treeInterval) == IntervalType.SAMPLE) { 	       			
-// 	       			if (linProbsLength > 0)
-// 	       				logP += normalizeLineages(linProbs);						// normalize all lineages before event
 	       			nrLineages++;													// sampling event increases the number of lineages by one
-	       			isDirty = sampleX(treeInterval, ratesInterval);							// calculate the likelihood of the sampling event if sampling rate is given
+	       			//isDirty = sampleX(treeInterval, ratesInterval);							// calculate the likelihood of the sampling event if sampling rate is given
+	       			int incomingLines = treeIntervals.getLineagesAdded(treeInterval);
+	       			linProbsLength = linProbsLength + 1 * states;
+	       			activeLineages.add(incomingLines);
+	       			isDirty = treeIntervals.storedLineagesAdded[treeInterval] != incomingLines;
 	       		}	
  	       		
  	       	
  	    		if (treeIntervals.intervalIsDirty(treeInterval+1) || isDirty) { //differ(activeLineages, coalActiveLineages.get(treeInterval))) {
+ 	    		//if (treeInterval + 1 == treeIntervals.firstDirtyInterval)
  	    			if (treeInterval <= 2) {
  	        			//Log.warning("Reset @ " + first);
  	        			treeInterval = 0;
@@ -266,6 +277,7 @@ public class Mascot extends StructuredTreeDistribution {
         migrationRates = dynamics.getBackwardsMigration(ratesInterval);
 		indicators = dynamics.getIndicators(ratesInterval);
 		nrLineages = activeLineages.size();
+		linProbsLength = nrLineages * states;
 
         // Calculate the likelihood
         do {       
@@ -289,7 +301,7 @@ public class Mascot extends StructuredTreeDistribution {
         	if (nextTreeEvent <= nextRateShift){
  	        	if (treeIntervals.getIntervalType(treeInterval) == IntervalType.COALESCENT) {
 // 	        		System.out.print(String.format("%.3f ", nextTreeEvent));
-	        		logP += normalizeLineages(linProbs);									// normalize all lineages before event		
+//	        		logP += normalizeLineages(linProbs);									// normalize all lineages before event		
  	        		nrLineages--;													// coalescent event reduces the number of lineages by one
 	        		logP += coalesce(treeInterval, ratesInterval, nextTreeEvent, nextRateShift);	  				// calculate the likelihood of the coalescent event
 	        	}
@@ -325,18 +337,6 @@ public class Mascot extends StructuredTreeDistribution {
 //        System.err.println(logP);
 		return logP;  	
     }
-
-    private boolean differ(ArrayList<Integer> a1, ArrayList<Integer> a2) {
-		if (a1.size() != a2.size()) {
-			return true;
-		}
-		for (int i = 0; i < a2.size(); i++) {
-			if (a1.get(i) - a2.get(i) != 0) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	double [] storedMigrationRates = new double[0];
     double [] storedCoalescentRates = new double[0];
@@ -472,15 +472,7 @@ public class Mascot extends StructuredTreeDistribution {
         	storeNode(currTreeInterval, currRatesInterval, linProbs, logP, activeLineages, nextTreeEvent, nextRateShift, incomingLines);
         }
     }
-    
-    private boolean sampleX(int currTreeInterval, int currRatesInterval) {
-		int incomingLines = treeIntervals.getLineagesAdded(currTreeInterval);
-		linProbsLength = linProbsLength + 1 * states;
-		activeLineages.add(incomingLines);
-		return treeIntervals.storedLineagesAdded[currTreeInterval] != incomingLines;
-		//return treeIntervals.storedLineagesAdded[currRatesInterval] == incomingLines;
-    }
-    
+          
     private double coalesce(int currTreeInterval, int currRatesInterval, double nextTreeEvent, double nextRateShift) {
     	int coalLines0 = treeIntervals.getLineagesRemoved(currTreeInterval,0);
     	int coalLines1 = treeIntervals.getLineagesRemoved(currTreeInterval,1);
@@ -535,7 +527,7 @@ public class Mascot extends StructuredTreeDistribution {
 			linProbsNew[linCount*states + j] = pVec.get(j);
 		}
 		// set p to pnew
-		double [] tmp = linProbs;
+		//double [] tmp = linProbs;
 		linProbs = linProbsNew;	
 		linProbsNew = linProbs;
 		linProbsLength = linProbsLength - states;
@@ -568,53 +560,7 @@ public class Mascot extends StructuredTreeDistribution {
 			return Math.log(lambda.sum());
     }
      
-    private boolean coalesceX2(int currTreeInterval, int currRatesInterval) {
-    	Integer coalLines0 = treeIntervals.getLineagesRemoved(currTreeInterval,0);
-    	Integer coalLines1 = treeIntervals.getLineagesRemoved(currTreeInterval,1);
-    	
-    	if (!activeLineages.remove(coalLines0) || activeLineages.remove(coalLines1)) {
-			System.out.println(coalLines0/*.getNr()*/ + " " + coalLines1/*.getNr()*/ + " " + activeLineages);
-			System.out.println("daughter lineages at coalescent event not found");
-			throw new RuntimeException("coalesceX went wrong at 1");
-		}
-		linProbsLength = linProbsLength - states;
-        int newLineage = tree.getNode(coalLines0).getParent().getNr();
-        activeLineages.add(newLineage);        
-		return treeIntervals.storedLineagesAdded[currTreeInterval] != newLineage;
-	}
-
-    private boolean coalesceX(int currTreeInterval, int currRatesInterval) {
-    	int coalLines0 = treeIntervals.getLineagesRemoved(currTreeInterval,0);
-    	int coalLines1 = treeIntervals.getLineagesRemoved(currTreeInterval,1);
-		
-    	final int daughterIndex1 = activeLineages.indexOf(coalLines0);//.getNr());
-		final int daughterIndex2 = activeLineages.indexOf(coalLines1);//.getNr());
-		if (daughterIndex1 == -1 || daughterIndex2 == -1) {
-			System.out.println(coalLines0/*.getNr()*/ + " " + coalLines1/*.getNr()*/ + " " + activeLineages);
-			System.out.println("daughter lineages at coalescent event not found");
-			throw new RuntimeException("coalesceX went wrong at 1");
-		}
-       
-        activeLineages.add(tree.getNode(coalLines0).getParent().getNr());        
-        
-		linProbsLength = linProbsLength - states;
-		
-		
-		//Remove daughter lineages from the line state probs
-		if (daughterIndex1>daughterIndex2){
-			// remove the daughter lineages from the active lineages
-			activeLineages.remove(daughterIndex1);
-			activeLineages.remove(daughterIndex2);			
-		} else {
-			// remove the daughter lineages from the active lineages
-			activeLineages.remove(daughterIndex2);
-			activeLineages.remove(daughterIndex1);			
-		}
-		
-		//return treeIntervals.storedLineagesAdded[currRatesInterval] == activeLineages.get(activeLineages.size() - 1);
-		return treeIntervals.storedLineagesAdded[currTreeInterval] != activeLineages.get(activeLineages.size() - 1);
-	}
-    
+  
     public DoubleMatrix getStateProb(int nr){
     	return stateProbabilities[nr - nrSamples];
     }    
@@ -662,13 +608,18 @@ public class Mascot extends StructuredTreeDistribution {
     		return;
     	}
     	// store the intermediate results
-    	storeLinProbs = new double[coalLinProbs.length][];
-    	for (int i = 0; i < coalLinProbs.length; i++)
-    		storeLinProbs[i] = Arrays.copyOf(coalLinProbs[i], coalLinProbs[i].length);
+    	for (int i = 0; i < coalLinProbs.length; i++) {
+    		double [] p = coalLinProbs[i];
+    		double [] q = storeLinProbs[i];
+    		if (p.length == q.length) {
+    			System.arraycopy(p, 0, q, 0, p.length);
+    		} else {
+    			q= Arrays.copyOf(p, p.length);
+    		}
+    	}
     	System.arraycopy(coalLogP, 0, storeLogP, 0, coalLogP.length);
     	System.arraycopy(coalRatesInterval, 0, storeRatesInterval, 0, coalRatesInterval.length);
         
-    	//System.arraycopy(treeIntervalNrs, 0, storedTreeIntervalNrs, 0, treeIntervalNrs.length);
 
     	System.arraycopy(nextTreeEvents, 0, storedNextTreeEvents, 0, nextTreeEvents.length);
     	System.arraycopy(nextRateShifts, 0, storedNextRateShifts, 0, nextRateShifts.length);

@@ -180,8 +180,7 @@ public class Mascot extends StructuredTreeDistribution {
       ArrayList<Integer> oldActiveLineages = new ArrayList<>();
         
       if (first > 0 && !dynamics.isDirtyCalculation() 
-				&& !treeIntervals.intervalIsDirty(0)
-				&& !treeIntervals.intervalIsDirty(1)) {
+				&& treeIntervals.firstDirtyInterval > 2) {
         // restore the likelihood to last known good place
         do {
         	oldActiveLineages.clear();
@@ -196,10 +195,8 @@ public class Mascot extends StructuredTreeDistribution {
         			logP = coalLogP[coalLogP.length-1];
         			return logP;
         		}
-        		boolean isDirty = false;
-        		if (treeIntervals.getIntervalType(treeInterval) == IntervalType.COALESCENT) {        		
- 	        		nrLineages--;													// coalescent event reduces the number of lineages by one
- 	        		//isDirty = coalesceX(treeInterval, ratesInterval);	  				// calculate the likelihood of the coalescent event
+        		boolean isDirty;
+        		if (treeIntervals.getCoalescentEvents(treeInterval) > 0) { // == IntervalType.COALESCENT) {        		
 	 	           	Integer coalLines0 = treeIntervals.getLineagesRemoved(treeInterval, 0);
 	 	           	Integer coalLines1 = treeIntervals.getLineagesRemoved(treeInterval, 1);
 	 	           	if (!activeLineages.remove(coalLines0) || !activeLineages.remove(coalLines1)) {
@@ -210,28 +207,26 @@ public class Mascot extends StructuredTreeDistribution {
 	 	            int newLineage = tree.getNode(coalLines0).getParent().getNr();
 	 	            activeLineages.add(newLineage);	 	           
 	 	            isDirty = treeIntervals.storedLineagesAdded[treeInterval] != newLineage;
-	        	}
- 	       		
- 	       		if (treeIntervals.getIntervalType(treeInterval) == IntervalType.SAMPLE) { 	       			
-	       			nrLineages++;													// sampling event increases the number of lineages by one
-	       			//isDirty = sampleX(treeInterval, ratesInterval);							// calculate the likelihood of the sampling event if sampling rate is given
+	        	} else { // (treeIntervals.getIntervalType(treeInterval) == IntervalType.SAMPLE) { 	       			
 	       			int incomingLines = treeIntervals.getLineagesAdded(treeInterval);
-	       			linProbsLength = linProbsLength + 1 * states;
 	       			activeLineages.add(incomingLines);
 	       			isDirty = treeIntervals.storedLineagesAdded[treeInterval] != incomingLines;
 	       		}	
  	       		
  	       	
  	    		if (treeIntervals.intervalIsDirty(treeInterval+1) || isDirty) { //differ(activeLineages, coalActiveLineages.get(treeInterval))) {
- 	    		//if (treeInterval + 1 == treeIntervals.firstDirtyInterval)
+ 	    		if (treeInterval != treeIntervals.firstDirtyInterval) {
+ 	    			int h = 3;
+ 	    			h++;
+ 	    		}
  	    			if (treeInterval <= 2) {
  	        			//Log.warning("Reset @ " + first);
  	        			treeInterval = 0;
  	        			ratesInterval = 0;
  	        	        activeLineages = new ArrayList<Integer>();
  	        	        logP = 0;
- 	        	        nrLineages = 0;
- 	        	        linProbsLength = 0;
+ 	        	        //nrLineages = 0;
+ 	        	        //linProbsLength = 0;
  	        	     	nextEventTime = 0.0;
  	        	        nextTreeEvent = treeIntervals.getInterval(treeInterval);
  	        	        nextRateShift = dynamics.getInterval(ratesInterval);        			

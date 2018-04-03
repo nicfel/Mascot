@@ -31,6 +31,13 @@ Euler2ndOrderCPU2::Euler2ndOrderCPU2() {
 	linProbs_tmpdt = NULL;
 	linProbs_tmpddt = NULL;
 	linProbs_tmpdddt = NULL;
+
+	rateShiftCount = 0;
+
+	migrationRatesCache = NULL;
+	coalescentRatesCache = NULL;
+	indicatorsRatesCache = NULL;
+	nextRateShiftCache = NULL;
 }
 
 Euler2ndOrderCPU2::~Euler2ndOrderCPU2() {
@@ -93,9 +100,21 @@ void Euler2ndOrderCPU2::setup(int maxSize, int states, double epsilon, double ma
 		(*this).states = states;
 		(*this).epsilon = epsilon;
 		(*this).max_step = max_step;
+}
+
+
+void Euler2ndOrderCPU2::setUpDynamics(int count, double * migration_rates, double * coalescent_rates, double * next_rate_shift) {
+	if (	rateShiftCount == 0) {
+		(*this).rateShiftCount = count;
+		migrationRatesCache = new double[rateShiftCount * states * states];
+		coalescentRatesCache = new double[rateShiftCount * states];
+		indicatorsRatesCache = new int[rateShiftCount * states];
+		nextRateShiftCache = new double[rateShiftCount];
 	}
-
-
+	memcpy(migrationRatesCache, migration_rates, rateShiftCount * states * states * sizeof(double));
+	memcpy(coalescentRatesCache, coalescent_rates, rateShiftCount * states * sizeof(double));
+	memcpy(nextRateShiftCache, next_rate_shift, rateShiftCount * sizeof(double));
+}
 
 void Euler2ndOrderCPU2::calculateValues(double duration, double * p, int length) {
 		double * pDot = linProbs_tmpdt;

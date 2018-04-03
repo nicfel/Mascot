@@ -16,7 +16,7 @@ public:
 	void init(double * migration_rates, int n, double * coalescent_rates, int lineages);
 	void initWithIndicators(double * migration_rates, int * indicators, double * coalescent_rates, int lineages);
 	void calculateValues(double duration, double * p, int length);
-
+	void setUpDynamics(int count, double * migration_rates, double * coalescent_rates, double * next_rate_shift);
 };
 
 #endif /* EULER2NDORDER_H_ */

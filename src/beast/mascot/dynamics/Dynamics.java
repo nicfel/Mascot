@@ -22,7 +22,7 @@ public abstract class Dynamics extends CalculationNode  {
 
     public boolean hasIndicators = false;
     
-    private boolean dynamicsKnown;
+    private boolean dynamicsKnown = false;
 
     /**
      * recalculate the dynamics
@@ -109,9 +109,19 @@ public abstract class Dynamics extends CalculationNode  {
     }
     
     @Override
+    protected void store() {
+    	dynamicsKnown = true; 	
+    }
+    
+    @Override
+    protected void restore() {
+    	dynamicsKnown = false; 	
+    }
+    
+    @Override
 	protected boolean requiresRecalculation(){
     	dynamicsKnown = false; 	
-    	return dynamicsKnown;
+    	return intervalIsDirty(0);
     }
     
     public boolean areDynamicsKnown(){

@@ -84,3 +84,69 @@ JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_initAndcalculat
   	instance->calculateValues(duration, p, length);
   	(env)->SetDoubleArrayRegion(pArray, 0, length, p);
 }
+
+
+
+/*
+ * Class:     beast_mascot_ode_Euler2ndOrderNative
+ * Method:    initAndcalculateValues
+ * Signature: (IID[DI)V
+ */
+JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_initAndcalculateValues__IID_3DI
+  (JNIEnv *env, jobject obj, jint ratesInterval,  jint lineages,
+			jdouble duration, jdoubleArray pArray, jint length) {
+	int states = instance->states;
+	if (ratesInterval >= instance->rateShiftCount) {
+		ratesInterval = instance->rateShiftCount - 1;
+	}
+  	jdouble * migration_rates = instance->migrationRatesCache + states * states * ratesInterval;
+  	jdouble * coalescent_rates = instance->coalescentRatesCache + states * ratesInterval;
+
+//  	fprintf(stderr, "ratesInterval %d\n", ratesInterval);
+//  	for (int i = 0; i < states; i++) {
+//  		printf("[");
+//  		for (int j = 0; j < states; j++) {
+//  			printf("%f ", migration_rates[i*states + j]);
+//  		}
+//  		printf("] %f \n", coalescent_rates[i]);
+//  	}
+
+
+  	int rateCount = states * states;
+
+	instance->init(migration_rates, rateCount, coalescent_rates, lineages);
+
+	jdouble * p = (env)->GetDoubleArrayElements(pArray, 0);
+  	instance->calculateValues(duration, p, length);
+  	(env)->SetDoubleArrayRegion(pArray, 0, length, p);
+
+}
+
+/*
+ * Class:     beast_mascot_ode_Euler2ndOrderNative
+ * Method:    setUpDynamics
+ * Signature: ([D[D[D)V
+ */
+JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_setUpDynamics___3D_3D_3D
+  (JNIEnv *env, jobject obj, jdoubleArray coalescentRatesArray, jdoubleArray migrationRatesArray, jdoubleArray nextRateShiftArry) {
+  	jdouble * migration_rates = (env)->GetDoubleArrayElements(migrationRatesArray, 0);
+  	jdouble * coalescent_rates = (env)->GetDoubleArrayElements(coalescentRatesArray, 0);
+  	jdouble * next_rate_shift = (env)->GetDoubleArrayElements(nextRateShiftArry, 0);
+  	int count = env->GetArrayLength(coalescentRatesArray) / instance->states;
+
+  	instance->setUpDynamics(count, migration_rates, coalescent_rates, next_rate_shift);
+
+  	(env)->ReleaseDoubleArrayElements(migrationRatesArray, migration_rates, 0);
+  	(env)->ReleaseDoubleArrayElements(coalescentRatesArray, coalescent_rates, 0);
+  	(env)->ReleaseDoubleArrayElements(nextRateShiftArry, next_rate_shift, 0);
+}
+
+/*
+ * Class:     beast_mascot_ode_Euler2ndOrderNative
+ * Method:    setUpDynamics
+ * Signature: ([D[D[I[D)V
+ */
+JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_setUpDynamics___3D_3D_3I_3D
+  (JNIEnv *env, jobject obj, jdoubleArray migrationRatesArray, jdoubleArray coalescentRatesArray, jintArray indicatorsArray, jdoubleArray nextRateShiftArry) {
+
+}

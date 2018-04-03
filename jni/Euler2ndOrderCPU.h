@@ -11,7 +11,7 @@
 #include "Euler2ndOrder.h"
 
 class Euler2ndOrderCPU : public Euler2ndOrder {
-protected:
+public:
 	double epsilon;
 	double max_step;
 
@@ -36,6 +36,11 @@ protected:
 	double * linProbs_tmpddt;
 	double * linProbs_tmpdddt;
 
+	int rateShiftCount;
+	double * migrationRatesCache;
+	double * coalescentRatesCache;
+	int * indicatorsRatesCache;
+	double * nextRateShiftCache;
 public:
 	Euler2ndOrderCPU();
 	virtual ~Euler2ndOrderCPU();
@@ -43,6 +48,7 @@ public:
 	virtual void init(double * migration_rates, int n, double * coalescent_rates, int lineages);
 	virtual void initWithIndicators(double * migration_rates, int * indicators, double * coalescent_rates, int lineages);
 	virtual void calculateValues(double duration, double * p, int length);
+	virtual void setUpDynamics(int count, double * migration_rates, double * coalescent_rates, double * next_rate_shift);
 
 private:
 	void calculateValues(double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length);
@@ -67,6 +73,7 @@ void setup(int maxSize, int states, double epsilon, double max_step);\
 void init(double * migration_rates, int n, double * coalescent_rates, int lineages);\
 void initWithIndicators(double * migration_rates, int * indicators, double * coalescent_rates, int lineages);\
 void calculateValues(double duration, double * p, int length);\
+void setUpDynamics(int count, double * migration_rates, double * coalescent_rates, double * next_rate_shift);\
 \
 private:\
 void calculateValues(double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length);\

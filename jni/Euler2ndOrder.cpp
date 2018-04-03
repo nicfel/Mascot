@@ -23,3 +23,4 @@ void Euler2ndOrder::setup(int maxSize, int states, double epsilon, double max_st
 void Euler2ndOrder::init(double * migration_rates, int ratesCount, double * coalescent_rates, int lineages) {}
 void Euler2ndOrder::initWithIndicators(double * migration_rates, int * indicators, double * coalescent_rates, int lineages) {}
 void Euler2ndOrder::calculateValues(double duration, double * p, int length) {}
+void Euler2ndOrder::setUpDynamics(int count, double * migration_rates, double * coalescent_rates, double * next_rate_shift) {}

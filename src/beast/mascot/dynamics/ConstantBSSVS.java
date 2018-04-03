@@ -415,11 +415,11 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
     	return m;  	
 	}
 
-    @Override
-	protected boolean requiresRecalculation(){
-    	return intervalIsDirty(0);
-    }
-
+//    @Override
+//	protected boolean requiresRecalculation(){
+//    	return intervalIsDirty(0);
+//    }
+//
     @Override
     public int getEpochCount() {return 1;}
 

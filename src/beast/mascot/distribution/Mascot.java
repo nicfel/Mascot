@@ -39,7 +39,7 @@ public class Mascot extends StructuredTreeDistribution {
     // current rates         
     //private double[] migrationRates;
     //private int [] indicators;
-    //private double[] coalescentRates; 	
+    private double[] coalescentRates; 	
 
     
     // Set up for lineage state probabilities
@@ -132,7 +132,7 @@ public class Mascot extends StructuredTreeDistribution {
     	linProbs = new double[MAX_SIZE];
     	linProbsNew = new double[MAX_SIZE];
     	
-    	if (false && Euler2ndOrderNative.loadLibrary()) {
+    	if (Euler2ndOrderNative.loadLibrary()) {
     		euler = new Euler2ndOrderNative();
     	} else {
     		switch (states) {
@@ -185,8 +185,9 @@ public class Mascot extends StructuredTreeDistribution {
         double nextTreeEvent = treeIntervals.getInterval(treeInterval);
         double nextRateShift = dynamics.getInterval(ratesInterval);
         
-        
-    	setUpDynamics();
+        if (first == 0 || !dynamics.areDynamicsKnown()) {
+        	setUpDynamics();
+        }
         if (first > 0 && !dynamics.isDirtyCalculation() 
 				&& treeIntervals.firstDirtyInterval > 2) {
         // restore the likelihood to last known good place
@@ -278,7 +279,7 @@ public class Mascot extends StructuredTreeDistribution {
     }
 
 
-		//coalescentRates = dynamics.getCoalescentRate(ratesInterval);  
+		coalescentRates = dynamics.getCoalescentRate(ratesInterval);  
         //migrationRates = dynamics.getBackwardsMigration(ratesInterval);
 		//indicators = dynamics.getIndicators(ratesInterval);
 		nrLineages = activeLineages.size();
@@ -322,7 +323,7 @@ public class Mascot extends StructuredTreeDistribution {
         		}
         	} else {
         		ratesInterval++;
-        		//coalescentRates = dynamics.getCoalescentRate(ratesInterval);  
+        		coalescentRates = dynamics.getCoalescentRate(ratesInterval);  
                 //migrationRates = dynamics.getBackwardsMigration(ratesInterval);
         		//indicators = dynamics.getIndicators(ratesInterval);  
         		nextTreeEvent -= nextRateShift;
@@ -350,6 +351,7 @@ public class Mascot extends StructuredTreeDistribution {
     		indicators[i] = dynamics.getIndicators(i);
     		nextRateShift[i] = dynamics.getInterval(i);
     	}
+    	dynamics.setDynamicsKnown();
 		euler.setUpDynamics(coalescentRates, migrationRates, indicators, nextRateShift);
 	}
 
@@ -498,7 +500,7 @@ public class Mascot extends StructuredTreeDistribution {
 		 * independent of the state at which this coalescent event is 
 		 * supposed to happen
 		 */
-		double [] coalescentRates = ((Euler2ndOrder)euler).coalescentRates[Math.min(currRatesInterval, ((Euler2ndOrder)euler).coalescentRates[0].length - 1)];
+		//double [] coalescentRates = ((Euler2ndOrder)euler).coalescentRates[Math.min(currRatesInterval, ((Euler2ndOrder)euler).coalescentRates[0].length - 1)];
         for (int k = 0; k < states; k++) { 
         	Double pairCoalRate = coalescentRates[k] * linProbs[daughterIndex1*states + k] * linProbs[daughterIndex2*states + k];			
 			if (!Double.isNaN(pairCoalRate)){

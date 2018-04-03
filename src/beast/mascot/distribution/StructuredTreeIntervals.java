@@ -14,7 +14,6 @@ import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 import beast.evolution.tree.coalescent.IntervalList;
 import beast.evolution.tree.coalescent.IntervalType;
-import beast.util.HeapSort;
 
 
 /*
@@ -479,7 +478,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         for (int i = 0; i < nodeCount; i++) {
         	indices[i] = i;
         }
-        //HeapSort.sort(times, indices);
+
         Arrays.sort(indices, new Comparator<Integer>() {
         	public int compare(Integer a,Integer b) {
         	if (times[a] > times[b]) {

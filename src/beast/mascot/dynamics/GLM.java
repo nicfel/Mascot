@@ -166,7 +166,7 @@ public class GLM extends Dynamics implements Loggable {
 	}
 
 	@Override
-	public void log(int sample, PrintStream out) {
+	public void log(long sample, PrintStream out) {
 		for (int j = 0; j < dimensionInput.get(); j++){
 			for (int i = 0; i < intTimes.length; i++){
 		    	double[] Ne = NeGLMInput.get().getRates(i);
@@ -183,9 +183,13 @@ public class GLM extends Dynamics implements Loggable {
 
     @Override
 	protected boolean requiresRecalculation(){
+    	
     	return intervalIsDirty(0);
     }
 
 
-	
+    @Override
+    public int getEpochCount() {
+    	return rateShiftsInput.get().getDimension();
+    }
 }

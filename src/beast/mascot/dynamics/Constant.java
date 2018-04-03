@@ -233,7 +233,7 @@ public class Constant extends Dynamics implements Loggable  {
 	}
 
 	@Override
-	public void log(int sample, PrintStream out) {
+	public void log(long sample, PrintStream out) {
 		for (int i = 0 ; i < NeInput.get().getDimension(); i++){
 			out.print(NeInput.get().getArrayValue(i) + "\t");
 		}
@@ -282,6 +282,8 @@ public class Constant extends Dynamics implements Loggable  {
     	return intervalIsDirty(0);
     }
 
+    @Override
+	public int getEpochCount() {return 1;}
 
 
     

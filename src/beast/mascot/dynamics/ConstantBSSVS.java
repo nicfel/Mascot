@@ -276,7 +276,7 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 	}
 
 	@Override
-	public void log(int sample, PrintStream out) {
+	public void log(long sample, PrintStream out) {
 		for (int i = 0 ; i < NeInput.get().getDimension(); i++){
 			out.print(String.format("%f\t", NeInput.get().getArrayValue(i)));
 		}
@@ -419,6 +419,9 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 	protected boolean requiresRecalculation(){
     	return intervalIsDirty(0);
     }
+
+    @Override
+    public int getEpochCount() {return 1;}
 
     
 }

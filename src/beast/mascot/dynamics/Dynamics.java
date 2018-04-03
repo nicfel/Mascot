@@ -48,6 +48,11 @@ public abstract class Dynamics extends CalculationNode  {
      * get the migration rates for the next interval
      */    
 	public abstract double[] getBackwardsMigration(int i);
+	
+	/**
+	 * get number of epochs where rates are shifted
+	 */
+	public abstract int getEpochCount();
 
 	
 	/**

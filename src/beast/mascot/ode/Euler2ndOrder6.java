@@ -5,201 +5,8 @@ import java.util.Arrays;
 
 import org.apache.commons.math3.util.FastMath;
 
-public class Euler2ndOrder6 implements Euler2ndOrderBase {
-
-	double epsilon;
-	double max_step;
-	
-	double[] migration_rates; // flattened square matrix of migration rates
-	int n, n2; // dimension of migration rate matrix and indicators matrix
-	int[] multiplicator;
-	int[] indicators;
-	double[] coalescent_rates;
-	double probs;
-    int lineages;
-    int states;
-    int dimension;
-	double[] sumStates;
-	boolean hasIndicators;
-	boolean hasMultiplicator;
-	double[] tCR;
-	double[] sumDotStates;
-
-	int iterations;
-
-	public Euler2ndOrder6() {};
-	@Override
-	public void init(double[] migration_rates, double[] coalescent_rates, int lineages) {
-        this.migration_rates = migration_rates;
-        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
-        this.coalescent_rates = coalescent_rates;
-        this.lineages = lineages;
-        this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];   	
-    	hasIndicators = false;
-    	hasMultiplicator = false;
-    	
-    	iterations=0;	
-	}
-	@Override
-	public void initWithIndicators(double[] migration_rates, int[] indicators, double[] coalescent_rates, int lineages) {
-        this.migration_rates = migration_rates;
-        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
-        this.indicators = indicators;
-        n2 = indicators.length / 2;
-        this.coalescent_rates = coalescent_rates;
-        this.lineages = lineages;
-        this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];tCR = new double[states];
-    	hasIndicators = true;
-    	hasMultiplicator = false;
-    	
-    	iterations=0;
-	}
-	
-    double [] linProbs_tmpdt;
-    double [] linProbs_tmpddt;
-    double [] linProbs_tmpdddt;
-
-	@Override
-	public void setup(int maxSize, int states, double epsilon, double max_step) {
-		linProbs_tmpdt = new double[maxSize];
-		linProbs_tmpddt = new double[maxSize];
-		linProbs_tmpdddt = new double[maxSize];		
-
-		this.max_step = max_step;
-		this.epsilon = epsilon;
-        this.states = states;
-	}
-
-	public Euler2ndOrder6(double[] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
-		this.max_step = max_step;
-		this.epsilon = epsilon;
-        this.migration_rates = migration_rates;
-        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
-        this.coalescent_rates = coalescent_rates;
-        this.lineages = lineages;
-        this.states = states;
-        this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];   	
-    	hasIndicators = false;
-    	hasMultiplicator = false;
-    	
-    	iterations=0;
-	}
-	
-	public Euler2ndOrder6(double[] migration_rates, int[] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
-		this.max_step = max_step;
-		this.epsilon = epsilon;
-        this.migration_rates = migration_rates;
-        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
-        this.indicators = indicators;
-        n2 = indicators.length / 2;
-        this.coalescent_rates = coalescent_rates;
-        this.lineages = lineages;
-        this.states = states;
-        this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];tCR = new double[states];
-    	hasIndicators = true;
-    	hasMultiplicator = false;
-    	
-    	iterations=0;
-	}
-
-	public Euler2ndOrder6(int[] multiplicator, double[] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
-		this.max_step = max_step;
-		this.epsilon = epsilon;
-        this.migration_rates = migration_rates;
-        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
-        this.multiplicator = multiplicator;
-        this.coalescent_rates = coalescent_rates;
-        this.lineages = lineages;
-        this.states = states;
-        this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];   	
-    	hasIndicators = false;
-    	hasMultiplicator = true; 
-    	
-    	iterations=0;
-	}
-	
-	public Euler2ndOrder6(int[] multiplicator, double[] migration_rates, int[] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
-		this.max_step = max_step;
-		this.epsilon = epsilon;
-        this.migration_rates = migration_rates;
-        this.multiplicator = multiplicator;
-        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
-        this.indicators = indicators;
-        n2 = indicators.length / 2;
-        this.coalescent_rates = coalescent_rates;
-        this.lineages = lineages;
-        this.states = states;
-        this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];   	
-    	hasIndicators = true;
-    	hasMultiplicator = true;   
-    	
-    	iterations=0;
-	}
-
-	@Override
-	public void calculateValues(double duration, double[] p, int length){
-		double[] pDot = linProbs_tmpdt; 
-		double[] pDotDot = linProbs_tmpddt; 
-		double[] pDotDotDot = linProbs_tmpdddt;
-		calculateValues(duration, p, pDot, pDotDot, pDotDotDot, length);
-	}
-	
-	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
-		calculateValues(duration, p, pDot, pDotDot, pDotDotDot, pDot.length);
-	}
-	
-	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
-		clearArray(pDotDot, length);
-		clearArray(pDotDotDot, length);
-
-		if (hasMultiplicator) {
-			while (duration > 0){
-		    	iterations++;
-				//pDot = new double[length];
-				clearArray(pDot, length);
-				computeDerivativesWithMultiplicator(p, pDot, pDotDot, pDotDotDot, length);
-				computeSecondDerivateWithMultiplicator(p, pDot, pDotDot, length);
-				approximateThirdDerivate(pDotDot, pDotDotDot, length);
-				duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot, length - 1);
-				
-				if (iterations>10000){
-					System.err.println("too many iterations, return negative infinity");
-					p[length-1] = Double.NEGATIVE_INFINITY;
-					break;
-				}
-			}			
-		} else {
-			while (duration > 0){
-		    	iterations++;
-				//pDot = new double[length];
-				clearArray(pDot, length);
-				computeDerivatives(p, pDot, pDotDot, pDotDotDot, length);
-				computeSecondDerivate(p, pDot, pDotDot, length);
-				approximateThirdDerivate(pDotDot, pDotDotDot, length);
-				duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot, length - 1);
-				
-				if (iterations>10000){
-					System.err.println("too many iterations, return negative infinity");
-					p[length-1] = Double.NEGATIVE_INFINITY;
-					break;
-				}
-			}
-		}			
-	}	
-	
-	private void clearArray(double[] v, int n) {
-		for (int i = 0; i < n; i++) {
-			v[i] = 0.0;
-		}		
-	}
-
-	private double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
+public class Euler2ndOrder6 extends Euler2ndOrder {
+	double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
 		final double max_dotdotdot = maxAbs(pDotDotDot, length);	
 		
 		//double timeStep = FastMath.min(FastMath.pow(epsilon*6/max_dotdotdot, C), FastMath.min(duration, max_step));
@@ -230,7 +37,7 @@ public class Euler2ndOrder6 implements Euler2ndOrderBase {
 	}
 	
 	
-	private double maxAbs(double[] pDotDotDot, int length) {
+	double maxAbs(double[] pDotDotDot, int length) {
 		double max_dotdotdot = 0.0;
 		for (int i = 0; i < length; i++) {
 			max_dotdotdot = FastMath.max(max_dotdotdot, FastMath.abs(pDotDotDot[i]));
@@ -239,7 +46,7 @@ public class Euler2ndOrder6 implements Euler2ndOrderBase {
 	}
 
 	    
-	private void normalise(final int i, final double[] p) {
+	void normalise(final int i, final double[] p) {
 		final int k = states * i;
 		double linSum = 0;
 		
@@ -297,12 +104,12 @@ public class Euler2ndOrder6 implements Euler2ndOrderBase {
 		}
 	}
 
-	private void bailout(double[] p) {
+	void bailout(double[] p) {
 		System.err.println(Arrays.toString(p));
 		System.exit(0);		
 	}
 	
-	private void updateP2(final double timeStep, final double timeStepSquare, final double[] p, final int length, final double[] pDot,
+	void updateP2(final double timeStep, final double timeStepSquare, final double[] p, final int length, final double[] pDot,
 			final double[] pDotDot) {
 		for (int i = 0; i < length; i++) {
 			p[i] += pDot[i] * timeStep

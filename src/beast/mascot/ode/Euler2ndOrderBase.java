@@ -12,4 +12,9 @@ public interface Euler2ndOrderBase {
 		calculateValues(duration, p, length);
 	}
 
+	public void initAndcalculateValues(int ratesInterval, int lineages, double duration, double[] p, int length);
+	
+	public void setUpDynamics(double[][] coalescentRates, double[][] migrationRates, int[][] indicators,
+			double[] nextRateShift);
+
 }

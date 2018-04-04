@@ -33,6 +33,7 @@ public abstract class Dynamics extends CalculationNode  {
      * get the time to the next rate shift
      */    
 	public abstract double getInterval(int i);
+	public abstract double [] getIntervals();
 
     /**
      * check if next interval is dirty, i.e. parameters changed in that interval

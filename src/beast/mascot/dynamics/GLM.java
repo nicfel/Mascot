@@ -67,6 +67,7 @@ public class GLM extends Dynamics implements Loggable {
     /**
      * Returns the time to the next interval.
      */
+    @Override
     public double getInterval(int i) {
     	if (i >= rateShiftsInput.get().getDimension()){
     		return Double.POSITIVE_INFINITY;
@@ -75,6 +76,11 @@ public class GLM extends Dynamics implements Loggable {
     	}
     }   
 
+    @Override
+    public double[] getIntervals() {
+    	return intTimes;
+    }
+    
     public boolean intervalIsDirty(int i){
 		if(NeGLMInput.get().isDirty())
 			return true;

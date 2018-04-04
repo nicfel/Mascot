@@ -95,9 +95,16 @@ public class Constant extends Dynamics implements Loggable  {
     /**
      * Returns the time to the next interval.
      */
+    @Override
     public double getInterval(int i) {
     	return Double.POSITIVE_INFINITY;
-    }   
+    }
+    
+    @Override
+	public double [] getIntervals() {
+		return new double[]{Double.POSITIVE_INFINITY};
+	}
+
     
     public boolean intervalIsDirty(int i){
     	boolean intervalIsDirty = false;  	    	

@@ -8,7 +8,6 @@ import org.jblas.DoubleMatrix;
 import beast.core.Citation;
 import beast.core.Description;
 import beast.evolution.tree.TreeInterface;
-import beast.evolution.tree.coalescent.IntervalType;
 import beast.mascot.dynamics.Dynamics;
 import beast.mascot.ode.*;
 
@@ -64,43 +63,47 @@ public class MascotNative extends StructuredTreeDistribution {
     private double maxTolerance = 1e-3;            
     private boolean recalculateLogP;
 	Euler2ndOrderBase euler;
-	TreeInterface tree;
 	StructuredTreeIntervals treeIntervals;
 
 	int [] nodeType;
 
+	int [] parents;
+	int [] lineagesAdded;
+	int [] lineagesRemoved;
+	double [] intervals;
+	
+	int [] storedLineagesAdded;
+	int intervalCount;
 	
     public MascotNative(Euler2ndOrderBase euler, StructuredTreeIntervals treeIntervals, int [] nodeType, int states) {
     	this.euler = euler;
     	this.treeIntervals = treeIntervals;
-    	this.tree = treeIntervals.treeInput.get();
+    	TreeInterface tree = treeIntervals.treeInput.get();
     	this.nodeType = nodeType;
     	this.states = states;
-    	initAndValidate();
-    }
-	
-    @Override
-    public void initAndValidate(){
+    	parents = new int[tree.getNodeCount()];
+
     	treeIntervals.calculateIntervals();       
     	stateProbabilities = new double[treeIntervals.getSampleCount()][states];
         nrSamples = treeIntervals.getSampleCount() + 1;    
                 
-    	int intCount = treeIntervals.getIntervalCount();
+    	intervalCount = treeIntervals.getIntervalCount();
 
     	// initialize storing arrays and ArrayLists
-    	coalLinProbs = new double[intCount * intCount];
-    	storeLinProbs = new double[intCount * intCount];
-    	coalLinProbsLengths = new int[intCount];
-    	storedCoalLinProbsLengths = new int[intCount];
-    	coalLogP = new double[intCount];
-    	storeLogP = new double[intCount];
-    	coalRatesInterval = new int[intCount];
-    	storeRatesInterval = new int[intCount];
+    	storedLineagesAdded = new int[intervalCount];
+    	coalLinProbs = new double[intervalCount * intervalCount];
+    	storeLinProbs = new double[intervalCount * intervalCount];
+    	coalLinProbsLengths = new int[intervalCount];
+    	storedCoalLinProbsLengths = new int[intervalCount];
+    	coalLogP = new double[intervalCount];
+    	storeLogP = new double[intervalCount];
+    	coalRatesInterval = new int[intervalCount];
+    	storeRatesInterval = new int[intervalCount];
     	//coalActiveLineages = new ArrayList<>();
-    	nextTreeEvents = new double[intCount];
-    	nextRateShifts = new double[intCount];
-    	storedNextTreeEvents = new double[intCount];
-    	storedNextRateShifts = new double[intCount];
+    	nextTreeEvents = new double[intervalCount];
+    	nextRateShifts = new double[intervalCount];
+    	storedNextTreeEvents = new double[intervalCount];
+    	storedNextRateShifts = new double[intervalCount];
     	//treeIntervalNrs = new int[intCount];
     	//storedTreeIntervalNrs = new int[intCount];
     	//lineagesAddded = new int[intCount];
@@ -111,7 +114,7 @@ public class MascotNative extends StructuredTreeDistribution {
     	
     	activeLineages = new ArrayList<>();
 
-    	int MAX_SIZE = intCount * states;
+    	int MAX_SIZE = intervalCount * states;
     	linProbs_for_ode = new double[MAX_SIZE];
     	linProbs_tmp = new double[MAX_SIZE];
     	linProbs = new double[MAX_SIZE];
@@ -120,13 +123,9 @@ public class MascotNative extends StructuredTreeDistribution {
     
     double [] linProbs_for_ode;
     double [] linProbs_tmp;
+    
 
-    public double calculateLogP(boolean dynamicsIsDirty) {
-    	// newly calculate tree intervals
-    	treeIntervals.calculateIntervals();
-    	// correctly calculate the daughter nodes at coalescent intervals in the case of
-    	// bifurcation or in case two nodes are at the same height
-    	treeIntervals.swap();    	
+    public double calculateLogP(boolean useCache) {
         // Set up ArrayLists for the indices of active lineages and the lineage state probabilities
         activeLineages.clear();
         logP = 0;
@@ -137,11 +136,10 @@ public class MascotNative extends StructuredTreeDistribution {
      	double nextEventTime = 0.0;
         
         // Time to the next rate shift or event on the tree
-        double nextTreeEvent = treeIntervals.getInterval(treeInterval);
+        double nextTreeEvent = intervals[treeInterval];//treeIntervals.getInterval(treeInterval);
         double nextRateShift = getRateShiftInterval(ratesInterval);
         
-        if (first > 0 && !dynamicsIsDirty 
-				&& treeIntervals.firstDirtyInterval > 2) {
+        if (first > 0 && useCache) {
         // restore the likelihood to last known good place
     	  int pos0 = -1, pos1 = -1;
     	  do {
@@ -149,15 +147,15 @@ public class MascotNative extends StructuredTreeDistribution {
         	nextEventTime = nextTreeEvent;
 
     		// Check if the last interval was reached
-    		if (treeInterval == treeIntervals.intervalCount){
+    		if (treeInterval == intervalCount){
     			// Log.warning("Restoring to the finish!");
     			logP = coalLogP[coalLogP.length-1];
     			return logP;
     		}
     		boolean isDirty;
-    		if (treeIntervals.getCoalescentEvents(treeInterval) > 0) { // == IntervalType.COALESCENT) {        		
- 	           	Integer coalLines0 = treeIntervals.getLineagesRemoved(treeInterval, 0);
- 	           	Integer coalLines1 = treeIntervals.getLineagesRemoved(treeInterval, 1);
+    		if (lineagesRemoved[treeInterval*2] >= 0) { // == IntervalType.COALESCENT) {        		
+ 	           	Integer coalLines0 = lineagesRemoved[treeInterval * 2 + 0];
+ 	           	Integer coalLines1 = lineagesRemoved[treeInterval * 2 + 1];
  	           	pos0 = activeLineages.indexOf(coalLines0);
  	           	pos1 = activeLineages.indexOf(coalLines1);
  	           	if (pos0 < 0 || pos1 < 0) {
@@ -172,13 +170,13 @@ public class MascotNative extends StructuredTreeDistribution {
  	           		activeLineages.remove(pos1);
  	           		activeLineages.remove(pos0);
  	           	}
- 	            int newLineage = tree.getNode(coalLines0).getParent().getNr();
+ 	            int newLineage = parents[coalLines0];
  	            activeLineages.add(newLineage);	 	           
- 	            isDirty = treeIntervals.storedLineagesAdded[treeInterval] != newLineage;
+ 	            isDirty = storedLineagesAdded[treeInterval] != newLineage;
         	} else { // (treeIntervals.getIntervalType(treeInterval) == IntervalType.SAMPLE) { 	       			
-       			int incomingLines = treeIntervals.getLineagesAdded(treeInterval);
+       			int incomingLines = lineagesAdded[treeInterval];
        			activeLineages.add(incomingLines);
-       			isDirty = treeIntervals.storedLineagesAdded[treeInterval] != incomingLines;
+       			isDirty = storedLineagesAdded[treeInterval] != incomingLines;
        		}	
        		
        	
@@ -189,16 +187,16 @@ public class MascotNative extends StructuredTreeDistribution {
         	        activeLineages.clear();
         	        logP = 0;
         	     	nextEventTime = 0.0;
-        	        nextTreeEvent = treeIntervals.getInterval(treeInterval);
+        	        nextTreeEvent = intervals[treeInterval];
         	        nextRateShift = getRateShiftInterval(ratesInterval);        			
         			break; 	    				
     			}
     			
 // 	    			Log.warning.print("Restore I ");
 	 	        activeLineages.remove(activeLineages.size() - 1);	 	           
-        		if (treeIntervals.getCoalescentEvents(treeInterval) > 0) { // == IntervalType.COALESCENT) {        		
-	 	           	Integer coalLines0 = treeIntervals.getLineagesRemoved(treeInterval, 0);
-	 	           	Integer coalLines1 = treeIntervals.getLineagesRemoved(treeInterval, 1);
+        		if (lineagesRemoved[treeInterval*2] > 0) { // == IntervalType.COALESCENT) {        		
+	 	           	Integer coalLines0 = lineagesRemoved[treeInterval * 2 + 0];
+	 	           	Integer coalLines1 = lineagesRemoved[treeInterval * 2 + 1];
 	 	           	if (pos0 > pos1) {
 	 	           		activeLineages.add(pos1, coalLines1);
 	 	           		activeLineages.add(pos0, coalLines0);
@@ -218,7 +216,7 @@ public class MascotNative extends StructuredTreeDistribution {
        		treeInterval++;
     		nextRateShift -= nextTreeEvent;   
     		try{
-    			nextTreeEvent = treeIntervals.getInterval(treeInterval);
+    			nextTreeEvent = intervals[treeInterval];
     		} catch(Exception e) {
     			break;
     		}
@@ -252,14 +250,15 @@ public class MascotNative extends StructuredTreeDistribution {
         	}
        	
         	if (nextTreeEvent <= nextRateShift){
- 	        	if (treeIntervals.getIntervalType(treeInterval) == IntervalType.COALESCENT) {
+        		if (lineagesRemoved[treeInterval*2] >= 0) { // == IntervalType.COALESCENT) {        		
+// 	        	if (treeIntervals.getIntervalType(treeInterval) == IntervalType.COALESCENT) {
 // 	        		System.out.print(String.format("%.3f ", nextTreeEvent));
 //	        		logP += normalizeLineages(linProbs);									// normalize all lineages before event		
  	        		nrLineages--;													// coalescent event reduces the number of lineages by one
 	        		logP += coalesce(treeInterval, ratesInterval, nextTreeEvent, nextRateShift);	  				// calculate the likelihood of the coalescent event
-	        	}
- 	       		
- 	       		if (treeIntervals.getIntervalType(treeInterval) == IntervalType.SAMPLE) { 	       			
+	        	} else {
+//	       		
+// 	       		if (treeIntervals.getIntervalType(treeInterval) == IntervalType.SAMPLE) { 	       			
  	       			//if (linProbsLength > 0)
  	       			//	logP += normalizeLineages(linProbs);								// normalize all lineages before event
 	       			nrLineages++;													// sampling event increases the number of lineages by one
@@ -268,9 +267,9 @@ public class MascotNative extends StructuredTreeDistribution {
  	       		
  	       		treeInterval++;
         		nextRateShift -= nextTreeEvent;   
-        		try{
-        			nextTreeEvent = treeIntervals.getInterval(treeInterval);
-        		}catch(Exception e){
+        		try {
+        			nextTreeEvent = intervals[treeInterval];
+        		} catch(Exception e) {
         			break;
         		}
         	} else {
@@ -403,7 +402,7 @@ public class MascotNative extends StructuredTreeDistribution {
 //    }
 //    
     private void sample(int currTreeInterval, int currRatesInterval, double nextTreeEvent, double nextRateShift) {
-		int incomingLines = treeIntervals.getLineagesAdded(currTreeInterval);
+		int incomingLines = lineagesAdded[currTreeInterval];
 		int newLength = linProbsLength + 1 * states;
 		
 		int currPosition = linProbsLength;
@@ -431,8 +430,8 @@ public class MascotNative extends StructuredTreeDistribution {
     }
           
     private double coalesce(int currTreeInterval, int currRatesInterval, double nextTreeEvent, double nextRateShift) {
-    	int coalLines0 = treeIntervals.getLineagesRemoved(currTreeInterval,0);
-    	int coalLines1 = treeIntervals.getLineagesRemoved(currTreeInterval,1);
+    	int coalLines0 = lineagesRemoved[currTreeInterval * 2 + 0];
+    	int coalLines1 = lineagesRemoved[currTreeInterval * 2 + 1];
 		
     	final int daughterIndex1 = activeLineages.indexOf(coalLines0);//.getNr());
 		final int daughterIndex2 = activeLineages.indexOf(coalLines1);//.getNr());
@@ -442,7 +441,7 @@ public class MascotNative extends StructuredTreeDistribution {
 			return Double.NaN;
 		}
 
-		double [] lambda = stateProbabilities[tree.getNode(coalLines0).getParent().getNr() - nrSamples];
+		double [] lambda = stateProbabilities[parents[coalLines0] - nrSamples];
 		
 		/*
 		 * Calculate the overall probability for two strains to coalesce 
@@ -467,7 +466,7 @@ public class MascotNative extends StructuredTreeDistribution {
        	    lambda[i] /= sum;
         }
 
-        int lineageToAdd = tree.getNode(coalLines0).getParent().getNr();
+        int lineageToAdd = parents[coalLines0];
         activeLineages.add(lineageToAdd);        
         
 		
@@ -581,7 +580,8 @@ public class MascotNative extends StructuredTreeDistribution {
     	System.arraycopy(nextTreeEvents, 0, storedNextTreeEvents, 0, nextTreeEvents.length);
     	System.arraycopy(nextRateShifts, 0, storedNextRateShifts, 0, nextRateShifts.length);
     	
- 
+    	System.arraycopy(lineagesAdded, 0, storedLineagesAdded, 0, lineagesAdded.length);
+    	
     	super.store();
     }
         
@@ -628,6 +628,11 @@ public class MascotNative extends StructuredTreeDistribution {
 		nextRateShifts = storedNextRateShifts;
 		storedNextRateShifts = tmp;
 
+//      not here: lineagesAdded points to TreeIntervals 		
+//		tmp2 = lineagesAdded;
+//		lineagesAdded = storedLineagesAdded;
+//		storedLineagesAdded = tmp2;
+		
     	super.restore();
     }
 

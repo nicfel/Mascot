@@ -10,6 +10,7 @@ import beast.core.Citation;
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.util.Log;
+import beast.evolution.tree.Node;
 import beast.evolution.tree.TreeInterface;
 import beast.evolution.tree.coalescent.IntervalType;
 import beast.mascot.dynamics.Dynamics;
@@ -175,18 +176,28 @@ public class Mascot extends StructuredTreeDistribution {
     double [] linProbs_tmp;
 
     public double calculateLogP() {
-    	if (mascotImpl != null) {
-            if (first == 0 || !dynamics.areDynamicsKnown()) {
-            	mascotImpl.setUpDynamics(dynamics);
-            }
-    		logP = mascotImpl.calculateLogP(dynamics.isDirtyCalculation());
-    		return logP;
-    	}
     	// newly calculate tree intervals
     	treeIntervals.calculateIntervals();
     	// correctly calculate the daughter nodes at coalescent intervals in the case of
     	// bifurcation or in case two nodes are at the same height
     	treeIntervals.swap();    	
+
+    	if (mascotImpl != null) {
+    		mascotImpl.lineagesAdded = treeIntervals.lineagesAdded;
+    		mascotImpl.lineagesRemoved = treeIntervals.lineagesRemoved;
+    		mascotImpl.intervals = treeIntervals.intervals;
+    		int [] parents = mascotImpl.parents;
+    		Node [] nodes = tree.getNodesAsArray();
+    		for (int i = 0; i < nodes.length - 1; i++) {
+    			parents[i] = nodes[i].getParent().getNr();
+    		}
+            if (first == 0 || !dynamics.areDynamicsKnown()) {
+            	mascotImpl.setUpDynamics(dynamics);
+            }
+    		logP = mascotImpl.calculateLogP(!dynamics.isDirtyCalculation() 
+    				&& treeIntervals.firstDirtyInterval > 2);
+    		return logP;
+    	}
         // Set up ArrayLists for the indices of active lineages and the lineage state probabilities
         activeLineages.clear();
         logP = 0;

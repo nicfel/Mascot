@@ -613,12 +613,6 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
             numLines -= lineagesRemoved;
         }    
         
-        for (int i = 0; i < firstDirtyInterval; i++) {
-        	if (lineagesAdded[i] != storedLineagesAdded[i]) {
-        		firstDirtyInterval = i;
-        		break;
-        	}
-        }
 //        print();
         intervalsKnown = true;
     }

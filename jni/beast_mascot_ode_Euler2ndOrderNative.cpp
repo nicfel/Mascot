@@ -129,16 +129,16 @@ JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_initAndcalculat
  */
 JNIEXPORT void JNICALL Java_beast_mascot_ode_Euler2ndOrderNative_setUpDynamics___3D_3D_3D
   (JNIEnv *env, jobject obj, jdoubleArray coalescentRatesArray, jdoubleArray migrationRatesArray, jdoubleArray nextRateShiftArry) {
-  	jdouble * migration_rates = (env)->GetDoubleArrayElements(migrationRatesArray, 0);
   	jdouble * coalescent_rates = (env)->GetDoubleArrayElements(coalescentRatesArray, 0);
+ 	jdouble * migration_rates = (env)->GetDoubleArrayElements(migrationRatesArray, 0);
   	jdouble * next_rate_shift = (env)->GetDoubleArrayElements(nextRateShiftArry, 0);
   	int count = env->GetArrayLength(coalescentRatesArray) / instance->states;
 
   	instance->setUpDynamics(count, migration_rates, coalescent_rates, next_rate_shift);
 
-  	(env)->ReleaseDoubleArrayElements(migrationRatesArray, migration_rates, 0);
-  	(env)->ReleaseDoubleArrayElements(coalescentRatesArray, coalescent_rates, 0);
-  	(env)->ReleaseDoubleArrayElements(nextRateShiftArry, next_rate_shift, 0);
+//  	(env)->ReleaseDoubleArrayElements(migrationRatesArray, migration_rates, 0);
+// 	(env)->ReleaseDoubleArrayElements(coalescentRatesArray, coalescent_rates, 0);
+//  	(env)->ReleaseDoubleArrayElements(nextRateShiftArry, next_rate_shift, 0);
 }
 
 /*

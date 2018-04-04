@@ -63,7 +63,6 @@ public class MascotNative extends StructuredTreeDistribution {
     private double maxTolerance = 1e-3;            
     private boolean recalculateLogP;
 	Euler2ndOrderBase euler;
-	StructuredTreeIntervals treeIntervals;
 
 	int [] nodeType;
 
@@ -75,19 +74,22 @@ public class MascotNative extends StructuredTreeDistribution {
 	int [] storedLineagesAdded;
 	int intervalCount;
 	
-    public MascotNative(Euler2ndOrderBase euler, StructuredTreeIntervals treeIntervals, int [] nodeType, int states) {
-    	this.euler = euler;
-    	this.treeIntervals = treeIntervals;
+    public MascotNative(StructuredTreeIntervals treeIntervals, 
+    		int [] nodeType, int states, double epsilon, double max_step
+    		) {
     	TreeInterface tree = treeIntervals.treeInput.get();
+    	treeIntervals.calculateIntervals();  
+    	int sampleCount = treeIntervals.getSampleCount();
+    	int nodeCount = tree.getNodeCount();
+    	intervalCount = treeIntervals.getIntervalCount();
+
     	this.nodeType = nodeType;
     	this.states = states;
-    	parents = new int[tree.getNodeCount()];
-
-    	treeIntervals.calculateIntervals();       
-    	stateProbabilities = new double[treeIntervals.getSampleCount()][states];
-        nrSamples = treeIntervals.getSampleCount() + 1;    
+    	parents = new int[nodeCount];
+    	
+    	stateProbabilities = new double[sampleCount][states];
+        nrSamples = sampleCount + 1;    
                 
-    	intervalCount = treeIntervals.getIntervalCount();
 
     	// initialize storing arrays and ArrayLists
     	storedLineagesAdded = new int[intervalCount];
@@ -119,13 +121,16 @@ public class MascotNative extends StructuredTreeDistribution {
     	linProbs_tmp = new double[MAX_SIZE];
     	linProbs = new double[MAX_SIZE];
     	linProbsNew = new double[MAX_SIZE];
+
+    	euler = new Euler2ndOrderNative();
+    	euler.setup(MAX_SIZE, states, epsilon, max_step);
     }
     
     double [] linProbs_for_ode;
     double [] linProbs_tmp;
     
 
-    public double calculateLogP(boolean useCache) {
+    public double calculateLogP(boolean dynamicsIsDirty, int firstDirtyInterval) {
         // Set up ArrayLists for the indices of active lineages and the lineage state probabilities
         activeLineages.clear();
         logP = 0;
@@ -139,7 +144,7 @@ public class MascotNative extends StructuredTreeDistribution {
         double nextTreeEvent = intervals[treeInterval];//treeIntervals.getInterval(treeInterval);
         double nextRateShift = getRateShiftInterval(ratesInterval);
         
-        if (first > 0 && useCache) {
+        if (first > 0 && !dynamicsIsDirty && firstDirtyInterval > 2) {
         // restore the likelihood to last known good place
     	  int pos0 = -1, pos1 = -1;
     	  do {
@@ -180,7 +185,7 @@ public class MascotNative extends StructuredTreeDistribution {
        		}	
        		
        	
-    		if (treeIntervals.intervalIsDirty(treeInterval+1) || isDirty) { 
+    		if (isDirty || treeInterval+1 == firstDirtyInterval) { 
     			if (treeInterval <= 2) {
         			treeInterval = 0;
         			ratesInterval = 0;
@@ -426,7 +431,7 @@ public class MascotNative extends StructuredTreeDistribution {
 
 		linProbsLength = newLength;
 		// store the node
-       	storeNode(currTreeInterval, currRatesInterval, linProbs, logP, activeLineages, nextTreeEvent, nextRateShift, incomingLines);
+       	storeNode(currTreeInterval, currRatesInterval, linProbs, logP, nextTreeEvent, nextRateShift);
     }
           
     private double coalesce(int currTreeInterval, int currRatesInterval, double nextTreeEvent, double nextRateShift) {
@@ -512,7 +517,7 @@ public class MascotNative extends StructuredTreeDistribution {
 		}				
 	
 		// store the node
-		storeNode(currTreeInterval, currRatesInterval, linProbs, logP + Math.log(sum), activeLineages, nextTreeEvent, nextRateShift, lineageToAdd);
+		storeNode(currTreeInterval, currRatesInterval, linProbs, logP + Math.log(sum), nextTreeEvent, nextRateShift);
 	
 		if (sum==0)
 			return Double.NEGATIVE_INFINITY;
@@ -542,8 +547,7 @@ public class MascotNative extends StructuredTreeDistribution {
     }            
     
     private void storeNode(int storingTreeInterval, int storingRatesInterval, double[] storeLinProbs,
-    		double probability, ArrayList<Integer> storeActiveLineages, double nextTreeEvent, double nextRateShift,
-    		int addedLineage) {
+    		double probability, double nextTreeEvent, double nextRateShift) {
     	coalRatesInterval[storingTreeInterval] = storingRatesInterval;
     	int offset = 0;
     	if (storingTreeInterval > 0) {

@@ -150,8 +150,7 @@ public class Mascot extends StructuredTreeDistribution {
     	}
 
     	if (Euler2ndOrderNative.loadLibrary()) {
-    		euler = new Euler2ndOrderNative();
-    		mascotImpl = new MascotNative(euler, treeIntervals, nodeType, states);
+    		mascotImpl = new MascotNative(treeIntervals, nodeType, states,epsilonInput.get(), maxStepInput.get());
     	} else {
     		switch (states) {
     		case 2: euler = new Euler2ndOrder2(); break;
@@ -165,10 +164,10 @@ public class Mascot extends StructuredTreeDistribution {
     		case 10: euler = new Euler2ndOrder10(); break;
     		default: euler = new Euler2ndOrder(); break;
     		}
+        	euler.setup(MAX_SIZE, states, epsilonInput.get(), maxStepInput.get());
+        	Log.warning("Using " + euler.getClass().getSimpleName());
     	}
-    	Log.warning("Using " + euler.getClass().getSimpleName());
     	
-    	euler.setup(MAX_SIZE, states, epsilonInput.get(), maxStepInput.get());
     	
     }
     
@@ -194,8 +193,7 @@ public class Mascot extends StructuredTreeDistribution {
             if (first == 0 || !dynamics.areDynamicsKnown()) {
             	mascotImpl.setUpDynamics(dynamics);
             }
-    		logP = mascotImpl.calculateLogP(!dynamics.isDirtyCalculation() 
-    				&& treeIntervals.firstDirtyInterval > 2);
+    		logP = mascotImpl.calculateLogP(dynamics.isDirtyCalculation(), treeIntervals.firstDirtyInterval);
     		return logP;
     	}
         // Set up ArrayLists for the indices of active lineages and the lineage state probabilities
@@ -256,7 +254,8 @@ public class Mascot extends StructuredTreeDistribution {
        		}	
        		
        	
-    		if (treeIntervals.intervalIsDirty(treeInterval+1) || isDirty) { 
+    		if (isDirty || treeInterval+1 == treeIntervals.firstDirtyInterval) {
+//    				treeIntervals.intervalIsDirty(treeInterval+1) || isDirty) { 
     			if (treeInterval <= 2) {
         			treeInterval = 0;
         			ratesInterval = 0;

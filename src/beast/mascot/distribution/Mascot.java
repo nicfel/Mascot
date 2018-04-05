@@ -119,6 +119,7 @@ public class Mascot extends StructuredTreeDistribution {
     	nextRateShifts = new double[intCount];
     	storedNextTreeEvents = new double[intCount];
     	storedNextRateShifts = new double[intCount];
+    	parents = new int[intCount];
     	//treeIntervalNrs = new int[intCount];
     	//storedTreeIntervalNrs = new int[intCount];
     	//lineagesAddded = new int[intCount];
@@ -173,6 +174,7 @@ public class Mascot extends StructuredTreeDistribution {
     
     double [] linProbs_for_ode;
     double [] linProbs_tmp;
+    int [] parents;
 
     public double calculateLogP() {
     	// newly calculate tree intervals
@@ -182,10 +184,6 @@ public class Mascot extends StructuredTreeDistribution {
     	treeIntervals.swap();    	
 
     	if (mascotImpl != null) {
-    		mascotImpl.lineagesAdded = treeIntervals.lineagesAdded;
-    		mascotImpl.lineagesRemoved = treeIntervals.lineagesRemoved;
-    		mascotImpl.intervals = treeIntervals.intervals;
-    		int [] parents = mascotImpl.parents;
     		Node [] nodes = tree.getNodesAsArray();
     		for (int i = 0; i < nodes.length - 1; i++) {
     			parents[i] = nodes[i].getParent().getNr();
@@ -193,7 +191,12 @@ public class Mascot extends StructuredTreeDistribution {
             if (first == 0 || !dynamics.areDynamicsKnown()) {
             	mascotImpl.setUpDynamics(dynamics);
             }
-    		logP = mascotImpl.calculateLogP(dynamics.isDirtyCalculation(), treeIntervals.firstDirtyInterval);
+    		logP = mascotImpl.calculateLogP(dynamics.isDirtyCalculation(), treeIntervals.firstDirtyInterval,
+    				treeIntervals.lineagesAdded,
+    				treeIntervals.lineagesRemoved,
+    				treeIntervals.intervals,
+    				parents
+    				);
     		return logP;
     	}
         // Set up ArrayLists for the indices of active lineages and the lineage state probabilities

@@ -1,15 +1,15 @@
 package beast.app.mascot.beauti;
 
+
 import beast.app.beauti.BeautiDoc;
-import beast.core.Citation;
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.StateNode;
 import beast.core.StateNodeInitialiser;
 import beast.evolution.tree.TraitSet;
 import beast.evolution.tree.Tree;
-import com.google.common.collect.Lists;
-import java.util.Collections;
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -114,8 +114,9 @@ public class TreeWithTrait extends Tree implements StateNodeInitialiser {
                     typeSet.add(typeName);
             }
 
-            typeList = Lists.newArrayList(typeSet);
-            Collections.sort(typeList);
+            //typeList = Lists.newArrayList(typeSet);
+            typeList = new ArrayList<>();
+            typeList.addAll(typeSet);
 
             System.out.println("Type trait with the following types detected:");
             for (int i = 0; i < typeList.size(); i++)

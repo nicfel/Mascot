@@ -17,9 +17,8 @@ import beast.mascot.ode.Euler2ndOrderNative;
 public class MascotNative extends StructuredTreeDistribution {
 	
     
-	public int samples;
-	public int nrSamples;
-	public double[][] stateProbabilities;
+	private int nrSamples;
+	private double[][] stateProbabilities;
     
     private int nrLineages;   
 
@@ -58,20 +57,28 @@ public class MascotNative extends StructuredTreeDistribution {
 
 	
 	// maximum integration error tolerance
-    private double maxTolerance = 1e-3;            
-    private boolean recalculateLogP;
-	Euler2ndOrderNative euler;
+    private Euler2ndOrderNative euler;
 
-	int [] nodeType;
+    private int [] nodeType;
 
-	int [] parents;
-	int [] lineagesAdded;
-	int [] lineagesRemoved;
-	double [] intervals;
+    private int [] parents;
+    private int [] lineagesAdded;
+    private int [] lineagesRemoved;
+    private double [] intervals;
 	
-	int [] storedLineagesAdded;
-	int intervalCount;
+    private int [] storedLineagesAdded;
+    private int intervalCount;
 	
+    private double [] linProbs_tmp;
+
+	private double [] coalescentRatesCache;
+	private double [] migrationRatesCache;
+	private int [][] indicatorsCache;
+	private double [] nextRateShiftCache;
+	private int rateShiftCount;
+	
+	private double [] currentCoalescentRates;
+
     public MascotNative(StructuredTreeIntervals treeIntervals, 
     		int [] nodeType, int states, double epsilon, double max_step
     		) {
@@ -80,7 +87,10 @@ public class MascotNative extends StructuredTreeDistribution {
     	int sampleCount = treeIntervals.getSampleCount();
     	int nodeCount = tree.getNodeCount();
     	intervalCount = treeIntervals.getIntervalCount();
-
+    	setup(nodeType, states, epsilon, max_step, sampleCount, nodeCount, nodeCount);
+    }
+    
+    void setup(int [] nodeType, int states, double epsilon, double max_step, int sampleCount, int nodeCount, int intervalCount) {
     	this.nodeType = nodeType;
     	this.states = states;
     	parents = new int[nodeCount];
@@ -108,7 +118,6 @@ public class MascotNative extends StructuredTreeDistribution {
     	activeLineagesCount = 0;
 
     	int MAX_SIZE = intervalCount * states;
-    	linProbs_for_ode = new double[MAX_SIZE];
     	linProbs_tmp = new double[MAX_SIZE];
     	linProbs = new double[MAX_SIZE];
     	linProbsNew = new double[MAX_SIZE];
@@ -117,11 +126,14 @@ public class MascotNative extends StructuredTreeDistribution {
     	euler.setup(MAX_SIZE, states, epsilon, max_step);
     }
     
-    double [] linProbs_for_ode;
-    double [] linProbs_tmp;
     
 
-    public double calculateLogP(boolean dynamicsIsDirty, int firstDirtyInterval) {
+    public double calculateLogP(boolean dynamicsIsDirty, int firstDirtyInterval, int[] lineagesAdded, int[] lineagesRemoved, double[] intervals, int[] parents) {
+    	this.lineagesAdded = lineagesAdded;
+    	this.lineagesRemoved = lineagesRemoved;
+    	this.intervals = intervals;
+    	this.parents = parents;
+    	
         // Set up ArrayLists for the indices of active lineages and the lineage state probabilities
         activeLineagesCount = 0;
         logP = 0;
@@ -143,7 +155,7 @@ public class MascotNative extends StructuredTreeDistribution {
 
     		// Check if the last interval was reached
     		if (treeInterval == intervalCount){
-    			logP = coalLogP[coalLogP.length-1];
+    			logP = coalLogP[intervalCount - 1];
     			return logP;
     		}
     		
@@ -210,7 +222,7 @@ public class MascotNative extends StructuredTreeDistribution {
     		}
        		treeInterval++;
     		nextRateShift -= nextTreeEvent;
-    		if (treeInterval == intervals.length) {
+    		if (treeInterval == intervalCount) {
     			break;
     		}
     		nextTreeEvent = intervals[treeInterval];
@@ -227,13 +239,6 @@ public class MascotNative extends StructuredTreeDistribution {
         do {       
         	nextEventTime = Math.min(nextTreeEvent, nextRateShift);       	
         	if (nextEventTime > 0) {													// if true, calculate the interval contribution        		
-                if (recalculateLogP) {
-    				System.err.println("ode calculation stuck, reducing tolerance, new tolerance= " + maxTolerance);
-    				maxTolerance *=0.9;
-    		    	recalculateLogP = false;
-    				System.exit(0);
-                	return calculateLogP();
-                }
         		logP += doEuler(nextEventTime, ratesInterval);
         	}
        	
@@ -247,7 +252,7 @@ public class MascotNative extends StructuredTreeDistribution {
 	       		}	
  	       		
  	       		treeInterval++;
- 	       		if (treeInterval == intervals.length) {
+ 	       		if (treeInterval == intervalCount) {
  	       			break;
  	       		}
         		nextRateShift -= nextTreeEvent;   
@@ -292,57 +297,61 @@ public class MascotNative extends StructuredTreeDistribution {
 	}
 
 	private double[] getCoalescentRate(int i) {
-    	if (i >= coalescentRatesCache.length) {
-    		return coalescentRatesCache[coalescentRatesCache.length-1];
+    	if (i >= rateShiftCount) {
+        	System.arraycopy(coalescentRatesCache, (rateShiftCount-1) * states , currentCoalescentRates, 0, states);
+    		return currentCoalescentRates;
     	} else {
-			return coalescentRatesCache[i];
+        	System.arraycopy(coalescentRatesCache, i * states , currentCoalescentRates, 0, states);
+			return currentCoalescentRates;
     	}
 	}
 
 	private double getRateShiftInterval(int i) {
-    	if (i >= nextRateShiftCache.length) {
+    	if (i >= rateShiftCount) {
     		return Double.POSITIVE_INFINITY;
     	} else {
 			return nextRateShiftCache[i];
     	}
 	}
 
-	double [][] coalescentRatesCache;
-	double [][] migrationRatesCache;
-	int [][] indicatorsCache;
-	double [] nextRateShiftCache;
 	
 	void setUpDynamics(Dynamics dynamics) {
-    	int n = dynamics.getEpochCount();
+    	rateShiftCount = dynamics.getEpochCount();
     	if (coalescentRatesCache == null) {
-        	coalescentRatesCache = new double[n][];
-        	migrationRatesCache = new double[n][];
-        	indicatorsCache = new int[n][];
+        	coalescentRatesCache = new double[rateShiftCount * states];
+        	currentCoalescentRates = new double[states];
+        	migrationRatesCache = new double[rateShiftCount * states * states];
+        	if (dynamics.hasIndicators) {
+        		indicatorsCache = new int[rateShiftCount][];
+        	} else {
+        		indicatorsCache = new int[1][];
+        	}
     	}
-    	for (int i = 0; i < n; i++) {
-    		coalescentRatesCache[i] = dynamics.getCoalescentRate(i);  
-            migrationRatesCache[i] = dynamics.getBackwardsMigration(i);
-    		indicatorsCache[i] = dynamics.getIndicators(i);
+    	for (int i = 0; i < rateShiftCount; i++) {
+    		System.arraycopy(dynamics.getCoalescentRate(i), 0, coalescentRatesCache, i*states, states);
+    		System.arraycopy(dynamics.getBackwardsMigration(i), 0, migrationRatesCache, i*states*states, states*states);
+    	}
+    	if (dynamics.hasIndicators) {
+        	for (int i = 0; i < rateShiftCount; i++) {
+        		indicatorsCache = new int[rateShiftCount][];
+        	}
     	}
     	nextRateShiftCache = dynamics.getIntervals();
     	dynamics.setDynamicsKnown();
 		euler.setUpDynamics(coalescentRatesCache, migrationRatesCache, indicatorsCache, nextRateShiftCache);
 	}
 
-	double [] storedMigrationRates = new double[0];
-    double [] storedCoalescentRates = new double[0];
-    int storedNrLineages = -1;
     
 	private double doEuler(double nextEventTime, int ratesInterval) {
 		if (linProbs_tmp.length != linProbsLength + 1) {
+			// though less memory efficient, 
+			// this reduces jni call time considerably
 			linProbs_tmp = new double[linProbsLength + 1];
 		}
 		System.arraycopy(linProbs,0,linProbs_tmp,0,linProbsLength);
 		linProbs_tmp[linProbsLength] = 0;
-
 		linProbs[linProbsLength-1] = 0;
 		
-
 		euler.initAndcalculateValues(ratesInterval, nrLineages, nextEventTime, linProbs_tmp, linProbsLength + 1);
 
 		System.arraycopy(linProbs_tmp,0,linProbs,0,linProbsLength);
@@ -483,7 +492,7 @@ public class MascotNative extends StructuredTreeDistribution {
     public DoubleMatrix getRootState(){
     	DoubleMatrix p = new DoubleMatrix(states);
     	for (int i = 0; i < states; i++) {
-    		p.put(i, stateProbabilities[stateProbabilities.length-1][i]);
+    		p.put(i, stateProbabilities[nrSamples-2][i]);
     	}
     	return p;
     }
@@ -523,21 +532,21 @@ public class MascotNative extends StructuredTreeDistribution {
     @Override
 	public void store() {
     	storeLinP();
-    	System.arraycopy(coalLogP, 0, storeLogP, 0, coalLogP.length);
-    	System.arraycopy(coalRatesInterval, 0, storeRatesInterval, 0, coalRatesInterval.length);
+    	System.arraycopy(coalLogP, 0, storeLogP, 0, intervalCount);
+    	System.arraycopy(coalRatesInterval, 0, storeRatesInterval, 0, intervalCount);
         
 
-    	System.arraycopy(nextTreeEvents, 0, storedNextTreeEvents, 0, nextTreeEvents.length);
-    	System.arraycopy(nextRateShifts, 0, storedNextRateShifts, 0, nextRateShifts.length);
+    	System.arraycopy(nextTreeEvents, 0, storedNextTreeEvents, 0, intervalCount);
+    	System.arraycopy(nextRateShifts, 0, storedNextRateShifts, 0, intervalCount);
     	
-    	System.arraycopy(lineagesAdded, 0, storedLineagesAdded, 0, lineagesAdded.length);
+    	System.arraycopy(lineagesAdded, 0, storedLineagesAdded, 0, intervalCount);
     	
     	super.store();
     }
         
     private void storeLinP() {
-    	System.arraycopy(coalLinProbsLengths, 0, storedCoalLinProbsLengths, 0, coalLinProbsLengths.length);
-    	System.arraycopy(coalLinProbs, 0, storeLinProbs, 0, coalLinProbsLengths[coalLinProbsLengths.length - 1]);
+    	System.arraycopy(coalLinProbsLengths, 0, storedCoalLinProbsLengths, 0, intervalCount);
+    	System.arraycopy(coalLinProbs, 0, storeLinProbs, 0, coalLinProbsLengths[intervalCount - 1]);
 	}
 
 

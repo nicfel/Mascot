@@ -37,6 +37,21 @@ public class Euler2ndOrderNative implements Euler2ndOrderBase {
 	@Override
 	native public void initAndcalculateValues(int ratesInterval, int lineages, double duration, double[] p, int length);
 	
+	public void setUpDynamics(double[] coalescentRates, double[] migrationRates, int[][] indicators,
+			double[] nextRateShift) {
+		int n = nextRateShift.length;
+		if (indicators[0] == null) {
+			setUpDynamics(coalescentRates, migrationRates, nextRateShift);
+		} else {
+			int n4 = indicators[0].length;
+			int [] indicatorsArray = new int[n*n4];
+			for (int i = 0; i < n; i++) {
+				System.arraycopy(indicators[i], 0, indicatorsArray, i*n4, n4);
+			}
+			setUpDynamics(coalescentRates, migrationRates, indicatorsArray, nextRateShift);
+		}
+	}
+	
 	@Override
 	public void setUpDynamics(double[][] coalescentRates, double[][] migrationRates, int[][] indicators,
 			double[] nextRateShift) {

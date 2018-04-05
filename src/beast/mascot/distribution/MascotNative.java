@@ -1,9 +1,15 @@
 package beast.mascot.distribution;
 
 
+
+import java.util.List;
+import java.util.Random;
+
 import org.jblas.DoubleMatrix;
 
 import beast.core.Description;
+import beast.core.Distribution;
+import beast.core.State;
 import beast.evolution.tree.TreeInterface;
 import beast.mascot.dynamics.Dynamics;
 import beast.mascot.ode.Euler2ndOrderNative;
@@ -14,11 +20,11 @@ import beast.mascot.ode.Euler2ndOrderNative;
  */
 
 @Description("Native Mascot implementation using JNI")
-public class MascotNative extends StructuredTreeDistribution {
+public class MascotNative extends Distribution {
 	
     
 	private int nrSamples;
-	private double[][] stateProbabilities;
+	private double[] stateProbabilities;
     
     private int nrLineages;   
 
@@ -95,7 +101,7 @@ public class MascotNative extends StructuredTreeDistribution {
     	this.states = states;
     	parents = new int[nodeCount];
     	
-    	stateProbabilities = new double[sampleCount][states];
+    	stateProbabilities = new double[sampleCount * states];
         nrSamples = sampleCount + 1;    
                 
 
@@ -401,7 +407,8 @@ public class MascotNative extends StructuredTreeDistribution {
 			return Double.NaN;
 		}
 
-		double [] lambda = stateProbabilities[parents[coalLines0] - nrSamples];
+		int offset = (parents[coalLines0] - nrSamples) * states;
+		//double [] lambda = stateProbabilities[parents[coalLines0] - nrSamples];
 		
 		/*
 		 * Calculate the overall probability for two strains to coalesce 
@@ -411,7 +418,7 @@ public class MascotNative extends StructuredTreeDistribution {
         for (int k = 0; k < states; k++) { 
         	Double pairCoalRate = coalescentRates[k] * linProbs[daughterIndex1*states + k] * linProbs[daughterIndex2*states + k];			
 			if (!Double.isNaN(pairCoalRate)){
-				lambda[k] = pairCoalRate;
+				stateProbabilities[offset + k] = pairCoalRate;
 			} else {
 				return Double.NEGATIVE_INFINITY;
 			}
@@ -419,11 +426,11 @@ public class MascotNative extends StructuredTreeDistribution {
         
         // get the node state probabilities
         double sum = 0;
-        for (double d : lambda) {
-       	    sum += d;
+        for (int k = 0; k < states; k++) {
+       	    sum += stateProbabilities[offset + k];
         }
         for (int i = 0; i < states; i++) {
-       	    lambda[i] /= sum;
+        	stateProbabilities[offset + i] /= sum;
         }
 
         int lineageToAdd = parents[coalLines0];
@@ -442,7 +449,7 @@ public class MascotNative extends StructuredTreeDistribution {
 		}
 		// add the parent lineage
 		for (int j = 0; j < states; j++){
-			linProbsNew[linCount*states + j] = lambda[j]; // pVec.get(j);
+			linProbsNew[linCount*states + j] = stateProbabilities[offset + j]; // pVec.get(j);
 		}
 		// set p to pnew
 		linProbs = linProbsNew;	
@@ -462,8 +469,8 @@ public class MascotNative extends StructuredTreeDistribution {
 		}
 		
 		double min = Double.POSITIVE_INFINITY;
-		for (double d : lambda) {
-			if (d < min) {min = d;}
+        for (int i = 0; i < states; i++) {
+			if (stateProbabilities[offset + i] < min) {min = stateProbabilities[offset + i];}
 		}
 		if (min < 0.0){
 			System.err.println("Coalescent probability is: " + min);
@@ -484,7 +491,7 @@ public class MascotNative extends StructuredTreeDistribution {
     public DoubleMatrix getStateProb(int nr){
     	DoubleMatrix p = new DoubleMatrix(states);
     	for (int i = 0; i < states; i++) {
-    		p.put(i, stateProbabilities[nr - nrSamples][i]);
+    		p.put(i, stateProbabilities[(nr - nrSamples) * states + i]);
     	}
     	return p;
     }    
@@ -492,7 +499,7 @@ public class MascotNative extends StructuredTreeDistribution {
     public DoubleMatrix getRootState(){
     	DoubleMatrix p = new DoubleMatrix(states);
     	for (int i = 0; i < states; i++) {
-    		p.put(i, stateProbabilities[nrSamples-2][i]);
+    		p.put(i, stateProbabilities[(nrSamples-2) * states + i]);
     	}
     	return p;
     }
@@ -589,6 +596,24 @@ public class MascotNative extends StructuredTreeDistribution {
     protected boolean requiresRecalculation() {
         return true;
     }
+
+	@Override
+	public List<String> getArguments() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<String> getConditions() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void sample(State state, Random random) {
+		// TODO Auto-generated method stub
+		
+	}
 
     
 }

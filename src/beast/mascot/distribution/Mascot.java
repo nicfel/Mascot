@@ -88,7 +88,7 @@ public class Mascot extends StructuredTreeDistribution {
 
 	int [] nodeType;
 
-	MascotNative mascotImpl = null;
+	MascotNative2 mascotImpl = null;
 	
     @Override
     public void initAndValidate(){
@@ -151,7 +151,7 @@ public class Mascot extends StructuredTreeDistribution {
     	}
 
     	if (Euler2ndOrderNative.loadLibrary()) {
-    		mascotImpl = new MascotNative(treeIntervals, nodeType, states,epsilonInput.get(), maxStepInput.get());
+    		mascotImpl = new MascotNative2(treeIntervals, nodeType, states,epsilonInput.get(), maxStepInput.get());
     	} else {
     		switch (states) {
     		case 2: euler = new Euler2ndOrder2(); break;

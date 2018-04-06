@@ -5,6 +5,7 @@
 #include <immintrin.h>
 using namespace std;
 
+
 inline double min(const double x, const double y) {return x < y ? x : y;}
 inline double max(const double x, const double y) {return x > y ? x : y;}
 
@@ -37,7 +38,7 @@ Euler2ndOrderCPU::Euler2ndOrderCPU() {
 	migrationRatesCache = NULL;
 	coalescentRatesCache = NULL;
 	indicatorsRatesCache = NULL;
-	nextRateShiftCache = NULL;
+	//nextRateShiftCache = NULL;
 }
 
 Euler2ndOrderCPU::~Euler2ndOrderCPU() {
@@ -53,7 +54,6 @@ void Euler2ndOrderCPU::init(double * migration_rates, int rateCount, double * co
 		(*this).coalescent_rates = coalescent_rates;
 		(*this).lineages = lineages;
 		(*this).dimension = (*this).lineages*(*this).states;
-		sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];
 		hasIndicators = false;
 		hasMultiplicator = false;
 
@@ -100,6 +100,10 @@ void Euler2ndOrderCPU::setup(int maxSize, int states, double epsilon, double max
 		(*this).states = states;
 		(*this).epsilon = epsilon;
 		(*this).max_step = max_step;
+
+		sumStates = new double[states];
+		tCR = new double[states];
+		sumDotStates = new double[states];
 }
 
 
@@ -109,11 +113,11 @@ void Euler2ndOrderCPU::setUpDynamics(int count, double * migration_rates, double
 		migrationRatesCache = new double[rateShiftCount * states * states];
 		coalescentRatesCache = new double[rateShiftCount * states];
 		indicatorsRatesCache = new int[rateShiftCount * states];
-		nextRateShiftCache = new double[rateShiftCount];
+		//nextRateShiftCache = new double[rateShiftCount];
 	}
 	memcpy(migrationRatesCache, migration_rates, rateShiftCount * states * states * sizeof(double));
 	memcpy(coalescentRatesCache, coalescent_rates, rateShiftCount * states * sizeof(double));
-	memcpy(nextRateShiftCache, next_rate_shift, rateShiftCount * sizeof(double));
+	//memcpy(nextRateShiftCache, next_rate_shift, rateShiftCount * sizeof(double));
 }
 
 void Euler2ndOrderCPU::calculateValues(double duration, double * p, int length) {
@@ -128,6 +132,9 @@ void Euler2ndOrderCPU::calculateValues(double duration, double * p, int length) 
 //	}
 
 void Euler2ndOrderCPU::calculateValues(double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length) {
+//	fprintf(stderr,"states=%d eps=%f max_step=%f\n", states, epsilon, max_step);
+//	printArray(coalescent_rates, states);
+//	printArray(migration_rates, states);
 		memset(pDotDot, 0, length * sizeof(double));
 		memset(pDotDotDot, 0, length * sizeof(double));
 

@@ -40,6 +40,7 @@ public class MascotNative2 extends Distribution {
     	int sampleCount = treeIntervals.getSampleCount();
     	nodeCount = tree.getNodeCount();
     	intervalCount = treeIntervals.getIntervalCount();
+    	this.states = states;
     	setup(nodeType, states, epsilon, max_step, sampleCount, nodeCount, nodeCount);
     }
     

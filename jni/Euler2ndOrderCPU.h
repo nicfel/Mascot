@@ -40,7 +40,7 @@ public:
 	double * migrationRatesCache;
 	double * coalescentRatesCache;
 	int * indicatorsRatesCache;
-	double * nextRateShiftCache;
+	//double * nextRateShiftCache;
 public:
 	Euler2ndOrderCPU();
 	virtual ~Euler2ndOrderCPU();

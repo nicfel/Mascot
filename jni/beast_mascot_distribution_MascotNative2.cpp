@@ -30,8 +30,10 @@ JNIEXPORT jdouble JNICALL Java_beast_mascot_distribution_MascotNative2_calculate
 	jdouble * intervals = (env)->GetDoubleArrayElements(intervalsArray, 0);
 	jint * parents = (env)->GetIntArrayElements(parentsArray, 0);
 
-	return instance->calculateLogP(dynamicsIsDirty, firstDirtyInterval,
+	jdouble logP = instance->calculateLogP(dynamicsIsDirty, firstDirtyInterval,
 			lineagesAdded, lineagesRemoved, intervals, parents);
+	//fprintf(stderr, "logP = %f\n", logP);
+	return logP;
 }
 
 /*
@@ -45,6 +47,19 @@ JNIEXPORT void JNICALL Java_beast_mascot_distribution_MascotNative2_setUpDynamic
 	jdouble * migrationRates = (env)->GetDoubleArrayElements(migrationRatesArray, 0);
 	jdouble * nextRateShift = (env)->GetDoubleArrayElements(nextRateShiftArray, 0);
 	int rateShiftCount = env->GetArrayLength(nextRateShiftArray);
+
+//	  	fprintf(stderr, "ratesInterval %d\n", rateShiftCount);
+//	  	for (int k = 0;k < rateShiftCount; k++) {
+//	  		fprintf(stderr, "%d %f\n", k, nextRateShift[k]);
+//	  	for (int i = 0; i < 5; i++) {
+//	  		fprintf(stderr, "[");
+//	  		for (int j = 0; j < 5; j++) {
+//	  			fprintf(stderr, "%f ", migrationRates[k * 25 + i*5 + j]);
+//	  		}
+//	  		fprintf(stderr, "] %f \n", coalescentRates[k * 5 + i]);
+//	  	}
+//	  	}
+
 	instance->setUpDynamics(rateShiftCount, coalescentRates, migrationRates, nextRateShift);
 }
 

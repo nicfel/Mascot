@@ -74,7 +74,7 @@ private:
 	 double * nextRateShiftCache;
 	 int rateShiftCount;
 
-	 double * currentCoalescentRates;
+	 //double * currentCoalescentRates;
 
 	 double logP;
 public:
@@ -88,6 +88,7 @@ public:
 
 
 	double* getCoalescentRate(int i) ;
+	double* getMigrationRates(int i) ;
 	double getRateShiftInterval(int i) ;
 	void setUpDynamics(int count, double * migration_rates, double * coalescent_rates, double * next_rate_shift);
 	double doEuler(double nextEventTime, int ratesInterval) ;

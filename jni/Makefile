@@ -26,7 +26,7 @@ WARN=-Wall -Wsign-compare -mavx2
 
 CPPFLAGS = -Ofast -ffast-math -mavx2
 CC = gcc
-CFLAGS = -Wall -Ofast -ffast-math $(WARN) -I../../ -I/Library/Java/JavaVirtualMachines/jdk1.8.0_73.jdk/Contents/Home/include -I/Library/Java/JavaVirtualMachines/jdk1.8.0_73.jdk/Contents/Home/include/darwin
+CFLAGS = -g -Wall -Ofast -ffast-math $(WARN) -I../../ -I/Library/Java/JavaVirtualMachines/jdk1.8.0_73.jdk/Contents/Home/include -I/Library/Java/JavaVirtualMachines/jdk1.8.0_73.jdk/Contents/Home/include/darwin
 LINKFLAGS = -L. $(PROFILING)
 LIBS=-lm
 PROG=mascot

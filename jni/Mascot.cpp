@@ -4,8 +4,33 @@
 #include <iostream>
 #include <immintrin.h>
 
+#include <stdio.h>
+
 inline double min(const double x, const double y) {return x < y ? x : y;}
 inline double max(const double x, const double y) {return x > y ? x : y;}
+
+void printArray(int * array, int n) {
+	return;
+	fprintf(stderr, "[");
+	for (int i = 0; i < n; i++) {
+		fprintf(stderr, "%d", array[i]);
+		if (i < n-1) {
+			fprintf(stderr, " ");
+		}
+	}
+	fprintf(stderr, "]\n");
+}
+void printArrayF(double * array, int n) {
+	return;
+	fprintf(stderr, "[");
+	for (int i = 0; i < n; i++) {
+		fprintf(stderr, "%.2f", array[i]);
+		if (i < n-1) {
+			fprintf(stderr, " ");
+		}
+	}
+	fprintf(stderr, "]\n");
+}
 
 
 inline void SystemArraycopy(double * src, const int start, double * dest, const int offset, const int count) {
@@ -16,22 +41,22 @@ inline void SystemArraycopy(double * src, double * dest, const int count) {
 	memcpy(dest, src, count * sizeof(double));
 }
 
-inline void SystemArraycopy(int * src, const int start, int * dest, const int offset, const int count) {
-	memcpy(dest + offset, src + start, count * sizeof(double));
+inline void SystemArraycopyI(int * src, const int start, int * dest, const int offset, const int count) {
+	memcpy(dest + offset, src + start, count * sizeof(int));
 }
 
 inline void SystemArraycopy(int * src, int * dest, const int count) {
-	memcpy(dest, src, count * sizeof(double));
+	memcpy(dest, src, count * sizeof(int));
 }
 
 Mascot::Mascot(int * nodeType, int states, double epsilon, double max_step, int sampleCount, int nodeCount, int intervalCount) {
 	(*this).nodeCount = nodeCount;
-	parents = new int[nodeCount];
     	(*this).states = states;
     	(*this).nodeType = nodeType;
 
+//    	fprintf(stderr, "%d %d %d\n", nodeCount, states, sampleCount);
     	stateProbabilities = new double[sampleCount * states];
-        nrSamples = sampleCount + 1;
+    nrSamples = sampleCount + 1;
 
 
     	// initialize storing arrays and ArrayLists
@@ -76,7 +101,7 @@ Mascot::Mascot(int * nodeType, int states, double epsilon, double max_step, int 
     	nextRateShiftCache = 0;
     	migrationRatesCache = 0;
     	coalescentRatesCache = 0;
-    	currentCoalescentRates = 0;
+    	//currentCoalescentRates = 0;
     	indicatorsCache = 0;
 
     	coalescentRates = 0;
@@ -85,6 +110,7 @@ Mascot::Mascot(int * nodeType, int states, double epsilon, double max_step, int 
     	rateShiftCount = 0;
     	intervals = new double[intervalCount];
     	lineagesAdded = new int[intervalCount];
+    	parents = new int[intervalCount];
     	lineagesRemoved = new int[intervalCount*2];
     	linProbsLength = 0;
     	(*this).intervalCount = intervalCount;
@@ -95,11 +121,15 @@ Mascot::Mascot(int * nodeType, int states, double epsilon, double max_step, int 
 
 
 
-double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* lineagesAdded, int* lineagesRemoved, double* intervals, int* parents) {
-	SystemArraycopy(lineagesAdded, 0, (*this).lineagesAdded, 0, intervalCount);
-	SystemArraycopy(lineagesRemoved, 0, (*this).lineagesRemoved, 0, intervalCount * 2);
-	SystemArraycopy(intervals, 0, (*this).intervals, 0, intervalCount);
-	SystemArraycopy(parents, 0, (*this).parents, 0, nodeCount);
+double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* lineagesAddedIn, int* lineagesRemovedIn, double* intervalsIn, int* parentsIn) {
+	SystemArraycopyI(lineagesAddedIn, 0, lineagesAdded, 0, intervalCount);
+	SystemArraycopyI(lineagesRemovedIn, 0, lineagesRemoved, 0, intervalCount * 2);
+	SystemArraycopy(intervalsIn, 0, intervals, 0, intervalCount);
+	SystemArraycopyI(parentsIn, 0, parents, 0, nodeCount);
+
+	//fprintf(stderr, "intervals"); printArrayF(intervals, intervalCount);
+
+	printArray(lineagesRemoved, 20);
 
         // Set up ArrayLists for the indices of active lineages and the lineage state probabilities
         activeLineagesCount = 0;
@@ -113,7 +143,7 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
         double nextTreeEvent = intervals[treeInterval];//treeIntervals.getInterval(treeInterval);
         double nextRateShift = getRateShiftInterval(ratesInterval);
 
-        if (!first && !dynamicsIsDirty && firstDirtyInterval > 2) {
+      if (!first && !dynamicsIsDirty && firstDirtyInterval > 2) {
         // restore the likelihood to last known good place
     	  int pos0 = -1, pos1 = -1;
     	  do {
@@ -231,10 +261,12 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
         		nextTreeEvent -= nextRateShift;
  	       		nextRateShift = getRateShiftInterval(ratesInterval);
         	}
+//std::cerr << "logP = " << logP << " " << treeInterval << " " << ratesInterval << std::endl;
         	if (logP == -INFINITY) {
         		return logP;
         	}
         } while (nextTreeEvent <= INFINITY);
+//std::cerr << "exiting with logP = " << logP << std::endl;
 
         first = false;
 		return logP;
@@ -242,18 +274,21 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 
 
 	void Mascot::addActiveLineages(const int pos1, const int coalLines1) {
-		SystemArraycopy(activeLineages, pos1, activeLineages, pos1 + 1, activeLineagesCount - pos1);
+		SystemArraycopyI(activeLineages, pos1, activeLineages, pos1 + 1, activeLineagesCount - pos1);
 		activeLineages[pos1] = coalLines1;
 		activeLineagesCount++;
+		printArray(activeLineages, activeLineagesCount);
 	}
 
 	void Mascot::addActiveLineages(int newLineage) {
 		activeLineages[activeLineagesCount++] = newLineage;
+		printArray(activeLineages, activeLineagesCount);
 	}
 
 	void  Mascot::removeActiveLineageAt(int pos0) {
-		SystemArraycopy(activeLineages, pos0 + 1, activeLineages, pos0, activeLineagesCount - pos0);
+		SystemArraycopyI(activeLineages, pos0 + 1, activeLineages, pos0, activeLineagesCount - pos0);
 		activeLineagesCount--;
+		printArray(activeLineages, activeLineagesCount);
 	}
 
 	int  Mascot::indexOf(int value) {
@@ -266,16 +301,20 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 	}
 
 	double* Mascot::getCoalescentRate(int i) {
-		// TODO: optimisie by getting rid of memory copies, just return pointer
     	if (i >= rateShiftCount) {
-        	SystemArraycopy(coalescentRatesCache, (rateShiftCount-1) * states , currentCoalescentRates, 0, states);
-    		return currentCoalescentRates;
+    		return coalescentRatesCache + (rateShiftCount-1) * states;
     	} else {
-        	SystemArraycopy(coalescentRatesCache, i * states , currentCoalescentRates, 0, states);
-			return currentCoalescentRates;
+    		return coalescentRatesCache + (rateShiftCount-1) * states;
     	}
 	}
 
+	double* Mascot::getMigrationRates(int i) {
+    	if (i >= rateShiftCount) {
+        	return migrationRatesCache +  (rateShiftCount-1) * states * states;
+    	} else {
+        	return migrationRatesCache +  1 * states * states;
+    	}
+	}
 	double Mascot::getRateShiftInterval(int i) {
     	if (i >= rateShiftCount) {
     		return INFINITY;
@@ -284,12 +323,11 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
     	}
 	}
 
-	void Mascot::setUpDynamics(int count, double * migration_rates, double * coalescent_rates, double * next_rate_shift) {
+	void Mascot::setUpDynamics(int count, double * coalescent_rates, double * migration_rates, double * next_rate_shift) {
 		if (rateShiftCount != count) {
 			rateShiftCount = count;
 			migrationRatesCache = new double[rateShiftCount * states * states];
 			coalescentRatesCache = new double[rateShiftCount * states];
-        		currentCoalescentRates = new double[states];
         		nextRateShiftCache = new double[rateShiftCount];
 		}
 		SystemArraycopy(migration_rates, 0, migrationRatesCache, 0, rateShiftCount * states * states);
@@ -303,9 +341,9 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 		linProbs_tmp[linProbsLength] = 0;
 		linProbs[linProbsLength-1] = 0;
 
-		euler->init(migrationRatesCache + ratesInterval * states * states,
-				nrLineages * states * states,
-				coalescentRatesCache + ratesInterval * states,
+		euler->init(getMigrationRates(ratesInterval),
+				states * states,
+				coalescentRates,
 				nrLineages);
 		euler->calculateValues(nextEventTime, linProbs_tmp, linProbsLength + 1);
 
@@ -359,13 +397,16 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 		int offset = (parents[coalLines0] - nrSamples) * states;
 		//double * lambda = stateProbabilities[parents[coalLines0] - nrSamples];
 
+//		std::cerr << coalLines0/*.getNr()*/ << " " << coalLines1/*.getNr()*/ << " " << activeLineages  << " " << offset << std::endl;
 		/*
 		 * Calculate the overall probability for two strains to coalesce
 		 * independent of the state at which this coalescent event is
 		 * supposed to happen
 		 */
         for (int k = 0; k < states; k++) {
-        	double pairCoalRate = coalescentRates[k] * linProbs[daughterIndex1*states + k] * linProbs[daughterIndex2*states + k];
+        		double pairCoalRate = coalescentRates[k] * linProbs[daughterIndex1*states + k] * linProbs[daughterIndex2*states + k];
+
+        		//std::cerr << pairCoalRate << "=" << coalescentRates[k] << "*" << linProbs[daughterIndex1*states + k] << "*" << linProbs[daughterIndex2*states + k] << std::endl;
 			if (!(pairCoalRate == NAN)){
 				stateProbabilities[offset + k] = pairCoalRate;
 			} else {
@@ -379,8 +420,9 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
        	    sum += stateProbabilities[offset + k];
         }
         for (int i = 0; i < states; i++) {
-        	stateProbabilities[offset + i] /= sum;
+        		stateProbabilities[offset + i] /= sum;
         }
+//		std::cerr << "Sum is: " << sum << std::endl;
 
         int lineageToAdd = parents[coalLines0];
         addActiveLineages(lineageToAdd);
@@ -417,6 +459,7 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 			removeActiveLineageAt(daughterIndex1);
 		}
 
+
 		double min = INFINITY;
         for (int i = 0; i < states; i++) {
 			if (stateProbabilities[offset + i] < min) {min = stateProbabilities[offset + i];}
@@ -426,14 +469,20 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 			return -INFINITY;
 		}
 
+		if (sum==0) {
+			return -INFINITY;
+		}
+
 		// store the node
 		sum = log(sum);
 		storeNode(currTreeInterval, currRatesInterval, linProbs, logP + sum, nextTreeEvent, nextRateShift);
 
-		if (sum==0)
-			return -INFINITY;
-		else
-			return sum;
+//		std::cerr << "Final coalescent probability is: " << sum << std::endl;
+
+//		if (sum==0)
+//			return -INFINITY;
+//		else
+		return sum;
     }
 
 
@@ -480,18 +529,18 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 	void Mascot::store() {
     	storeLinP();
     	SystemArraycopy(coalLogP, 0, storeLogP, 0, intervalCount);
-    	SystemArraycopy(coalRatesInterval, 0, storeRatesInterval, 0, intervalCount);
+    	SystemArraycopyI(coalRatesInterval, 0, storeRatesInterval, 0, intervalCount);
 
 
     	SystemArraycopy(nextTreeEvents, 0, storedNextTreeEvents, 0, intervalCount);
     	SystemArraycopy(nextRateShifts, 0, storedNextRateShifts, 0, intervalCount);
 
-    	SystemArraycopy(lineagesAdded, 0, storedLineagesAdded, 0, intervalCount);
+    	SystemArraycopyI(lineagesAdded, 0, storedLineagesAdded, 0, intervalCount);
 
     }
 
     void Mascot::storeLinP() {
-    	SystemArraycopy(coalLinProbsLengths, 0, storedCoalLinProbsLengths, 0, intervalCount);
+    	SystemArraycopyI(coalLinProbsLengths, 0, storedCoalLinProbsLengths, 0, intervalCount);
     	SystemArraycopy(coalLinProbs, 0, storeLinProbs, 0, coalLinProbsLengths[intervalCount - 1]);
 	}
 

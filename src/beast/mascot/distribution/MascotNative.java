@@ -477,14 +477,16 @@ public class MascotNative extends Distribution {
 			return Double.NEGATIVE_INFINITY;
 		}				
 	
+		if (sum==0)
+			return Double.NEGATIVE_INFINITY;
 		// store the node
 		sum = Math.log(sum);
 		storeNode(currTreeInterval, currRatesInterval, linProbs, logP + sum, nextTreeEvent, nextRateShift);
 	
-		if (sum==0)
-			return Double.NEGATIVE_INFINITY;
-		else
-			return sum;
+//		if (sum==0)
+//			return Double.NEGATIVE_INFINITY;
+//		else
+		return sum;
     }
      
   

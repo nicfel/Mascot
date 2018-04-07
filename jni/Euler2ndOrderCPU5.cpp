@@ -5,26 +5,6 @@
 #include <immintrin.h>
 using namespace std;
 
-void printArray(double * array, int n) {
-	fprintf(stderr, "[");
-	for (int i = 0; i < n; i++) {
-		fprintf(stderr, "%.4f", array[i]);
-		if (i < n-1) {
-			fprintf(stderr, " ");
-		}
-	}
-	fprintf(stderr, "]\n");
-}
-void printArrayX(double * array, int n) {
-	fprintf(stderr, "[");
-	for (int i = 0; i < n; i++) {
-		fprintf(stderr, "%f", array[i]);
-		if (i < n-1) {
-			fprintf(stderr, " ");
-		}
-	}
-	fprintf(stderr, "]\n");
-}
 
 inline double min(const double x, const double y) {return x < y ? x : y;}
 inline double max(const double x, const double y) {return x > y ? x : y;}
@@ -152,11 +132,10 @@ void Euler2ndOrderCPU5::calculateValues(double duration, double * p, int length)
 //	}
 
 void Euler2ndOrderCPU5::calculateValues(double duration, double * p, double * pDot, double * pDotDot, double * pDotDotDot, int length) {
-//	fprintf(stderr,"duration=%f states=%d eps=%f max_step=%f\n", duration, states, epsilon, max_step);
-//	fprintf(stderr,"caol");printArray(coalescent_rates, states);
-//	fprintf(stderr,"migr");printArray(migration_rates, states * states);
-//	fprintf(stderr,"p in");printArrayX(p, length);
-	memset(pDotDot, 0, length * sizeof(double));
+//	fprintf(stderr,"states=%d eps=%f max_step=%f\n", states, epsilon, max_step);
+//	printArray(coalescent_rates, states);
+//	printArray(migration_rates, states);
+		memset(pDotDot, 0, length * sizeof(double));
 		memset(pDotDotDot, 0, length * sizeof(double));
 
 		if (hasMultiplicator) {
@@ -192,7 +171,6 @@ void Euler2ndOrderCPU5::calculateValues(double duration, double * p, double * pD
 				}
 			}
 		}
-		//fprintf(stderr,"p out");printArrayX(p, length);
 	}
 
 

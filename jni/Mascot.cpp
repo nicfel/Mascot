@@ -9,27 +9,27 @@
 inline double min(const double x, const double y) {return x < y ? x : y;}
 inline double max(const double x, const double y) {return x > y ? x : y;}
 
-void printArray(int * array, int n) {
-	return;
-	fprintf(stderr, "[");
-	for (int i = 0; i < n; i++) {
-		fprintf(stderr, "%d", array[i]);
-		if (i < n-1) {
-			fprintf(stderr, " ");
-		}
-	}
-	fprintf(stderr, "]\n");
+inline void printArray(int * array, int n) {
+//	return;
+//	fprintf(stderr, "[");
+//	for (int i = 0; i < n; i++) {
+//		fprintf(stderr, "%d", array[i]);
+//		if (i < n-1) {
+//			fprintf(stderr, " ");
+//		}
+//	}
+//	fprintf(stderr, "]\n");
 }
-void printArrayF(double * array, int n) {
-	return;
-	fprintf(stderr, "[");
-	for (int i = 0; i < n; i++) {
-		fprintf(stderr, "%.2f", array[i]);
-		if (i < n-1) {
-			fprintf(stderr, " ");
-		}
-	}
-	fprintf(stderr, "]\n");
+inline void printArrayF(double * array, int n) {
+//	return;
+//	fprintf(stderr, "[");
+//	for (int i = 0; i < n; i++) {
+//		fprintf(stderr, "%.2f", array[i]);
+//		if (i < n-1) {
+//			fprintf(stderr, " ");
+//		}
+//	}
+//	fprintf(stderr, "]\n");
 }
 
 
@@ -54,9 +54,9 @@ Mascot::Mascot(int * nodeType, int states, double epsilon, double max_step, int 
     	(*this).states = states;
     	(*this).nodeType = nodeType;
 
-//    	fprintf(stderr, "%d %d %d\n", nodeCount, states, sampleCount);
-    	stateProbabilities = new double[sampleCount * states];
+    	fprintf(stderr, "nodeCount=%d states=%d sampleCount=%d intervalCount=%d\n", nodeCount, states, sampleCount, intervalCount);
     nrSamples = sampleCount + 1;
+    	stateProbabilities = new double[nrSamples * states];
 
 
     	// initialize storing arrays and ArrayLists
@@ -74,7 +74,7 @@ Mascot::Mascot(int * nodeType, int states, double epsilon, double max_step, int 
     	storedNextTreeEvents = new double[intervalCount];
     	storedNextRateShifts = new double[intervalCount];
 
-    	activeLineages = new int[nodeCount];
+    	activeLineages = new int[nodeCount + 1];
     	activeLineagesCount = 0;
 
     	int MAX_SIZE = intervalCount * states;
@@ -104,7 +104,7 @@ Mascot::Mascot(int * nodeType, int states, double epsilon, double max_step, int 
     	//currentCoalescentRates = 0;
     	indicatorsCache = 0;
 
-    	coalescentRates = 0;
+    	coalescentRates = 0; // == current Coalescent Rates
 
     	nrLineages = 0;
     	rateShiftCount = 0;
@@ -142,7 +142,7 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
         // Time to the next rate shift or event on the tree
         double nextTreeEvent = intervals[treeInterval];//treeIntervals.getInterval(treeInterval);
         double nextRateShift = getRateShiftInterval(ratesInterval);
-
+//first = 0;
       if (!first && !dynamicsIsDirty && firstDirtyInterval > 2) {
         // restore the likelihood to last known good place
     	  int pos0 = -1, pos1 = -1;
@@ -301,37 +301,38 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 	}
 
 	double* Mascot::getCoalescentRate(int i) {
-    	if (i >= rateShiftCount) {
-    		return coalescentRatesCache + (rateShiftCount-1) * states;
-    	} else {
-    		return coalescentRatesCache + (rateShiftCount-1) * states;
-    	}
+		if (i >= rateShiftCount) {
+			return coalescentRatesCache + (rateShiftCount-1) * states;
+		} else {
+			return coalescentRatesCache + i * states;
+		}
 	}
 
 	double* Mascot::getMigrationRates(int i) {
-    	if (i >= rateShiftCount) {
-        	return migrationRatesCache +  (rateShiftCount-1) * states * states;
-    	} else {
-        	return migrationRatesCache +  1 * states * states;
-    	}
+		if (i >= rateShiftCount) {
+			return migrationRatesCache +  (rateShiftCount-1) * states * states;
+		} else {
+			return migrationRatesCache +  i * states * states;
+		}
 	}
+
 	double Mascot::getRateShiftInterval(int i) {
-    	if (i >= rateShiftCount) {
-    		return INFINITY;
-    	} else {
+    		if (i >= rateShiftCount) {
+    			return INFINITY;
+    		} else {
 			return nextRateShiftCache[i];
-    	}
+    		}
 	}
 
 	void Mascot::setUpDynamics(int count, double * coalescent_rates, double * migration_rates, double * next_rate_shift) {
 		if (rateShiftCount != count) {
 			rateShiftCount = count;
-			migrationRatesCache = new double[rateShiftCount * states * states];
 			coalescentRatesCache = new double[rateShiftCount * states];
+			migrationRatesCache = new double[rateShiftCount * states * states];
         		nextRateShiftCache = new double[rateShiftCount];
 		}
-		SystemArraycopy(migration_rates, 0, migrationRatesCache, 0, rateShiftCount * states * states);
 		SystemArraycopy(coalescent_rates, 0, coalescentRatesCache, 0, rateShiftCount * states);
+		SystemArraycopy(migration_rates, 0, migrationRatesCache, 0, rateShiftCount * states * states);
 		SystemArraycopy(next_rate_shift, 0, nextRateShiftCache, 0, rateShiftCount);
 	}
 
@@ -571,7 +572,6 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 		nextRateShifts = storedNextRateShifts;
 		storedNextRateShifts = tmp;
 
-//      not here: lineagesAdded points to TreeIntervals
 		tmp2 = lineagesAdded;
 		lineagesAdded = storedLineagesAdded;
 		storedLineagesAdded = tmp2;

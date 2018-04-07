@@ -69,6 +69,7 @@ public class MascotNative2 extends Distribution {
         	for (int i = 0; i < rateShiftCount; i++) {
         		indicatorsCache = new int[rateShiftCount][];
         	}
+    		throw new IllegalArgumentException("Indicators not implemented yet");
     	}
     	nextRateShiftCache = dynamics.getIntervals();
     	dynamics.setDynamicsKnown();

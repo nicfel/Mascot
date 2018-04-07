@@ -193,6 +193,11 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	}
 	
 	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
+		System.err.println(duration);
+		System.err.println("caol "  + Arrays.toString(coalescent_rates));
+		System.err.println("imgr "  + Arrays.toString(migration_rates));		
+		System.err.println("p "  + Arrays.toString(p));
+		
 		clearArray(pDotDot, length);
 		clearArray(pDotDotDot, length);
 

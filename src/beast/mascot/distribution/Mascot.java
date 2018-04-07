@@ -29,7 +29,9 @@ public class Mascot extends StructuredTreeDistribution {
 	public Input<Double> epsilonInput = new Input<>("epsilon", "step size for the RK4 integration",0.001);
 	public Input<Double> maxStepInput = new Input<>("maxStep", "step size for the RK4 integration", Double.POSITIVE_INFINITY);
 	
-
+	enum MascotImplementation {java, indictors, allnative};
+	public Input<MascotImplementation> implementationInput = new Input<>("implementation", "implementation, one of " + MascotImplementation.values().toString(),
+			MascotImplementation.allnative, MascotImplementation.values());
     
 	public int samples;
 	public int nrSamples;
@@ -150,9 +152,19 @@ public class Mascot extends StructuredTreeDistribution {
     		// TODO: fill in nodeType another way
     	}
 
-    	if (Euler2ndOrderNative.loadLibrary()) {
+    	MascotImplementation imp = implementationInput.get();
+    	switch (imp) {
+    	case allnative: if (Euler2ndOrderNative.loadLibrary()) {
     		mascotImpl = new MascotNative2(treeIntervals, nodeType, states,epsilonInput.get(), maxStepInput.get());
-    	} else {
+    		break;
+    	}
+    	case indictors: if (Euler2ndOrderNative.loadLibrary()) {
+    		euler = new Euler2ndOrderNative();
+        	euler.setup(MAX_SIZE, states, epsilonInput.get(), maxStepInput.get());
+        	Log.warning("Using " + euler.getClass().getSimpleName());
+    		break;
+    	}
+    	case java:
     		switch (states) {
     		case 2: euler = new Euler2ndOrder2(); break;
     		case 3: euler = new Euler2ndOrder3(); break;
@@ -191,12 +203,15 @@ public class Mascot extends StructuredTreeDistribution {
             if (first == 0 || !dynamics.areDynamicsKnown()) {
             	mascotImpl.setUpDynamics(dynamics);
             }
-    		logP = mascotImpl.calculateLogP(dynamics.isDirtyCalculation(), treeIntervals.firstDirtyInterval,
+    		logP = mascotImpl.calculateLogP(dynamics.isDirtyCalculation() || first == 0, 
+    				treeIntervals.firstDirtyInterval,
     				treeIntervals.lineagesAdded,
     				treeIntervals.lineagesRemoved,
     				treeIntervals.intervals,
     				parents
     				);
+    		//System.out.println(logP);
+    		first++;
     		return logP;
     	}
         // Set up ArrayLists for the indices of active lineages and the lineage state probabilities

@@ -70,7 +70,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     @Override
     public void initAndValidate() {
     	// RRB: correct?
-    	tree = this;
+    	tree = mascotInput.get().treeIntervalsInput.get().treeInput.get();
     	
         if (parameterInput.get().size() == 0 && clockModelInput.get() == null) {
         	someMetaDataNeedsLogging = false;
@@ -108,7 +108,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
    }
 
     @Override
-    public void log(int nSample, PrintStream out) {
+    public void log(long nSample, PrintStream out) {
     	states = mascotInput.get().dynamicsInput.get().getDimension();
     	
         // make sure we get the current version of the inputs
@@ -787,7 +787,5 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 			return stateProbabilities[nr - nrSamples] ;
 		}
 	}
-
-
 	
 }

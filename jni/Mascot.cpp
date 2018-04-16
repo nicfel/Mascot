@@ -11,25 +11,25 @@ inline double max(const double x, const double y) {return x > y ? x : y;}
 
 inline void printArray(int * array, int n) {
 //	return;
-//	fprintf(stderr, "[");
-//	for (int i = 0; i < n; i++) {
-//		fprintf(stderr, "%d", array[i]);
-//		if (i < n-1) {
-//			fprintf(stderr, " ");
-//		}
-//	}
-//	fprintf(stderr, "]\n");
+	fprintf(stderr, "[");
+	for (int i = 0; i < n; i++) {
+		fprintf(stderr, "%d", array[i]);
+		if (i < n-1) {
+			fprintf(stderr, " ");
+		}
+	}
+	fprintf(stderr, "]\n");
 }
 inline void printArrayF(double * array, int n) {
 //	return;
-//	fprintf(stderr, "[");
-//	for (int i = 0; i < n; i++) {
-//		fprintf(stderr, "%.2f", array[i]);
-//		if (i < n-1) {
-//			fprintf(stderr, " ");
-//		}
-//	}
-//	fprintf(stderr, "]\n");
+	fprintf(stderr, "[");
+	for (int i = 0; i < n; i++) {
+		fprintf(stderr, "%.2f", array[i]);
+		if (i < n-1) {
+			fprintf(stderr, " ");
+		}
+	}
+	fprintf(stderr, "]\n");
 }
 
 
@@ -61,8 +61,8 @@ Mascot::Mascot(int * nodeType, int states, double epsilon, double max_step, int 
 
     	// initialize storing arrays and ArrayLists
     	storedLineagesAdded = new int[intervalCount];
-    	coalLinProbs = new double[intervalCount * intervalCount];
-    	storeLinProbs = new double[intervalCount * intervalCount];
+    	coalLinProbs = new double[intervalCount * intervalCount * states];
+    	storeLinProbs = new double[intervalCount * intervalCount * states];
     	coalLinProbsLengths = new int[intervalCount];
     	storedCoalLinProbsLengths = new int[intervalCount];
     	coalLogP = new double[intervalCount];
@@ -117,6 +117,8 @@ Mascot::Mascot(int * nodeType, int states, double epsilon, double max_step, int 
     	logP = 0;
 
     	first = true;
+    	debug = false;
+    	callCount = 0;
     }
 
 
@@ -127,9 +129,13 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 	SystemArraycopy(intervalsIn, 0, intervals, 0, intervalCount);
 	SystemArraycopyI(parentsIn, 0, parents, 0, nodeCount);
 
+	//fprintf(stderr,"callCount = %d\n", callCount);
+	//if (callCount == 244) {
+	//	debug = true;
+	//}
 	//fprintf(stderr, "intervals"); printArrayF(intervals, intervalCount);
 
-	printArray(lineagesRemoved, 20);
+	//printArray(lineagesRemoved, 20);
 
         // Set up ArrayLists for the indices of active lineages and the lineage state probabilities
         activeLineagesCount = 0;
@@ -142,7 +148,7 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
         // Time to the next rate shift or event on the tree
         double nextTreeEvent = intervals[treeInterval];//treeIntervals.getInterval(treeInterval);
         double nextRateShift = getRateShiftInterval(ratesInterval);
-//first = 0;
+firstDirtyInterval = 0;
       if (!first && !dynamicsIsDirty && firstDirtyInterval > 2) {
         // restore the likelihood to last known good place
     	  int pos0 = -1, pos1 = -1;
@@ -269,6 +275,7 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 //std::cerr << "exiting with logP = " << logP << std::endl;
 
         first = false;
+        callCount++;
 		return logP;
     }
 
@@ -277,18 +284,18 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 		SystemArraycopyI(activeLineages, pos1, activeLineages, pos1 + 1, activeLineagesCount - pos1);
 		activeLineages[pos1] = coalLines1;
 		activeLineagesCount++;
-		printArray(activeLineages, activeLineagesCount);
+		//printArray(activeLineages, activeLineagesCount);
 	}
 
 	void Mascot::addActiveLineages(int newLineage) {
 		activeLineages[activeLineagesCount++] = newLineage;
-		printArray(activeLineages, activeLineagesCount);
+		//printArray(activeLineages, activeLineagesCount);
 	}
 
 	void  Mascot::removeActiveLineageAt(int pos0) {
 		SystemArraycopyI(activeLineages, pos0 + 1, activeLineages, pos0, activeLineagesCount - pos0);
 		activeLineagesCount--;
-		printArray(activeLineages, activeLineagesCount);
+		//printArray(activeLineages, activeLineagesCount);
 	}
 
 	int  Mascot::indexOf(int value) {
@@ -342,6 +349,15 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 		linProbs_tmp[linProbsLength] = 0;
 		linProbs[linProbsLength-1] = 0;
 
+		if (debug) {
+			fprintf(stderr,"%f\n", nextEventTime);
+			fprintf(stderr,"caol ");
+			printArrayF(coalescentRates, states);
+			fprintf(stderr,"imgr ");
+			printArrayF(getMigrationRates(ratesInterval), states * states);
+			fprintf(stderr,"p ");
+			printArrayF(linProbs_tmp, linProbsLength);
+		}
 		euler->init(getMigrationRates(ratesInterval),
 				states * states,
 				coalescentRates,
@@ -356,6 +372,10 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
 
 
     void Mascot::sample(int currTreeInterval, int currRatesInterval, double nextTreeEvent, double nextRateShift) {
+			if (debug) {
+				fprintf(stderr,"sample activeLineages %d = ", currTreeInterval);
+				printArray(activeLineages, activeLineagesCount);
+			}
 		int incomingLines = lineagesAdded[currTreeInterval];
 		int newLength = linProbsLength + 1 * states;
 
@@ -384,6 +404,11 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
     }
 
     double Mascot::coalesce(int currTreeInterval, int currRatesInterval, double nextTreeEvent, double nextRateShift) {
+    	if (debug) {
+    		fprintf(stderr,"coalesce activeLineages %d = ", currTreeInterval);
+    		printArray(activeLineages, activeLineagesCount);
+    	}
+
     	int coalLines0 = lineagesRemoved[currTreeInterval * 2 + 0];
     	int coalLines1 = lineagesRemoved[currTreeInterval * 2 + 1];
 

@@ -107,6 +107,10 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     	states = mascotInput.get().dynamicsInput.get().getDimension();
    }
 
+    public void log(int nSample, PrintStream out) {
+    	log((long) nSample, out);
+    }
+    
     @Override
     public void log(long nSample, PrintStream out) {
     	states = mascotInput.get().dynamicsInput.get().getDimension();

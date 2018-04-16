@@ -5,6 +5,8 @@ import java.util.Arrays;
 
 import org.apache.commons.math3.util.FastMath;
 
+import beast.mascot.distribution.Mascot;
+
 public class Euler2ndOrder implements Euler2ndOrderBase {
 
 	double epsilon;
@@ -193,10 +195,13 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	}
 	
 	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
-//		System.err.println(duration);
-//		System.err.println("caol "  + Arrays.toString(coalescent_rates));
-//		System.err.println("imgr "  + Arrays.toString(migration_rates));		
-//		System.err.println("p "  + Arrays.toString(p));
+
+		if (Mascot.debug && false) {
+			System.err.println(duration);
+			System.err.println("caol "  + Arrays.toString(coalescent_rates));
+			System.err.println("imgr "  + Arrays.toString(migration_rates));		
+			System.err.println("p "  + Arrays.toString(p));
+		}
 	
 		clearArray(pDotDot, length);
 		clearArray(pDotDotDot, length);

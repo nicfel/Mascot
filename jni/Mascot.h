@@ -51,6 +51,8 @@ private:
 
     // check if this is the first calculation
      bool first;
+     int callCount;
+     bool debug;
 
 
 	// maximum integration error tolerance

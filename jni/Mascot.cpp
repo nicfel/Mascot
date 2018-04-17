@@ -94,6 +94,11 @@ Mascot::Mascot(int * nodeType, int states, double epsilon, double max_step, int 
     	case 8: euler = new Euler2ndOrderCPU8();break;
     	case 9: euler = new Euler2ndOrderCPU9();break;
     	case 10: euler = new Euler2ndOrderCPU10();break;
+    	case 11: euler = new Euler2ndOrderCPU11();break;
+    	case 12: euler = new Euler2ndOrderCPU12();break;
+    	case 13: euler = new Euler2ndOrderCPU13();break;
+    	case 14: euler = new Euler2ndOrderCPU14();break;
+    	case 15: euler = new Euler2ndOrderCPU15();break;
     	default: euler = new Euler2ndOrderCPU();
     	}
     	euler->setup(MAX_SIZE, states, epsilon, max_step);

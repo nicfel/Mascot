@@ -99,5 +99,10 @@ sub(Euler2ndOrderCPU7);
 sub(Euler2ndOrderCPU8);
 sub(Euler2ndOrderCPU9);
 sub(Euler2ndOrderCPU10);
+sub(Euler2ndOrderCPU11);
+sub(Euler2ndOrderCPU12);
+sub(Euler2ndOrderCPU13);
+sub(Euler2ndOrderCPU14);
+sub(Euler2ndOrderCPU15);
 
 #endif /* EULER2NDORDERCPU_H_ */

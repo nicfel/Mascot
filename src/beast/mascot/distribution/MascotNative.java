@@ -534,7 +534,7 @@ public class MascotNative extends Distribution {
     	System.arraycopy(coalLinProbs, offset, linProbs, 0, linProbsLength);
 
     	logP = coalLogP[restoringInterval];    	
-    	return coalRatesInterval[restoringInterval];
+    	return coalRatesInterval[restoringInterval + 1];
 
     }
     

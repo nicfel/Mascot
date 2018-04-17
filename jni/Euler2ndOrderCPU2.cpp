@@ -238,7 +238,28 @@ void Euler2ndOrderCPU2::normalise(const int i, double * p) {
 
 void Euler2ndOrderCPU2::updateP2(const double timeStep, const double timeStepSquare, double * p, const int length, double * pDot,
 			double * pDotDot) {
-		for (int i = 0; i < length; i++) {
+//	int n = length - length % 4;
+//	int i = 0;
+//	while (i < n) {
+////		p[0] += *pDot++ * timeStep;
+////		p[1] += *pDot++ * timeStep;
+////		p[2] += *pDot++ * timeStep;
+////		p[3] += *pDot++ * timeStep;
+////		*p++ += *pDotDot++ * timeStepSquare;
+////		*p++ += *pDotDot++ * timeStepSquare;
+////		*p++ += *pDotDot++ * timeStepSquare;
+////		*p++ += *pDotDot++ * timeStepSquare;
+//		*p++ += *pDot++ * timeStep + *pDotDot++ * timeStepSquare;
+//		*p++ += *pDot++ * timeStep + *pDotDot++ * timeStepSquare;
+//		*p++ += *pDot++ * timeStep + *pDotDot++ * timeStepSquare;
+//		*p++ += *pDot++ * timeStep + *pDotDot++ * timeStepSquare;
+//		i += 4;
+//	}
+//	while (i < length) {
+//		*p++ += *pDot++ * timeStep + *pDotDot++ * timeStepSquare;
+//		i++;
+//	}
+	for (int i = 0; i < length; i++) {
 			p[i] += pDot[i] * timeStep + pDotDot[i] * timeStepSquare;
 		}
 	}

@@ -24,9 +24,9 @@
 # Compiler warnings
 WARN=-Wall -Wsign-compare -mavx2
 
-CPPFLAGS = -Ofast -ffast-math -mavx2
+CPPFLAGS = -Ofast -ftree-vectorize -ffast-math -mavx2
 CC = gcc
-CFLAGS = -g -Wall -Ofast -ffast-math $(WARN) -I../../ -I/Library/Java/JavaVirtualMachines/jdk1.8.0_73.jdk/Contents/Home/include -I/Library/Java/JavaVirtualMachines/jdk1.8.0_73.jdk/Contents/Home/include/darwin
+CFLAGS = -funroll-loops -ftree-vectorize --param max-unroll-times=2 -Wall -Ofast -ffast-math $(WARN) -I../../ -I/Library/Java/JavaVirtualMachines/jdk1.8.0_73.jdk/Contents/Home/include -I/Library/Java/JavaVirtualMachines/jdk1.8.0_73.jdk/Contents/Home/include/darwin
 LINKFLAGS = -L. $(PROFILING)
 LIBS=-lm
 PROG=mascot
@@ -42,12 +42,17 @@ OBJS=	beast_mascot_distribution_MascotNative2.o \
 	Euler2ndOrderCPU7.o\
 	Euler2ndOrderCPU8.o\
 	Euler2ndOrderCPU9.o\
-	Euler2ndOrderCPU10.o
+	Euler2ndOrderCPU10.o\
+	Euler2ndOrderCPU11.o\
+	Euler2ndOrderCPU12.o\
+	Euler2ndOrderCPU13.o\
+	Euler2ndOrderCPU14.o\
+	Euler2ndOrderCPU15.o
 
 all: $(OBJS)
 #		g++ -dynamiclib -o mascot.jnilib $(OBJS)
 #		gcc -lc++ -lm -Wl -O3  -shared -o mascot.so $(OBJS)
-		gcc -lc++ -lm -Wl -O3  -shared -o libmascot.jnilib $(OBJS)
+		gcc -lc++ -lm -Wl -Ofast  -shared -o libmascot.jnilib $(OBJS)
 
 
 $(PROG): $(OBJS)

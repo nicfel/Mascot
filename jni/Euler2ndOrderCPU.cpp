@@ -217,28 +217,23 @@ double Euler2ndOrderCPU::maxAbs(double * pDotDotDot, int length) {
 
 void Euler2ndOrderCPU::normalise(const int i, double * p) {
 		const int k = states * i;
+		double *p2 = p + k;
 
 		double linSum = 0;
-		int u = k;
 		int q;
 		for (q = 0; q < states; q++) {
-			linSum += p[u++];
+			linSum += *p2++;
 		}
-		//			if (x < 0.0) {
-		//				System.err.println(Arrays.toString(p));
-		//				System.exit(0);
-		//			}
-		u = k;
+		p2 = p + k;
 		for (q = 0; q < states; q++) {
-			p[u++] /= linSum;
+			*p2++ /= linSum;
 		}
 	}
 
 void Euler2ndOrderCPU::updateP2(const double timeStep, const double timeStepSquare, double * p, const int length, double * pDot,
 			double * pDotDot) {
 		for (int i = 0; i < length; i++) {
-			p[i] += pDot[i] * timeStep;
-			p[i] += pDotDot[i] * timeStepSquare;
+			p[i] += pDot[i] * timeStep + pDotDot[i] * timeStepSquare;
 		}
 	}
 
@@ -315,10 +310,12 @@ void Euler2ndOrderCPU::computeDerivatives (double * p, double * pDot, double * p
 	}
 
 void Euler2ndOrderCPU::calcSumStates(double  * sumStates, const double * p) {
-		int u = 0;
+		int q;
+		double * ss;
 		for (int i = 0; i < lineages; i++) {
-			for (int j = 0; j < states; j++) {
-				sumStates[j] += p[u++];
+			ss = sumStates;
+			for (q = 0; q < states; q++) {
+				*ss++ += *p++;
 			}
 		}
 	}

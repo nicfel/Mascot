@@ -34,7 +34,7 @@ public class Mascot extends StructuredTreeDistribution {
 
 	enum MascotImplementation {java, indicators, allnative};
 	public Input<MascotImplementation> implementationInput = new Input<>("implementation", "implementation, one of " + MascotImplementation.values().toString(),
-			MascotImplementation.java, MascotImplementation.values());
+			MascotImplementation.allnative, MascotImplementation.values());
     
 	public int samples;
 	public int nrSamples;

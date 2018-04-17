@@ -33,7 +33,7 @@ public class MascotNative2 extends Distribution {
 	private double [] currentCoalescentRates;
 
     public MascotNative2(StructuredTreeIntervals treeIntervals, 
-    		int [] nodeType, int states, double epsilon, double max_step
+    		int [] nodeType, int states, double epsilon, double max_step, boolean useCache
     		) {
     	TreeInterface tree = treeIntervals.treeInput.get();
     	treeIntervals.calculateIntervals();  
@@ -41,10 +41,10 @@ public class MascotNative2 extends Distribution {
     	nodeCount = tree.getNodeCount();
     	intervalCount = treeIntervals.getIntervalCount();
     	this.states = states;
-    	setup(nodeType, states, epsilon, max_step, sampleCount, nodeCount, nodeCount);
+    	setup(nodeType, states, epsilon, max_step, sampleCount, nodeCount, nodeCount, useCache);
     }
     
-    native void setup(int [] nodeType, int states, double epsilon, double max_step, int sampleCount, int nodeCount, int intervalCount);
+    native void setup(int [] nodeType, int states, double epsilon, double max_step, int sampleCount, int nodeCount, int intervalCount, boolean useCache);
 
     native public double calculateLogP(boolean dynamicsIsDirty, int firstDirtyInterval, int[] lineagesAdded, 
     		int[] lineagesRemoved, double[] intervals, int[] parents);

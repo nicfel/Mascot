@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     beast_mascot_distribution_MascotNative2
  * Method:    setup
- * Signature: ([IIDDIII)V
+ * Signature: ([IIDDIIIZ)V
  */
 JNIEXPORT void JNICALL Java_beast_mascot_distribution_MascotNative2_setup
-  (JNIEnv *, jobject, jintArray, jint, jdouble, jdouble, jint, jint, jint);
+  (JNIEnv *, jobject, jintArray, jint, jdouble, jdouble, jint, jint, jint, jboolean);
 
 /*
  * Class:     beast_mascot_distribution_MascotNative2

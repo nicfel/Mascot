@@ -53,6 +53,7 @@ private:
      bool first;
      int callCount;
      bool debug;
+     bool useCache;
 
 
 	// maximum integration error tolerance
@@ -80,7 +81,7 @@ private:
 
 	 double logP;
 public:
-	Mascot(int * nodeType, int states, double epsilon, double max_step, int sampleCount, int nodeCount, int intervalCount);
+	Mascot(int * nodeType, int states, double epsilon, double max_step, int sampleCount, int nodeCount, int intervalCount, bool useCache);
 	virtual ~Mascot();
     double calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* lineagesAdded, int* lineagesRemoved, double* intervals, int* parents);
     void addActiveLineages(const int pos1, const int coalLines1);

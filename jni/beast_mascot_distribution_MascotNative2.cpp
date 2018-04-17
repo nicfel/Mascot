@@ -11,9 +11,9 @@ Mascot  * instance;
  */
 JNIEXPORT void JNICALL Java_beast_mascot_distribution_MascotNative2_setup
   (JNIEnv * env, jobject o, jintArray nodeTypeArray, jint states,
-		  jdouble epsilon, jdouble max_step, jint sampleCount, jint nodeCount, jint intervalCount) {
+		  jdouble epsilon, jdouble max_step, jint sampleCount, jint nodeCount, jint intervalCount, jboolean useCache) {
 	jint * nodeType = (env)->GetIntArrayElements(nodeTypeArray, 0);
-	instance = new Mascot(nodeType, states, epsilon, max_step, sampleCount, nodeCount, nodeCount);
+	instance = new Mascot(nodeType, states, epsilon, max_step, sampleCount, nodeCount, nodeCount, useCache);
 }
 
 /*

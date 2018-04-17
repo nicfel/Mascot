@@ -49,12 +49,13 @@ inline void SystemArraycopy(int * src, int * dest, const int count) {
 	memcpy(dest, src, count * sizeof(int));
 }
 
-Mascot::Mascot(int * nodeType, int states, double epsilon, double max_step, int sampleCount, int nodeCount, int intervalCount) {
+Mascot::Mascot(int * nodeType, int states, double epsilon, double max_step, int sampleCount, int nodeCount, int intervalCount, bool useCache) {
 	(*this).nodeCount = nodeCount;
     	(*this).states = states;
     	(*this).nodeType = nodeType;
+    	(*this).useCache = useCache;
 
-    	fprintf(stderr, "nodeCount=%d states=%d sampleCount=%d intervalCount=%d\n", nodeCount, states, sampleCount, intervalCount);
+    	fprintf(stderr, "nodeCount=%d states=%d sampleCount=%d intervalCount=%d useCache=%d\n", nodeCount, states, sampleCount, intervalCount, useCache);
     nrSamples = sampleCount + 1;
     	stateProbabilities = new double[nrSamples * states];
 
@@ -119,6 +120,7 @@ Mascot::Mascot(int * nodeType, int states, double epsilon, double max_step, int 
     	first = true;
     	debug = false;
     	callCount = 0;
+
     }
 
 
@@ -148,8 +150,8 @@ double Mascot::calculateLogP(bool dynamicsIsDirty, int firstDirtyInterval, int* 
         // Time to the next rate shift or event on the tree
         double nextTreeEvent = intervals[treeInterval];//treeIntervals.getInterval(treeInterval);
         double nextRateShift = getRateShiftInterval(ratesInterval);
-firstDirtyInterval = 0;
-      if (!first && !dynamicsIsDirty && firstDirtyInterval > 2) {
+
+      if (useCache && !first && !dynamicsIsDirty && firstDirtyInterval > 2) {
         // restore the likelihood to last known good place
     	  int pos0 = -1, pos1 = -1;
     	  do {
@@ -526,6 +528,9 @@ firstDirtyInterval = 0;
 
     void Mascot::storeNode(int storingTreeInterval, int storingRatesInterval, double* storeLinProbs,
     		double probability, double nextTreeEvent, double nextRateShift) {
+    	if (!useCache) {
+    		return;
+    	}
     	coalRatesInterval[storingTreeInterval] = storingRatesInterval;
     	int offset = 0;
     	if (storingTreeInterval > 0) {
@@ -548,11 +553,14 @@ firstDirtyInterval = 0;
     	SystemArraycopy(coalLinProbs, offset, linProbs, 0, linProbsLength);
 
     	logP = coalLogP[restoringInterval];
-    	return coalRatesInterval[restoringInterval];
+    	return coalRatesInterval[restoringInterval + 1];
 
     }
 
 	void Mascot::store() {
+    	if (!useCache) {
+    		return;
+    	}
     	storeLinP();
     	SystemArraycopy(coalLogP, 0, storeLogP, 0, intervalCount);
     	SystemArraycopyI(coalRatesInterval, 0, storeRatesInterval, 0, intervalCount);
@@ -572,6 +580,9 @@ firstDirtyInterval = 0;
 
 
 	void Mascot::restore(){
+    	if (!useCache) {
+    		return;
+    	}
     	// restore intermediate results
     	double * tmp = storeLogP;
     	storeLogP = coalLogP;

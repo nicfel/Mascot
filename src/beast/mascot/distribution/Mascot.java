@@ -15,6 +15,7 @@ import beast.evolution.tree.TreeInterface;
 import beast.evolution.tree.coalescent.IntervalType;
 import beast.mascot.dynamics.Dynamics;
 import beast.mascot.ode.*;
+import cern.colt.Arrays;
 
 /**
  * @author Nicola Felix Mueller
@@ -29,9 +30,11 @@ public class Mascot extends StructuredTreeDistribution {
 	public Input<Double> epsilonInput = new Input<>("epsilon", "step size for the RK4 integration",0.001);
 	public Input<Double> maxStepInput = new Input<>("maxStep", "step size for the RK4 integration", Double.POSITIVE_INFINITY);
 	
+	public Input<Boolean> cacheInput = new Input<>("useCache", "use cache to speed things up (may be fragile)", false);
+
 	enum MascotImplementation {java, indicators, allnative};
 	public Input<MascotImplementation> implementationInput = new Input<>("implementation", "implementation, one of " + MascotImplementation.values().toString(),
-			MascotImplementation.allnative, MascotImplementation.values());
+			MascotImplementation.java, MascotImplementation.values());
     
 	public int samples;
 	public int nrSamples;
@@ -91,9 +94,11 @@ public class Mascot extends StructuredTreeDistribution {
 	int [] nodeType;
 
 	MascotNative2 mascotImpl = null;
+	boolean useCache;
 	
     @Override
     public void initAndValidate(){
+    	useCache = cacheInput.get();
     	dynamics = dynamicsInput.get();
     	treeIntervals = treeIntervalsInput.get();
     	tree = treeInput.get();
@@ -155,7 +160,7 @@ public class Mascot extends StructuredTreeDistribution {
     	MascotImplementation imp = implementationInput.get();
     	switch (imp) {
     	case allnative: if (Euler2ndOrderNative.loadLibrary()) {
-    		mascotImpl = new MascotNative2(treeIntervals, nodeType, states,epsilonInput.get(), maxStepInput.get());
+    		mascotImpl = new MascotNative2(treeIntervals, nodeType, states,epsilonInput.get(), maxStepInput.get(), useCache);
     		break;
     	}
     	case indicators: if (Euler2ndOrderNative.loadLibrary()) {
@@ -190,10 +195,10 @@ public class Mascot extends StructuredTreeDistribution {
 
     public double calculateLogP() {
     	// newly calculate tree intervals (already done by swap() below)
-    	// treeIntervals.calculateIntervals();
+    	treeIntervals.calculateIntervals();
     	// correctly calculate the daughter nodes at coalescent intervals in the case of
     	// bifurcation or in case two nodes are at the same height
-    	treeIntervals.swap();    	
+    	//treeIntervals.swap();    	
 
     	if (mascotImpl != null) {
     		Node [] nodes = tree.getNodesAsArray();
@@ -227,14 +232,20 @@ public class Mascot extends StructuredTreeDistribution {
         double nextTreeEvent = treeIntervals.getInterval(treeInterval);
         double nextRateShift = dynamics.getInterval(ratesInterval);
         
-        System.err.println("first = " + first);
-        if (first == 382) {
+        //System.err.println("first = " + first);
+        if (first == 7) {
         	//debug = true;
+        }
+        if (debug) {
+        	Log.info.println("##" + treeIntervals.firstDirtyInterval);
+        	Log.info.println("##" + Arrays.toString(treeIntervals.lineagesAdded));
+        	Log.info.println("##" + Arrays.toString(treeIntervals.lineagesRemoved));
+        	Log.info.println("##" + Arrays.toString(treeIntervals.intervals));
         }
         if (first == 0 || !dynamics.areDynamicsKnown()) {
         	setUpDynamics();
         }
-        if (first > 0 && !dynamics.isDirtyCalculation() 
+        if (useCache && first > 0 && !dynamics.isDirtyCalculation() 
 				&& treeIntervals.firstDirtyInterval > 2) {
         // restore the likelihood to last known good place
     	  int pos0 = -1, pos1 = -1;
@@ -379,11 +390,9 @@ public class Mascot extends StructuredTreeDistribution {
         	if (logP == Double.NEGATIVE_INFINITY) {
         		return logP;
         	}
-        	if (treeInterval == 46) {
-        		int h = 3;
-        		h++;
-        	}
-        	
+            if (debug) {
+            	Log.info(treeInterval + " " + ratesInterval + " " + logP);
+            }        	
         } while(nextTreeEvent <= Double.POSITIVE_INFINITY);
 
         first++;
@@ -647,6 +656,10 @@ public class Mascot extends StructuredTreeDistribution {
     private void storeNode(int storingTreeInterval, int storingRatesInterval, double[] storeLinProbs,
 		double probability, ArrayList<Integer> storeActiveLineages, double nextTreeEvent, double nextRateShift,
 		int addedLineage) {
+    	if (!useCache) {
+    		return;
+    	}
+
     	coalRatesInterval[storingTreeInterval] = storingRatesInterval;
     	int offset = 0;
     	if (storingTreeInterval > 0) {
@@ -669,12 +682,15 @@ public class Mascot extends StructuredTreeDistribution {
     	System.arraycopy(coalLinProbs, offset, linProbs, 0, linProbsLength);
 
     	logP = coalLogP[restoringInterval];    	
-    	return coalRatesInterval[restoringInterval];
-
+    	return coalRatesInterval[restoringInterval + 1];
     }
     
     @Override
 	public void store() {
+    	if (!useCache) {
+    		super.store();
+    		return;
+    	}
     	if (mascotImpl != null) {
     		mascotImpl.store();
     		super.store();
@@ -711,6 +727,11 @@ public class Mascot extends StructuredTreeDistribution {
 
 	@Override
 	public void restore(){
+    	if (!useCache) {
+    		super.restore();
+    		return;
+    	}
+
     	if (mascotImpl != null) {
     		mascotImpl.restore();
     		super.restore();

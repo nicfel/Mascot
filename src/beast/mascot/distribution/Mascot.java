@@ -198,7 +198,7 @@ public class Mascot extends StructuredTreeDistribution {
     	treeIntervals.calculateIntervals();
     	// correctly calculate the daughter nodes at coalescent intervals in the case of
     	// bifurcation or in case two nodes are at the same height
-    	//treeIntervals.swap();    	
+    	treeIntervals.swap();    	
 
     	if (mascotImpl != null) {
     		Node [] nodes = tree.getNodesAsArray();
@@ -233,7 +233,7 @@ public class Mascot extends StructuredTreeDistribution {
         double nextRateShift = dynamics.getInterval(ratesInterval);
         
         //System.err.println("first = " + first);
-        if (first == 7) {
+        if (first == 270) {
         	//debug = true;
         }
         if (debug) {

@@ -9,6 +9,7 @@ import java.util.List;
 import beast.core.CalculationNode;
 import beast.core.Description;
 import beast.core.Input;
+import beast.core.Input.Validate;
 import beast.evolution.tree.TraitSet;
 
 @Description("Class that is to be extended by other dynamic processes")
@@ -17,6 +18,9 @@ public abstract class Dynamics extends CalculationNode  {
     public Input<Integer> dimensionInput = new Input<>("dimension", "the number of different states." + 
     " if -1, it will use the number of different types ", -1);
     public Input<TraitSet> typeTraitInput = new Input<>("typeTrait", "Type trait set.  Used only by BEAUti.");
+
+	public Input<String> typesInput = new Input<>(
+			"types", "input of the different types, can be helpful for multilocus data", Validate.OPTIONAL);
 
 
     public boolean hasIndicators = false;
@@ -63,8 +67,19 @@ public abstract class Dynamics extends CalculationNode  {
 	HashMap<Integer, String> reverseTraitToType; 
 
     @Override
-    public void initAndValidate() {    	
-    	if (typeTraitInput.get()!=null){
+    public void initAndValidate() {  
+    	if (typesInput.get()!=null){
+        	String[] splittedTypes = typesInput.get().split("\\s+");
+
+    		dimensionInput.set(splittedTypes.length);
+    		
+    		traitToType = new HashMap<>();
+    		reverseTraitToType = new HashMap<>();
+    		for (int i = 0; i < splittedTypes.length; i++)
+    			traitToType.put(splittedTypes[i], i);
+    		for (int i = 0; i < splittedTypes.length; i++)
+    			reverseTraitToType.put(i, splittedTypes[i]);    		
+    	}else if (typeTraitInput.get()!=null){
     		traitToType = new HashMap<>();
     		reverseTraitToType = new HashMap<>();
     		List<String> taxa = typeTraitInput.get().taxaInput.get().asStringList();

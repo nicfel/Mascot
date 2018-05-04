@@ -10,4 +10,4 @@
 /test-reports/
 /dist/
 /templates/MascotBSSVS/
-
+src/beast/mascot/operators/BitFlipBSSVSOperator.java

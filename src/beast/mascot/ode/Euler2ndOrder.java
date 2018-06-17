@@ -106,8 +106,12 @@ public class Euler2ndOrder {
 			if (iterations>10000){
 				System.err.println("too many iterations, erturn negative infinity");
 				p[length-1] = Double.NEGATIVE_INFINITY;
-				break;
 			}
+			
+			if (p[length-1]==Double.NEGATIVE_INFINITY)
+				break;
+ 
+			
 				
 		}			
 	}	
@@ -120,7 +124,6 @@ public class Euler2ndOrder {
 
 	private double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
 		final double max_dotdotdot = maxAbs(pDotDotDot, length);	
-		
 		//double timeStep = FastMath.min(FastMath.pow(epsilon*6/max_dotdotdot, C), FastMath.min(duration, max_step));
 
 		double timeStep = FastMath.min(FastMath.cbrt(epsilon*6/max_dotdotdot), FastMath.min(duration, max_step));
@@ -130,13 +133,25 @@ public class Euler2ndOrder {
 		for (int i = 0; i < length; i++){
 			double new_val = p[i] + pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
 			double diff = FastMath.abs(new_val - p[i]);
+			int its = 0;
 			while (new_val > 1 || new_val < 0 || diff>0.2){
 				timeStep *= 0.9;
 				timeStepSquare = timeStep*timeStep*0.5;
 				new_val = p[i] + pDot[i]*timeStep + pDotDot[i]*timeStepSquare;
 				diff = FastMath.abs(new_val - p[i]);
+				its++;
+				if (its>10000){
+//					System.err.println("cannot find proper time step, skip these parameter values");
+					p[length-1] = Double.NEGATIVE_INFINITY;
+					break;
+				}
+
 			}			
 		}
+		
+		if (p[length-1]==Double.NEGATIVE_INFINITY)
+			return 0.0;
+		
 		doUpdating(timeStep, timeStepSquare, p, pDot, pDotDot, length + 1);
 		duration -= timeStep;
 		return duration;
@@ -159,11 +174,11 @@ public class Euler2ndOrder {
 		
 		// normalize to ensure stability
 		for (int i = 0; i < lineages; i ++){
-			normalise(i, p);
+			normalise(i, p, length);
 		}
 	}
 	    
-	private void normalise(final int i, final double[] p) {
+	private void normalise(final int i, final double[] p, int length) {
 		final int k = states*i;
 		double linSum = 0;
 		
@@ -171,8 +186,9 @@ public class Euler2ndOrder {
 			if (p[k+j]>=0.0){
 				linSum += p[k+j];
 			}else{
-				System.err.println(Arrays.toString(p));
-				System.exit(0);
+//				System.err.println(Arrays.toString(p));
+				p[length-1] = Double.NEGATIVE_INFINITY;
+				return;
 			}
 		}
 		for (int j = 0; j < states; j++){

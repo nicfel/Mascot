@@ -189,13 +189,17 @@ public class Mascot extends StructuredTreeDistribution {
        	
         	if (nextEventTime > 0) {													// if true, calculate the interval contribution        		
                 if(recalculateLogP){
-    				System.err.println("ode calculation stuck, reducing tolerance, new tolerance= " + maxTolerance);
-    				maxTolerance *=0.9;
-    		    	recalculateLogP = false;
+                	System.out.println(Arrays.toString(migrationRates[0]));
+                	System.out.println(Arrays.toString(migrationRates[1]));
+                	System.out.println(Arrays.toString(migrationRates[2]));
+    				System.err.println("ode calculation stuck, return negative infinity");
+    				logP = Double.NEGATIVE_INFINITY;
     				System.exit(0);
-                	return calculateLogP();
+                	return logP;
                 }
                 if(stepSizeInput.get()!=null){
+                	
+                	System.out.println("dfkjskfdklfdkllf;dks");
 		        	//double[] linProbs_for_ode = new double[linProbs.length]; 
 	                FirstOrderIntegrator integrator = new ClassicalRungeKuttaIntegrator(stepSizeInput.get());	                
 //	                integrator.setMaxEvaluations((int) 1e5);  // set the maximal number of evaluations              
@@ -297,10 +301,14 @@ public class Mascot extends StructuredTreeDistribution {
     			if (linProbs[i*states+j]>=0.0){
     				lineProbs += linProbs[i*states+j];
     			}else{
-    				// try recalculation after lowering the tolerance
-    				System.out.println(linProbs[i*states+j]);
-    				recalculateLogP = true;
-    				return Math.log(1.0);
+    				if (linProbs[i*states+j]>-4.9E-300){
+    					linProbs[i*states+j]=0.0;
+    				}else{
+	    				// try recalculation after lowering the tolerance
+	    				System.out.println(linProbs[i*states+j]);
+	    				recalculateLogP = true;
+	    				return Math.log(1.0);
+    				}
     			}
     		for (int j = 0; j < states; j++){
     			if (lineProbs==0.0)

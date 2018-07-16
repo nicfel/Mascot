@@ -8,6 +8,9 @@
 #ifndef EULER2NDORDER_H_
 #define EULER2NDORDER_H_
 
+#include <string.h>
+#include <stdio.h>
+
 class Euler2ndOrder {
 public:
 	Euler2ndOrder();

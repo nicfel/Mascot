@@ -5,6 +5,8 @@ import java.util.Arrays;
 
 import org.apache.commons.math3.util.FastMath;
 
+import beast.mascot.distribution.Mascot;
+
 public class Euler2ndOrder9 extends Euler2ndOrder {
 	double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
 		final double max_dotdotdot = maxAbs(pDotDotDot, length);	
@@ -17,14 +19,24 @@ public class Euler2ndOrder9 extends Euler2ndOrder {
 		for (int i = 0; i < length; i++) {
 			double new_val = p[i] + pDot[i] * timeStep + pDotDot[i] * timeStepSquare;
 			double diff = FastMath.abs(new_val - p[i]);
+			int its = 0;
 			while (new_val > 1 || new_val < 0 || diff > 0.2) {
 				timeStep *= 0.9;
 				timeStepSquare = timeStep * timeStep * 0.5;
 				new_val = p[i] + pDot[i] * timeStep + pDotDot[i] * timeStepSquare;
 				diff = FastMath.abs(new_val - p[i]);
+				its++;
+				if (its > 10000) {
+//					System.err.println("cannot find proper time step, skip these parameter values");
+					p[length-1] = Double.NEGATIVE_INFINITY;
+					break;					
+				}
 			}			
 		}
 		
+		if (p[length-1]==Double.NEGATIVE_INFINITY)
+			return 0.0;
+
 		updateP2(timeStep, timeStepSquare, p, length + 1, pDot, pDotDot);
 		
 		// normalize to ensure stability
@@ -53,50 +65,87 @@ public class Euler2ndOrder9 extends Euler2ndOrder {
 		int u = k;
 		
 		double x;
+		
 {
 			x = p[u++];
 			linSum += x;
-			if (x < 0.0) bailout(p);
+			if (x < 0.0) {
+				p[p.length-1] = Double.NEGATIVE_INFINITY; 
+				return;
+			} // XXX
+			
 		}
 {
 			x = p[u++];
 			linSum += x;
-			if (x < 0.0) bailout(p);
+			if (x < 0.0) {
+				p[p.length-1] = Double.NEGATIVE_INFINITY; 
+				return;
+			} // XXX
+			
 		}
 {
 			x = p[u++];
 			linSum += x;
-			if (x < 0.0) bailout(p);
+			if (x < 0.0) {
+				p[p.length-1] = Double.NEGATIVE_INFINITY; 
+				return;
+			} // XXX
+			
 		}
 {
 			x = p[u++];
 			linSum += x;
-			if (x < 0.0) bailout(p);
+			if (x < 0.0) {
+				p[p.length-1] = Double.NEGATIVE_INFINITY; 
+				return;
+			} // XXX
+			
 		}
 {
 			x = p[u++];
 			linSum += x;
-			if (x < 0.0) bailout(p);
+			if (x < 0.0) {
+				p[p.length-1] = Double.NEGATIVE_INFINITY; 
+				return;
+			} // XXX
+			
 		}
 {
 			x = p[u++];
 			linSum += x;
-			if (x < 0.0) bailout(p);
+			if (x < 0.0) {
+				p[p.length-1] = Double.NEGATIVE_INFINITY; 
+				return;
+			} // XXX
+			
 		}
 {
 			x = p[u++];
 			linSum += x;
-			if (x < 0.0) bailout(p);
+			if (x < 0.0) {
+				p[p.length-1] = Double.NEGATIVE_INFINITY; 
+				return;
+			} // XXX
+			
 		}
 {
 			x = p[u++];
 			linSum += x;
-			if (x < 0.0) bailout(p);
+			if (x < 0.0) {
+				p[p.length-1] = Double.NEGATIVE_INFINITY; 
+				return;
+			} // XXX
+			
 		}
 {
 			x = p[u++];
 			linSum += x;
-			if (x < 0.0) bailout(p);
+			if (x < 0.0) {
+				p[p.length-1] = Double.NEGATIVE_INFINITY; 
+				return;
+			} // XXX
+			
 		}
 		u = k;
 {

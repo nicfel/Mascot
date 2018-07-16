@@ -219,9 +219,11 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 				if (iterations>10000){
 					System.err.println("too many iterations, return negative infinity");
 					p[length-1] = Double.NEGATIVE_INFINITY;
-					break;
 				}
-			}			
+				
+				if (p[length-1]==Double.NEGATIVE_INFINITY)
+					break;
+				}			
 		} else {
 			while (duration > 0){
 		    	iterations++;
@@ -258,14 +260,24 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		for (int i = 0; i < length; i++) {
 			double new_val = p[i] + pDot[i] * timeStep + pDotDot[i] * timeStepSquare;
 			double diff = FastMath.abs(new_val - p[i]);
+			int its = 0;
 			while (new_val > 1 || new_val < 0 || diff > 0.2) {
 				timeStep *= 0.9;
 				timeStepSquare = timeStep * timeStep * 0.5;
 				new_val = p[i] + pDot[i] * timeStep + pDotDot[i] * timeStepSquare;
 				diff = FastMath.abs(new_val - p[i]);
+				its++;
+				if (its > 10000) {
+//					System.err.println("cannot find proper time step, skip these parameter values");
+					p[length-1] = Double.NEGATIVE_INFINITY;
+					break;					
+				}
 			}			
 		}
 		
+		if (p[length-1]==Double.NEGATIVE_INFINITY)
+			return 0.0;
+
 		updateP2(timeStep, timeStepSquare, p, length + 1, pDot, pDotDot);
 		
 		// normalize to ensure stability
@@ -294,10 +306,15 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		int u = k;
 		int q;
 		double x;
+		
 		for (q = 0; q < states; q++) {
 			x = p[u++];
 			linSum += x;
-			if (x < 0.0) bailout(p);
+			if (x < 0.0) {
+				p[p.length-1] = Double.NEGATIVE_INFINITY; 
+				return;
+			} // XXX
+			
 		}
 		u = k;
 		for (q = 0; q < states; q++) {

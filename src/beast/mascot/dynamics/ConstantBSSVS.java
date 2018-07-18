@@ -93,10 +93,16 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
     /**
      * Returns the time to the next interval.
      */
+    @Override
     public double getInterval(int i) {
     	return Double.POSITIVE_INFINITY;
     }   
-    
+
+    @Override
+    public double [] getIntervals() {
+		return new double[]{Double.POSITIVE_INFINITY};
+	}
+
     public boolean intervalIsDirty(int i){
     	boolean intervalIsDirty = false;  
     	
@@ -140,8 +146,9 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
     }
     
 	@Override    
-    public double[][] getBackwardsMigration(int i){
-    	double[][] m = new double[NeInput.get().getDimension()][NeInput.get().getDimension()];
+    public double[] getBackwardsMigration(int i){
+		int n = NeInput.get().getDimension();
+    	double[] m = new double[n * n];
 //    	System.out.println(b_mInput.get());
     	
     	if (isBackwardsMigration){
@@ -151,9 +158,9 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = 0; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5)
-		    					m[a][b] = migrationClockInput.get().getValue()*b_mInput.get().getArrayValue(c);
+		    					m[a * n + b] = migrationClockInput.get().getValue()*b_mInput.get().getArrayValue(c);
 		    				else
-		    					m[a][b] = 0.0;
+		    					m[a * n + b] = 0.0;
 		    				c++;
 		    			}
 		    		}
@@ -164,11 +171,11 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = a+1; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-			    				m[a][b] = migrationClockInput.get().getValue()*b_mInput.get().getArrayValue(c);
-			    				m[b][a] = migrationClockInput.get().getValue()*b_mInput.get().getArrayValue(c);
+			    				m[a * n + b] = migrationClockInput.get().getValue()*b_mInput.get().getArrayValue(c);
+			    				m[b * n + a] = migrationClockInput.get().getValue()*b_mInput.get().getArrayValue(c);
 		    				}else{
-		    					m[a][b] = 0.0;
-		    					m[b][a] = 0.0;
+		    					m[a * n + b] = 0.0;
+		    					m[b * n + a] = 0.0;
 		    				}
 		    				c++;
 		    			}
@@ -182,11 +189,11 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = 0; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5)
-		    					m[a][b] = migrationClockInput.get().getValue()*f_mInput.get().getArrayValue(c)
+		    					m[a * n + b] = migrationClockInput.get().getValue()*f_mInput.get().getArrayValue(c)
 			    						*NeInput.get().getArrayValue(b)
 			    							/NeInput.get().getArrayValue(a);
 		    				else
-		    					m[a][b] = 0.0;
+		    					m[a * n + b] = 0.0;
 		    				c++;
 		    			}
 		    		}
@@ -197,15 +204,15 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = a+1; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-			    				m[a][b] = migrationClockInput.get().getValue()*f_mInput.get().getArrayValue(c)
+			    				m[a * n + b] = migrationClockInput.get().getValue()*f_mInput.get().getArrayValue(c)
 			    						*NeInput.get().getArrayValue(b)
 			    							/NeInput.get().getArrayValue(a);
-			    				m[b][a] = migrationClockInput.get().getValue()*f_mInput.get().getArrayValue(c)
+			    				m[b * n + a] = migrationClockInput.get().getValue()*f_mInput.get().getArrayValue(c)
 			    						*NeInput.get().getArrayValue(a)
 			    							/NeInput.get().getArrayValue(b);
 		    				}else{
-		    					m[a][b] = 0.0;
-		    					m[b][a] = 0.0;
+		    					m[a * n + b] = 0.0;
+		    					m[b * n + a] = 0.0;
 		    				}
 		    				c++;
 		    			}
@@ -276,7 +283,7 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 	}
 
 	@Override
-	public void log(int sample, PrintStream out) {
+	public void log(long sample, PrintStream out) {
 		for (int i = 0 ; i < NeInput.get().getDimension(); i++){
 			out.print(String.format("%f\t", NeInput.get().getArrayValue(i)));
 		}
@@ -334,7 +341,7 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 	}
 
 	@Override
-	public int[][] getIndicators(int i) {
+	public int[] getIndicators(int i) {
 		int nrTrue = 0;
 		for (int j = 0; j < indicatorInput.get().getDimension(); j++)
 			if (indicatorInput.get().getArrayValue(j) > 0.5)
@@ -343,7 +350,7 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		if (migrationType == MigrationType.symmetric)
 			nrTrue*=2;
 		
-		int[][] m = new int[nrTrue][2];
+		int[] m = new int[nrTrue*2];
     	int c = 0;
     	int mi = 0;
 		
@@ -354,8 +361,8 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = 0; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-		    					m[mi][0] = a;
-		    					m[mi][1] = b;
+		    					m[mi * nrTrue + 0] = a;
+		    					m[mi * nrTrue + 1] = b;
 		    					mi++;
 		    				}
 		    				c++;
@@ -367,11 +374,11 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = a+1; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-		    					m[mi][0] = a;
-		    					m[mi][1] = b;
+		    					m[mi * nrTrue + 0] = a;
+		    					m[mi * nrTrue + 1] = b;
 		    					mi++;
-		    					m[mi][0] = b;
-		    					m[mi][1] = a;
+		    					m[mi * nrTrue + 0] = b;
+		    					m[mi * nrTrue + 1] = a;
 		    					mi++;
 		    				}
 		    				c++;
@@ -385,8 +392,8 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = 0; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-		    					m[mi][0] = a;
-		    					m[mi][1] = b;
+		    					m[mi * nrTrue + 0] = a;
+		    					m[mi * nrTrue + 1] = b;
 		    					mi++;
 		    				}
 		    				c++;
@@ -398,11 +405,11 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = a+1; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-		    					m[mi][0] = a;
-		    					m[mi][1] = b;
+		    					m[mi * nrTrue + 0] = a;
+		    					m[mi * nrTrue + 1] = b;
 		    					mi++;
-		    					m[mi][0] = b;
-		    					m[mi][1] = a;
+		    					m[mi * nrTrue + 0] = b;
+		    					m[mi * nrTrue + 1] = a;
 		    					mi++;
 		    				}
 		    				c++;
@@ -415,10 +422,13 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
     	return m;  	
 	}
 
+//    @Override
+//	protected boolean requiresRecalculation(){
+//    	return intervalIsDirty(0);
+//    }
+//
     @Override
-	protected boolean requiresRecalculation(){
-    	return intervalIsDirty(0);
-    }
+    public int getEpochCount() {return 1;}
 
     
 }

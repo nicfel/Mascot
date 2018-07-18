@@ -2,6 +2,7 @@
 package beast.mascot.dynamics;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -18,14 +19,12 @@ public abstract class Dynamics extends CalculationNode  {
     public Input<Integer> dimensionInput = new Input<>("dimension", "the number of different states." + 
     " if -1, it will use the number of different types ", -1);
     public Input<TraitSet> typeTraitInput = new Input<>("typeTrait", "Type trait set.  Used only by BEAUti.");
-
-	public Input<String> typesInput = new Input<>(
-			"types", "input of the different types, can be helpful for multilocus data", Validate.OPTIONAL);
-
+    public Input<String> typesInput = new Input<>(
+    		"types", "input of the different types, can be helpful for multilocus data", Validate.OPTIONAL);
 
     public boolean hasIndicators = false;
     
-    private boolean dynamicsKnown;
+    private boolean dynamicsKnown = false;
 
     /**
      * recalculate the dynamics
@@ -36,6 +35,7 @@ public abstract class Dynamics extends CalculationNode  {
      * get the time to the next rate shift
      */    
 	public abstract double getInterval(int i);
+	public abstract double [] getIntervals();
 
     /**
      * check if next interval is dirty, i.e. parameters changed in that interval
@@ -50,7 +50,12 @@ public abstract class Dynamics extends CalculationNode  {
     /**
      * get the migration rates for the next interval
      */    
-	public abstract double[][] getBackwardsMigration(int i);
+	public abstract double[] getBackwardsMigration(int i);
+	
+	/**
+	 * get number of epochs where rates are shifted
+	 */
+	public abstract int getEpochCount();
 
 	
 	/**
@@ -58,28 +63,28 @@ public abstract class Dynamics extends CalculationNode  {
 	 * @param i
 	 * @return
 	 */
-	public int[][] getIndicators(int i){
+	public int[] getIndicators(int i){
 		return null;
 	}
 
 
 	HashMap<String, Integer> traitToType = new HashMap<>(); 
-	HashMap<Integer, String> reverseTraitToType; 
-
+	HashMap<Integer, String> reverseTraitToType;
+	
     @Override
-    public void initAndValidate() {  
+    public void initAndValidate() {    	
     	if (typesInput.get()!=null){
-        	String[] splittedTypes = typesInput.get().split("\\s+");
-
-    		dimensionInput.set(splittedTypes.length);
+    		String[] splittedTypes = typesInput.get().split("\\s+");
     		
+    		dimensionInput.set(splittedTypes.length);
+
     		traitToType = new HashMap<>();
     		reverseTraitToType = new HashMap<>();
     		for (int i = 0; i < splittedTypes.length; i++)
     			traitToType.put(splittedTypes[i], i);
     		for (int i = 0; i < splittedTypes.length; i++)
     			reverseTraitToType.put(i, splittedTypes[i]);    		
-    	}else if (typeTraitInput.get()!=null){
+    	} else if (typeTraitInput.get()!=null){
     		traitToType = new HashMap<>();
     		reverseTraitToType = new HashMap<>();
     		List<String> taxa = typeTraitInput.get().taxaInput.get().asStringList();
@@ -96,13 +101,14 @@ public abstract class Dynamics extends CalculationNode  {
     			traitToType.put(unique.get(i), i);
     		for (int i = 0; i < unique.size(); i++)
     			reverseTraitToType.put(i, unique.get(i));
+
     	}
     	
     	if (dimensionInput.get()>1 && dimensionInput.get()<traitToType.size())
             throw new IllegalArgumentException("dimension is not -1 (undefined) and smaller " +
             		"than the number of different traits");
 
-    	
+    
     }
     
     /**
@@ -117,9 +123,19 @@ public abstract class Dynamics extends CalculationNode  {
     }
     
     @Override
+    protected void store() {
+    	dynamicsKnown = true; 	
+    }
+    
+    @Override
+    protected void restore() {
+    	dynamicsKnown = false; 	
+    }
+    
+    @Override
 	protected boolean requiresRecalculation(){
     	dynamicsKnown = false; 	
-    	return dynamicsKnown;
+    	return intervalIsDirty(0);
     }
     
     public boolean areDynamicsKnown(){
@@ -142,7 +158,7 @@ public abstract class Dynamics extends CalculationNode  {
 	public int getValue(String id) {
 		return traitToType.get(typeTraitInput.get().getStringValue(id));	
 	}
-	
+		
 	public String getStringStateValue(int state){
 		return reverseTraitToType.get(state);
 	}

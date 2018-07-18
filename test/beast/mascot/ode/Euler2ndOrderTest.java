@@ -20,11 +20,11 @@ public class Euler2ndOrderTest  {
 		multiplicator[1] = 2;
 		
 		// migration rates
-		double[][] migration_rates = new double[2][2];
-		migration_rates[0][0] = 0;
-		migration_rates[1][1] = 0;
-		migration_rates[0][1] = 0.2;
-		migration_rates[1][0] = 2;
+		double[] migration_rates = new double[2*2];
+		migration_rates[0*2+0] = 0;
+		migration_rates[1*2+1] = 0;
+		migration_rates[0*2+1] = 0.2;
+		migration_rates[1*2+0] = 2;
 		
 		// coal rates
 		double[] coalescent_rates = {1,2};
@@ -60,9 +60,9 @@ public class Euler2ndOrderTest  {
 		
 		// check that it does not depend if indicators
 		
-		int[][] indicators = new int[1][2];
-		indicators[0][0] = 0;
-		indicators[0][1] = 1;
+		int[] indicators = new int[1*2];
+		indicators[0*2+0] = 0;
+		indicators[0*2+1] = 1;
 		
 		double[] p_ind = {0.5, 0.5, 1, 0, 1, 0, 0};
 		double[] p_new = {0.5, 0.5, 1, 0, 1, 0, 0};
@@ -74,10 +74,10 @@ public class Euler2ndOrderTest  {
 		
 		
 		Euler2ndOrder euler2ndOrderInd =  new Euler2ndOrder(migration_rates, indicators, coalescent_rates, lineages+1, states, 0.001, 0.2);
-		migration_rates[0][0] = 0;
-		migration_rates[1][1] = 0;
-		migration_rates[0][1] = 0.2;
-		migration_rates[1][0] = 0;
+		migration_rates[0*2+0] = 0;
+		migration_rates[1*2+1] = 0;
+		migration_rates[0*2+1] = 0.2;
+		migration_rates[1*2+0] = 0;
 		
 		euler2ndOrderInd.calculateValues(1.0, p_ind, pDot, pDotDot, pDotDotDot, p_ind.length);
 		

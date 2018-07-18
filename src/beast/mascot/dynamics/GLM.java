@@ -35,8 +35,9 @@ public class GLM extends Dynamics implements Loggable {
 
 	double[] intTimes;
 	
+ 
 	int firstlargerzero;
-    
+	
     @Override
     public void initAndValidate() {
     	
@@ -52,7 +53,7 @@ public class GLM extends Dynamics implements Loggable {
 	    		}
 	    			
 	    	}
-    	}else{
+	    }else{
 	    	intTimes = new double[1];
 	    	intTimes[0] = Double.POSITIVE_INFINITY;
     	}
@@ -68,6 +69,15 @@ public class GLM extends Dynamics implements Loggable {
     	
     	String[] splittedTypes = typesInput.get().split("\\s+");
 
+    	// check which rateshiftInput is the first above 0
+    	firstlargerzero = intTimes.length-1;
+    	for (int i = 0 ; i < intTimes.length; i++){
+    		if (intTimes[i] >  0){
+    			firstlargerzero = i;
+				break;
+    		}
+    	}
+    	
 		dimensionInput.set(splittedTypes.length);
     	
 		traitToType = new HashMap<>();
@@ -85,14 +95,20 @@ public class GLM extends Dynamics implements Loggable {
     /**
      * Returns the time to the next interval.
      */
-    public double getInterval(int i) {   
+    @Override
+    public double getInterval(int i) {
     	if (i >= rateShiftsInput.get().getDimension()-firstlargerzero){
-    		return Double.POSITIVE_INFINITY;
-    	}else{
+     		return Double.POSITIVE_INFINITY;
+     	}else{
 			return intTimes[i+firstlargerzero];
-    	}
+     	}
     }   
 
+    @Override
+    public double[] getIntervals() {
+    	return intTimes;
+    }
+    
     public boolean intervalIsDirty(int i){
 		if(NeGLMInput.get().isDirty())
 			return true;
@@ -120,14 +136,15 @@ public class GLM extends Dynamics implements Loggable {
     }
     
 	@Override    
-    public double[][] getBackwardsMigration(int i){
+    public double[] getBackwardsMigration(int i){
 		int intervalNr;
     	if (i >= rateShiftsInput.get().getDimension()-firstlargerzero)
     		intervalNr = rateShiftsInput.get().getDimension()-1;
     	else
     		intervalNr = i + firstlargerzero;
 
-    	double[][] m = new double[dimensionInput.get()][dimensionInput.get()];
+    	int n = dimensionInput.get();
+    	double[] m = new double[n * n];
 		double[] mig = migrationGLMInput.get().getRates(intervalNr);
 		double[] Ne = NeGLMInput.get().getRates(intervalNr);
 		
@@ -135,7 +152,7 @@ public class GLM extends Dynamics implements Loggable {
 		for (int a = 0; a < dimensionInput.get(); a++){
 			for (int b = 0; b < dimensionInput.get(); b++){
 				if (a!=b){
-					m[b][a] = FastMath.min( 
+					m[b * n + a] = FastMath.min( 
 							Ne[a]*mig[c]/Ne[b],
 							maxRateInput.get());
 					c++;
@@ -183,7 +200,7 @@ public class GLM extends Dynamics implements Loggable {
 	}
 
 	@Override
-	public void log(int sample, PrintStream out) {
+	public void log(long sample, PrintStream out) {
 		for (int j = 0; j < dimensionInput.get(); j++){
 			for (int i = 0; i < intTimes.length; i++){
 		    	double[] Ne = NeGLMInput.get().getRates(i);
@@ -198,11 +215,15 @@ public class GLM extends Dynamics implements Loggable {
 		
 	}
 
+//    @Override
+//	protected boolean requiresRecalculation(){
+//    	
+//    	return intervalIsDirty(0);
+//    }
+
+
     @Override
-	protected boolean requiresRecalculation(){
-    	return intervalIsDirty(0);
+    public int getEpochCount() {
+    	return rateShiftsInput.get().getDimension();
     }
-
-
-	
 }

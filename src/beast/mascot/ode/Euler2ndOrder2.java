@@ -7,248 +7,7 @@ import org.apache.commons.math3.util.FastMath;
 
 import beast.mascot.distribution.Mascot;
 
-public class Euler2ndOrder implements Euler2ndOrderBase {
-
-	double epsilon;
-	double max_step;
-	
-	double[] migration_rates; // flattened square matrix of migration rates
-	int n, n2; // dimension of migration rate matrix and indicators matrix
-	int[] multiplicator;
-	int[] indicators;
-	double[] coalescent_rates;
-	double probs;
-    int lineages;
-    int states;
-    int dimension;
-	double[] sumStates;
-	boolean hasIndicators;
-	boolean hasMultiplicator;
-	double[] tCR;
-	double[] sumDotStates;
-
-	int iterations;
-
-	public Euler2ndOrder() {};
-	@Override
-	public void init(double[] migration_rates, double[] coalescent_rates, int lineages) {
-        this.migration_rates = migration_rates;
-        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
-        this.coalescent_rates = coalescent_rates;
-        this.lineages = lineages;
-        this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];   	
-    	hasIndicators = false;
-    	hasMultiplicator = false;
-    	
-    	iterations=0;	
-	}
-	@Override
-	public void initWithIndicators(double[] migration_rates, int[] indicators, double[] coalescent_rates, int lineages) {
-        this.migration_rates = migration_rates;
-        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
-        this.indicators = indicators;
-        n2 = indicators.length / 2;
-        this.coalescent_rates = coalescent_rates;
-        this.lineages = lineages;
-        this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];tCR = new double[states];
-    	hasIndicators = true;
-    	hasMultiplicator = false;
-    	
-    	iterations=0;
-	}
-	
-    double [] linProbs_tmpdt;
-    double [] linProbs_tmpddt;
-    double [] linProbs_tmpdddt;
-
-	@Override
-	public void setup(int maxSize, int states, double epsilon, double max_step) {
-		linProbs_tmpdt = new double[maxSize];
-		linProbs_tmpddt = new double[maxSize];
-		linProbs_tmpdddt = new double[maxSize];		
-
-		this.max_step = max_step;
-		this.epsilon = epsilon;
-        this.states = states;
-	}
-	
-	public double[][] coalescentRates; 
-	double[][] migrationRates;
-	int[][] indicators_;
-	double[] nextRateShift;
-	
-	@Override
-	public void setUpDynamics(double[][] coalescentRates, double[][] migrationRates, int[][] indicators,
-			double[] nextRateShift) {
-		this.coalescentRates = coalescentRates;
-		this.migrationRates = migrationRates;
-		this.indicators_ = indicators;
-		this.nextRateShift = nextRateShift;
-	}
-
-	public Euler2ndOrder(double[] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
-		this.max_step = max_step;
-		this.epsilon = epsilon;
-        this.migration_rates = migration_rates;
-        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
-        this.coalescent_rates = coalescent_rates;
-        this.lineages = lineages;
-        this.states = states;
-        this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];   	
-    	hasIndicators = false;
-    	hasMultiplicator = false;
-    	
-    	iterations=0;
-	}
-	
-	public Euler2ndOrder(double[] migration_rates, int[] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
-		this.max_step = max_step;
-		this.epsilon = epsilon;
-        this.migration_rates = migration_rates;
-        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
-        this.indicators = indicators;
-        n2 = indicators.length / 2;
-        this.coalescent_rates = coalescent_rates;
-        this.lineages = lineages;
-        this.states = states;
-        this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];tCR = new double[states];
-    	hasIndicators = true;
-    	hasMultiplicator = false;
-    	
-    	iterations=0;
-	}
-
-	public Euler2ndOrder(int[] multiplicator, double[] migration_rates, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
-		this.max_step = max_step;
-		this.epsilon = epsilon;
-        this.migration_rates = migration_rates;
-        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
-        this.multiplicator = multiplicator;
-        this.coalescent_rates = coalescent_rates;
-        this.lineages = lineages;
-        this.states = states;
-        this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];   	
-    	hasIndicators = false;
-    	hasMultiplicator = true; 
-    	
-    	iterations=0;
-	}
-	
-	public Euler2ndOrder(int[] multiplicator, double[] migration_rates, int[] indicators, double[] coalescent_rates, int lineages, int states, double epsilon, double max_step) {
-		this.max_step = max_step;
-		this.epsilon = epsilon;
-        this.migration_rates = migration_rates;
-        this.multiplicator = multiplicator;
-        n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
-        this.indicators = indicators;
-        n2 = indicators.length / 2;
-        this.coalescent_rates = coalescent_rates;
-        this.lineages = lineages;
-        this.states = states;
-        this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];   	
-    	hasIndicators = true;
-    	hasMultiplicator = true;   
-    	
-    	iterations=0;
-	}
-
-	@Override
-	public void initAndcalculateValues(int ratesInterval, int lineages, double duration, double[] p, int length) {
-		double nextRateShiftTime = ratesInterval == nextRateShift.length ? Double.POSITIVE_INFINITY : nextRateShift[ratesInterval];
-		if (ratesInterval >= nextRateShift.length) {
-			ratesInterval = nextRateShift.length - 1;
-		}
-		migration_rates = migrationRates[ratesInterval];
-		coalescent_rates = coalescentRates[ratesInterval];
-		indicators = indicators_[ratesInterval];
-
-    	iterations = 0;	
-		n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
-        this.lineages = lineages;
-        this.dimension = this.lineages * this.states;
-    	hasIndicators = (indicators!=null);
-    	hasMultiplicator = false;
-        
-    	sumStates = new double[states];
-    	tCR = new double[states]; 
-    	sumDotStates = new double[states];   	
-
-		calculateValues(duration, p, length);
-	}
-	
-	@Override
-	public void calculateValues(double duration, double[] p, int length){
-		double[] pDot = linProbs_tmpdt; 
-		double[] pDotDot = linProbs_tmpddt; 
-		double[] pDotDotDot = linProbs_tmpdddt;
-		calculateValues(duration, p, pDot, pDotDot, pDotDotDot, length);
-	}
-	
-	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot){
-		calculateValues(duration, p, pDot, pDotDot, pDotDotDot, pDot.length);
-	}
-	
-	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
-
-		if (Mascot.debug && false) {
-			System.err.println(duration);
-			System.err.println("caol "  + Arrays.toString(coalescent_rates));
-			System.err.println("imgr "  + Arrays.toString(migration_rates));		
-			System.err.println("p "  + Arrays.toString(p));
-		}
-	
-		clearArray(pDotDot, length);
-		clearArray(pDotDotDot, length);
-
-		if (hasMultiplicator) {
-			while (duration > 0){
-		    	iterations++;
-				//pDot = new double[length];
-				clearArray(pDot, length);
-				computeDerivativesWithMultiplicator(p, pDot, pDotDot, pDotDotDot, length);
-				computeSecondDerivateWithMultiplicator(p, pDot, pDotDot, length);
-				approximateThirdDerivate(pDotDot, pDotDotDot, length);
-				duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot, length - 1);
-				
-				if (iterations>10000){
-					System.err.println("too many iterations, return negative infinity");
-					p[length-1] = Double.NEGATIVE_INFINITY;
-				}
-				
-				if (p[length-1]==Double.NEGATIVE_INFINITY)
-					break;
-				}			
-		} else {
-			while (duration > 0){
-		    	iterations++;
-				//pDot = new double[length];
-				clearArray(pDot, length);
-				computeDerivatives(p, pDot, pDotDot, pDotDotDot, length);
-				computeSecondDerivate(p, pDot, pDotDot, length);
-				approximateThirdDerivate(pDotDot, pDotDotDot, length);
-				duration = updateP(duration, p,  pDot, pDotDot, pDotDotDot, length - 1);
-				
-				if (iterations>10000){
-					System.err.println("too many iterations, return negative infinity");
-					p[length-1] = Double.NEGATIVE_INFINITY;
-					break;
-				}
-			}
-		}			
-	}	
-	
-	void clearArray(double[] v, int n) {
-		for (int i = 0; i < n; i++) {
-			v[i] = 0.0;
-		}		
-	}
-
+public class Euler2ndOrder2 extends Euler2ndOrder {
 	double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
 		final double max_dotdotdot = maxAbs(pDotDotDot, length);	
 		
@@ -267,7 +26,6 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 				new_val = p[i] + pDot[i] * timeStep + pDotDot[i] * timeStepSquare;
 				diff = FastMath.abs(new_val - p[i]);
 				its++;
-
 				if (its > 10000) {
 //					System.err.println("cannot find proper time step, skip these parameter values");
 					p[length-1] = Double.NEGATIVE_INFINITY;
@@ -305,10 +63,19 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		double linSum = 0;
 		
 		int u = k;
-		int q;
+		
 		double x;
 		
-		for (q = 0; q < states; q++) {
+{
+			x = p[u++];
+			linSum += x;
+			if (x < 0.0) {
+				p[p.length-1] = Double.NEGATIVE_INFINITY; 
+				return;
+			} // XXX
+			
+		}
+{
 			x = p[u++];
 			linSum += x;
 			if (x < 0.0) {
@@ -318,7 +85,10 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 			
 		}
 		u = k;
-		for (q = 0; q < states; q++) {
+{
+			p[u++] /= linSum;
+		}
+{
 			p[u++] /= linSum;
 		}
 	}
@@ -349,7 +119,14 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     		
     		double sumCoal = 0;
     		k = currlin;
-    		for (j = 0; j < states; j++) {
+j = 0;
+{
+    			tCR[j] = coalescent_rates[j] * (sumStates[j] - p[k]);
+    			sumCoal += p[k] * tCR[j];
+    			k++;
+    		}
+j++;
+{
     			tCR[j] = coalescent_rates[j] * (sumStates[j] - p[k]);
     			sumCoal += p[k] * tCR[j];
     			k++;
@@ -357,7 +134,17 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
      		pDot[length-1] -= sumCoal;
      		
      		k = currlin;
-    		for (j = 0; j < states; j++) {    			
+j = 0;
+{    			
+    			// Calculate the Derivate of p:
+    			double coal = sumCoal - tCR[j];
+    			pDotDot[k] = coal;
+    			pDotDotDot[k] = coal;
+    			pDot[k] +=	p[k] * coal;
+    			k++;
+    		} // j
+j++;
+{    			
     			// Calculate the Derivate of p:
     			double coal = sumCoal - tCR[j];
     			pDotDot[k] = coal;
@@ -389,7 +176,22 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     		int u = 0 , v; double pj;
         	for (int i = 0; i < lineages; i++) {
         		// Calculate the probability of a lineage changing states
-        		for (j = 0; j < states; j++) {
+j = 0;
+{
+            		v = u;
+        			pj = p[u];
+        			for (k = j + 1; k < states; k++) {    
+    					v++;
+    					// the probability of lineage i being in state j is p[i*nr_states +j]
+    					migrates = p[v] * migration_rates[k * n + j] -
+    							   pj   * migration_rates[j * n + k];
+    					pDot[u] += migrates;
+    					pDot[v] -= migrates;
+        			} // j XXX
+        			u++;
+        		}// j
+j++;
+{
             		v = u;
         			pj = p[u];
         			for (k = j + 1; k < states; k++) {    
@@ -412,7 +214,12 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     private void calcSumStates(final double [] sumStates, final double[] p) {
      	int u = 0, j;
     	for (int i = 0; i < lineages; i++) {
-    		for (j = 0; j < states; j++) {
+j = 0;
+{
+				sumStates[j] += p[u++];
+    		}
+j++;
+{
 				sumStates[j] += p[u++];
     		}
     	}
@@ -427,14 +234,26 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     	for (int i = 0; i < lineages; i++){    		
     		double pCoalRate = 0.0;    		
     		int k = currlin;
-    		for (j = 0; j < states; j++) {
+j = 0;
+{
+    			pCoalRate += coalescent_rates[j] * (pDot[k] * (sumStates[j] - 2 * p[k]) + p[k] * (sumDotStates[j]));
+    			k++;
+    		}
+j++;
+{
     			pCoalRate += coalescent_rates[j] * (pDot[k] * (sumStates[j] - 2 * p[k]) + p[k] * (sumDotStates[j]));
     			k++;
     		}
     		
 
     		k = currlin;
-    		for (j = 0; j < states; j++) {
+j = 0;
+{
+    			pDotDot[k] = pDotDot[k] * pDot[k] + p[k] * (pCoalRate - coalescent_rates[j] * (sumDotStates[j] - pDot[k]));
+    			k++;
+    		}// j
+j++;
+{
     			pDotDot[k] = pDotDot[k] * pDot[k] + p[k] * (pCoalRate - coalescent_rates[j] * (sumDotStates[j] - pDot[k]));
     			k++;
     		}// j
@@ -463,7 +282,23 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 			int u = 0;
         	for (int i = 0; i<lineages; i++){
         		// Calculate the probability of a lineage changing states
-        		for (j = 0; j < states; j++) {
+j = 0;
+{
+        			double pj = pDot[u];
+        			int v = u + 1;
+        			for (int k = j+1; k < states; k++){    
+        				
+    					// the probability of lineage i being in state j is p[i*nr_states +j]
+    					migrates = pDot[v]*migration_rates[k * n + j] -
+    							pj*migration_rates[j * n + k];
+    					pDotDot[u] += migrates;
+    					pDotDot[v] -= migrates;
+    					v++;
+        			}// j XXX
+        			u++;
+        		}// j
+j++;
+{
         			double pj = pDot[u];
         			int v = u + 1;
         			for (int k = j+1; k < states; k++){    
@@ -506,7 +341,22 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     	} else {
     		int k;
 			for (int j = 0; j < states; j++){
-				for (k = 0; k < states; k++) {  
+k = 0;
+{  
+					double mrate = migration_rates[j * n + k];
+					int u = j;
+					int v = k;
+			    	for (int i = 0; i<lineages; i++){
+						migrates = pDotDot[u] * mrate;
+						pDotDotDot[v] += migrates;
+						pDotDotDot[u] -= migrates;
+						u += states;
+						v += states;
+	    			} // XXX
+			    	
+				}
+k++;
+{  
 					double mrate = migration_rates[j * n + k];
 					int u = j;
 					int v = k;
@@ -532,7 +382,12 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
      	{
 	     	int u = 0;
 	    	for (int i = 0; i<lineages; i++) {
-	    		for (j = 0; j < states; j++) {
+j = 0;
+{
+					sumStates[j] += multiplicator[i]*p[u++]; 
+	    		}
+j++;
+{
 					sumStates[j] += multiplicator[i]*p[u++]; 
 	    		}
 	    	}
@@ -576,7 +431,21 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
         	for (int i = 0; i<lineages; i++){
         		int currlin = states*i;
         		// Calculate the probability of a lineage changing states
-        		for (j = 0; j < states; j++) {
+j = 0;
+{
+        			pj = p[currlin+j];
+        			for (int k = j+1; k < states; k++){    
+        				
+    					// the probability of lineage i being in state j is p[i*nr_states +j]
+    					migrates = p[currlin+k]*migration_rates[k * n + j] -
+    							pj*migration_rates[j * n + k];
+    					pDot[currlin+j] += migrates;
+    					pDot[currlin+k] -= migrates;
+        			}// j XXX
+        			
+        		}// j
+j++;
+{
         			pj = p[currlin+j];
         			for (int k = j+1; k < states; k++){    
         				
@@ -600,7 +469,12 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     	//double[] sumDotStates = new double[states];;
     	clearArray(sumDotStates, states);
     	for (int i = 0; i<lineages; i++) {
-    		for (j = 0; j < states; j++) {
+j = 0;
+{
+    			sumDotStates[j] += multiplicator[i]*pDot[states*i+j];
+    		}
+j++;
+{
     			sumDotStates[j] += multiplicator[i]*pDot[states*i+j];
     		}
     	}
@@ -609,7 +483,12 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     	for (int i = 0; i<lineages; i++){    		
     		double pCoalRate = 0.0;    		
     		int currlin = states*i;
-    		for (j = 0; j < states; j++) {
+j = 0;
+{
+    			pCoalRate += coalescent_rates[j] * (pDot[currlin+j]* (sumStates[j] - p[currlin+j]) + p[currlin+j]* (sumDotStates[j] - pDot[currlin+j]));
+    		}
+j++;
+{
     			pCoalRate += coalescent_rates[j] * (pDot[currlin+j]* (sumStates[j] - p[currlin+j]) + p[currlin+j]* (sumDotStates[j] - pDot[currlin+j]));
     		}
     		
@@ -644,7 +523,21 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
         	for (int i = 0; i<lineages; i++){
         		int currlin = states*i;
         		// Calculate the probability of a lineage changing states
-        		for (j = 0; j < states; j++) {
+j = 0;
+{
+        			pj = pDot[currlin+j];
+        			for (int k = j+1; k < states; k++){    
+        				
+    					// the probability of lineage i being in state j is p[i*nr_states +j]
+    					migrates = pDot[currlin+k]*migration_rates[k * n + j] -
+    							pj*migration_rates[j * n + k];
+    					pDotDot[currlin+j] += migrates;
+    					pDotDot[currlin+k] -= migrates;
+        			}// j  XXX
+        			
+        		}// j
+j++;
+{
         			pj = pDot[currlin+j];
         			for (int k = j+1; k < states; k++){    
         				

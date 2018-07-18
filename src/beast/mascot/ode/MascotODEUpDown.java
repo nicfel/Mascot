@@ -8,7 +8,8 @@ import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 public class MascotODEUpDown implements FirstOrderDifferentialEquations {
     
     
-	double[][] migration_rates;
+	double[] migration_rates;
+	int n; // dimension of migration_rates matrix
 	double[] coalescent_rates;
 	double probs;
     int lineages;
@@ -18,8 +19,9 @@ public class MascotODEUpDown implements FirstOrderDifferentialEquations {
     boolean belowzero = false;
 
     // MascotODEUpDown
-    public MascotODEUpDown(double[][] migration_rates, double[] coalescent_rates, int lineages , int states){
+    public MascotODEUpDown(double[] migration_rates, double[] coalescent_rates, int lineages , int states){
         this.migration_rates = migration_rates;
+        n = (int)(Math.sqrt(migration_rates.length) + 0.5);
         this.coalescent_rates = coalescent_rates;
         this.lineages = lineages;
         this.states = states;
@@ -109,7 +111,7 @@ public class MascotODEUpDown implements FirstOrderDifferentialEquations {
 			for (int k = 0; k<states; k++){
 				if (k != j){
 					for (int i = 0; i<lineages; i++){
-						double migration = p[states*i+j]*migration_rates[j][k];
+						double migration = p[states*i+j]*migration_rates[j * n + k];
 						pDot[states*i+j] -= migration;
 						pDot[states*i+k] += migration;
 					}//i
@@ -129,7 +131,7 @@ public class MascotODEUpDown implements FirstOrderDifferentialEquations {
     				if (k != l){
 	    				for (int i = 0; i < lineages; i++){ // which lineages
 	    					double migration = p[lineages*states + i*states*states + j*states + k]
-	    							* migration_rates[k][l];	    					
+	    							* migration_rates[k * n + l];	    					
 	    					
 	    					pDot[lineages*states + i*states*states + j*states + k] -= migration;
 							pDot[lineages*states + i*states*states + j*states + l] += migration;

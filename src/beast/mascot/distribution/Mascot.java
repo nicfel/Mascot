@@ -107,6 +107,7 @@ public class Mascot extends StructuredTreeDistribution {
     double [] linProbs_tmpdddt;
 
     public double calculateLogP() {
+    	recalculateLogP = false;
     	// newly calculate tree intervals
     	treeIntervalsInput.get().calculateIntervals();
     	// correctly calculate the daughter nodes at coalescent intervals in the case of
@@ -185,16 +186,17 @@ public class Mascot extends StructuredTreeDistribution {
 //        System.out.println(activeLineages + " " + treeInterval);
         // Calculate the likelihood
         do {       
+        	
         	nextEventTime = Math.min(nextTreeEvent, nextRateShift); 	 
        	
         	if (nextEventTime > 0) {													// if true, calculate the interval contribution        		
                 if(recalculateLogP){
-                	System.out.println(Arrays.toString(migrationRates[0]));
-                	System.out.println(Arrays.toString(migrationRates[1]));
-                	System.out.println(Arrays.toString(migrationRates[2]));
+//                	System.out.println(Arrays.toString(migrationRates[0]));
+//                	System.out.println(Arrays.toString(migrationRates[1]));
+//                	System.out.println(Arrays.toString(migrationRates[2]));
     				System.err.println("ode calculation stuck, return negative infinity");
     				logP = Double.NEGATIVE_INFINITY;
-    				System.exit(0);
+//    				System.exit(0);
                 	return logP;
                 }
                 if(stepSizeInput.get()!=null){
@@ -305,7 +307,9 @@ public class Mascot extends StructuredTreeDistribution {
     					linProbs[i*states+j]=0.0;
     				}else{
 	    				// try recalculation after lowering the tolerance
-	    				System.out.println(linProbs[i*states+j]);
+	    				System.err.println("probability of being in a state is negative");
+	    				System.err.println("possible ode calculation error");
+	    				System.err.println("Can be caused by having very low Ne or very migh migration rates");
 	    				recalculateLogP = true;
 	    				return Math.log(1.0);
     				}

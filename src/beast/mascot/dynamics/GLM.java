@@ -26,10 +26,7 @@ public class GLM extends Dynamics implements Loggable {
     
     public Input<RealParameter> rateShiftsInput = new Input<>(
     		"rateShifts", "input of timings of rate shifts relative to the most recent sample", Validate.OPTIONAL);    
-    
-	public Input<String> typesInput = new Input<>(
-			"types", "input of the different types in the order that will be used by the glm", Validate.REQUIRED);
- 
+     
 	public Input<Double> maxRateInput = new Input<>(
 			"maxRate", "maximum rate used for integration", Double.POSITIVE_INFINITY);
 
@@ -37,6 +34,10 @@ public class GLM extends Dynamics implements Loggable {
 	
  
 	int firstlargerzero;
+	
+	public GLM(){
+    	typesInput.setRule(Input.Validate.REQUIRED);		
+	}
 	
     @Override
     public void initAndValidate() {

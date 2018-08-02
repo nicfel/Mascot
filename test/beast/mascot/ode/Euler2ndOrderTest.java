@@ -44,12 +44,12 @@ public class Euler2ndOrderTest  {
 		double[] pDot = new double[p.length];
 		double[] pDotDot = new double[p.length];
 		double[] pDotDotDot = new double[p.length];
-		euler2ndOrder.calculateValues(1.0, p, pDot, pDotDot, pDotDotDot);
+		euler2ndOrder.calculateValues(1.0, p, pDot, pDotDot, pDotDotDot, p.length);
 		
 		pDot = new double[p_mul.length];
 		pDotDot = new double[p_mul.length];
 		pDotDotDot = new double[p_mul.length];
-		euler2ndOrderMult.calculateValues(1.0, p_mul, pDot, pDotDot, pDotDotDot);
+		euler2ndOrderMult.calculateValues(1.0, p_mul, pDot, pDotDot, pDotDotDot, p_mul.length);
 		
 		
 		// check that it does not depend if multiplicators are used
@@ -79,7 +79,7 @@ public class Euler2ndOrderTest  {
 		migration_rates[0*2+1] = 0.2;
 		migration_rates[1*2+0] = 0;
 		
-		euler2ndOrderInd.calculateValues(1.0, p_ind, pDot, pDotDot, pDotDotDot);
+		euler2ndOrderInd.calculateValues(1.0, p_ind, pDot, pDotDot, pDotDotDot, p_ind.length);
 		
 
 		pDot = new double[p.length];
@@ -87,7 +87,7 @@ public class Euler2ndOrderTest  {
 		pDotDotDot = new double[p.length];		
 		
 		euler2ndOrder =  new Euler2ndOrder(migration_rates, coalescent_rates, lineages+1, states, 0.001, 0.2);
-		euler2ndOrder.calculateValues(1.0, p_new, pDot, pDotDot, pDotDotDot);
+		euler2ndOrder.calculateValues(1.0, p_new, pDot, pDotDot, pDotDotDot, p_new.length);
 		
 		
 		Assert.assertTrue(Math.abs(p_new[0]-p_ind[0])<0.0000000001);

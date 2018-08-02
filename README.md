@@ -1,7 +1,7 @@
 # MASCOT
 
 
-MASCOT is a [BEAST2](http://beast2.org) package that allows to use MASCOT with other BEAST2 utilities. A tutorial on how to use MASCOT can be found [here](https://github.com/nicfel/Mascot-Tutorial)
+MASCOT is a [BEAST2](http://beast2.org) package that allows to use MASCOT with other BEAST2 utilities. A tutorial on how to use MASCOT can be found [here](https://taming-the-beast.org/tutorials/Mascot-Tutorial/)
 
 
 # License

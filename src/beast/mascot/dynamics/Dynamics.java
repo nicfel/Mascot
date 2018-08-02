@@ -17,8 +17,10 @@ import beast.evolution.tree.TraitSet;
 public abstract class Dynamics extends CalculationNode  {
 	
     public Input<Integer> dimensionInput = new Input<>("dimension", "the number of different states." + 
-    " if -1, it will use the number of different types ", -1);
+    		" if -1, it will use the number of different types ", -1);
+    
     public Input<TraitSet> typeTraitInput = new Input<>("typeTrait", "Type trait set.  Used only by BEAUti.");
+    
     public Input<String> typesInput = new Input<>(
     		"types", "input of the different types, can be helpful for multilocus data", Validate.OPTIONAL);
 

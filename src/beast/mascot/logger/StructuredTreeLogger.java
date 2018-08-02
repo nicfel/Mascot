@@ -222,7 +222,10 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 //		        }
 		        	
 		        
-		        
+		        if (branchRateModel != null) {
+		            buf.append(",rate=");
+	                appendDouble(buf, branchRateModel.getRateForBranch(node));
+		        }
 		        buf.append(']');
         	}else{
 		        buf.append("[&max" + type + "=");
@@ -231,6 +234,12 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 	        	stateProbs = getStateProb(node.getNr());
 
 		        buf.append(String.format("%d", stateProbs.argmax() ));
+		        
+		        if (branchRateModel != null) {
+		            buf.append(",rate=");
+	                appendDouble(buf, branchRateModel.getRateForBranch(node));
+		        }
+
 		        buf.append(']');        		
         	}
         }else{

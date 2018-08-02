@@ -267,6 +267,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 				new_val = p[i] + pDot[i] * timeStep + pDotDot[i] * timeStepSquare;
 				diff = FastMath.abs(new_val - p[i]);
 				its++;
+
 				if (its > 10000) {
 //					System.err.println("cannot find proper time step, skip these parameter values");
 					p[length-1] = Double.NEGATIVE_INFINITY;

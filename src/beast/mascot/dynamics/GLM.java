@@ -26,19 +26,22 @@ public class GLM extends Dynamics implements Loggable {
     
     public Input<RealParameter> rateShiftsInput = new Input<>(
     		"rateShifts", "input of timings of rate shifts relative to the most recent sample", Validate.OPTIONAL);    
-    
-	public Input<String> typesInput = new Input<>(
-			"types", "input of the different types in the order that will be used by the glm", Validate.REQUIRED);
- 
+     
 	public Input<Double> maxRateInput = new Input<>(
 			"maxRate", "maximum rate used for integration", Double.POSITIVE_INFINITY);
 
 	double[] intTimes;
-    
+	
+ 
 	int firstlargerzero;
+	
+	public GLM(){
+    	typesInput.setRule(Input.Validate.REQUIRED);		
+	}
 	
     @Override
     public void initAndValidate() {
+    	
     	// if there are rate shifts as an input, use the stepwise glm model otherwise the constant
     	if (rateShiftsInput.get() != null){
 	    	intTimes = new double[(int) rateShiftsInput.get().getDimension()];
@@ -54,6 +57,15 @@ public class GLM extends Dynamics implements Loggable {
 	    }else{
 	    	intTimes = new double[1];
 	    	intTimes[0] = Double.POSITIVE_INFINITY;
+    	}
+    	
+    	// check which rateshiftInput is the first above 0
+    	firstlargerzero = intTimes.length-1;
+    	for (int i = 0 ; i < intTimes.length; i++){
+    		if (intTimes[i] >  0){
+    			firstlargerzero = i;
+				break;
+    		}
     	}
     	
     	String[] splittedTypes = typesInput.get().split("\\s+");
@@ -193,7 +205,7 @@ public class GLM extends Dynamics implements Loggable {
 		for (int j = 0; j < dimensionInput.get(); j++){
 			for (int i = 0; i < intTimes.length; i++){
 		    	double[] Ne = NeGLMInput.get().getRates(i);
-				out.print(1/Ne[j] + "\t");
+				out.print(Ne[j] + "\t");
 			}			
 		}
 	}

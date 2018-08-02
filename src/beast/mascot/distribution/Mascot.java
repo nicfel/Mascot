@@ -441,7 +441,6 @@ public class Mascot extends StructuredTreeDistribution {
 
 		//for (int i = 0; i < linProbs.length; i++) linProbs[i] = linProbs_tmp[i];
 		System.arraycopy(linProbs_tmp,0,linProbs,0,linProbsLength);
-
 		return linProbs_tmp[linProbsLength];
 	}
 

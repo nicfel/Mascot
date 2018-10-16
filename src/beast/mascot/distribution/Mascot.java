@@ -180,6 +180,26 @@ public class Mascot extends StructuredTreeDistribution {
     		case 8: euler = new Euler2ndOrder8(); break;
     		case 9: euler = new Euler2ndOrder9(); break;
     		case 10: euler = new Euler2ndOrder10(); break;
+    		case 11: euler = new Euler2ndOrder11(); break;
+    		case 12: euler = new Euler2ndOrder12(); break;
+    		case 13: euler = new Euler2ndOrder13(); break;
+    		case 14: euler = new Euler2ndOrder14(); break;
+    		case 15: euler = new Euler2ndOrder15(); break;
+    		case 16: euler = new Euler2ndOrder16(); break;
+    		case 17: euler = new Euler2ndOrder17(); break;
+    		case 18: euler = new Euler2ndOrder18(); break;
+    		case 19: euler = new Euler2ndOrder19(); break;
+    		case 20: euler = new Euler2ndOrder20(); break;
+    		case 21: euler = new Euler2ndOrder21(); break;
+    		case 22: euler = new Euler2ndOrder22(); break;
+    		case 23: euler = new Euler2ndOrder23(); break;
+    		case 24: euler = new Euler2ndOrder24(); break;
+    		case 25: euler = new Euler2ndOrder25(); break;
+    		case 26: euler = new Euler2ndOrder26(); break;
+    		case 27: euler = new Euler2ndOrder27(); break;
+    		case 28: euler = new Euler2ndOrder28(); break;
+    		case 29: euler = new Euler2ndOrder29(); break;
+    		case 30: euler = new Euler2ndOrder30(); break;
     		default: euler = new Euler2ndOrder(); break;
     		}
         	euler.setup(MAX_SIZE, states, epsilonInput.get(), maxStepInput.get());

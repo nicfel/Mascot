@@ -3,16 +3,21 @@ package beast.mascot.dynamics;
 
 import java.io.PrintStream;
 
+import beast.core.Citation;
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.Input.Validate;
 import beast.core.Loggable;
 import beast.core.parameter.BooleanParameter;
 import beast.core.parameter.RealParameter;
+import cern.colt.Arrays;
 
 
 @Description("Allows to use indicators on the migration rates " +
 			 "to sample significant routes of migration")
+@Citation(	"Lemey, Philippe and Rambaut, Andrew and Drummond, Alexei J and Suchard, Marc A (2009)\n"+
+			"  Bayesian phylogeography finds its roots\n"+
+			"  PLoS computational biology, https://doi.org/10.1371/journal.pcbi.1000520")
 public class ConstantBSSVS extends Dynamics implements Loggable  {
 
     public Input<RealParameter> NeInput = new Input<>("Ne", "input of effective population sizes", Validate.REQUIRED);    
@@ -349,7 +354,7 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		
 		if (migrationType == MigrationType.symmetric)
 			nrTrue*=2;
-		
+
 		int[] m = new int[nrTrue*2];
     	int c = 0;
     	int mi = 0;
@@ -361,8 +366,8 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = 0; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-		    					m[mi * nrTrue + 0] = a;
-		    					m[mi * nrTrue + 1] = b;
+		    					m[mi * 2 + 0] = a;
+		    					m[mi * 2 + 1] = b;
 		    					mi++;
 		    				}
 		    				c++;
@@ -374,11 +379,11 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = a+1; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-		    					m[mi * nrTrue + 0] = a;
-		    					m[mi * nrTrue + 1] = b;
+		    					m[mi * 2 + 0] = a;
+		    					m[mi * 2 + 1] = b;
 		    					mi++;
-		    					m[mi * nrTrue + 0] = b;
-		    					m[mi * nrTrue + 1] = a;
+		    					m[mi * 2 + 0] = b;
+		    					m[mi * 2 + 1] = a;
 		    					mi++;
 		    				}
 		    				c++;
@@ -392,8 +397,8 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = 0; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-		    					m[mi * nrTrue + 0] = a;
-		    					m[mi * nrTrue + 1] = b;
+		    					m[mi * 2 + 0] = a;
+		    					m[mi * 2 + 1] = b;
 		    					mi++;
 		    				}
 		    				c++;
@@ -405,11 +410,11 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		for (int b = a+1; b < NeInput.get().getDimension(); b++){
 		    			if (a!=b){
 		    				if (indicatorInput.get().getArrayValue(c)>0.5){
-		    					m[mi * nrTrue + 0] = a;
-		    					m[mi * nrTrue + 1] = b;
+		    					m[mi * 2 + 0] = a;
+		    					m[mi * 2 + 1] = b;
 		    					mi++;
-		    					m[mi * nrTrue + 0] = b;
-		    					m[mi * nrTrue + 1] = a;
+		    					m[mi * 2 + 0] = b;
+		    					m[mi * 2 + 1] = a;
 		    					mi++;
 		    				}
 		    				c++;
@@ -417,7 +422,7 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 		    		}
 		    	}    			
     		}
-    	}
+    	}       	
     	
     	return m;  	
 	}

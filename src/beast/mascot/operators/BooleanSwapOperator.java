@@ -24,27 +24,27 @@ public class BooleanSwapOperator extends Operator {
 
 
     int howMany;
-    Parameter<?> indcator;
+    Parameter<?> indicator;
     Parameter<?> parameter;
     private List<Integer> masterList = null;
 
     @Override
     public void initAndValidate() {
-        indcator = boolparameterInput.get();
+    	indicator = boolparameterInput.get();
         if (realparameterInput.get()!=null){
 	        parameter = realparameterInput.get();
-	        if (indcator.getDimension()!=parameter.getDimension()){
+	        if (indicator.getDimension()!=parameter.getDimension()){
 	            throw new IllegalArgumentException("indicator and parameter have different dimensions");
 	        }
         }
         
         howMany = howManyInput.get();
-        if (howMany * 2 > indcator.getDimension()) {
+        if (howMany * 2 > indicator.getDimension()) {
             throw new IllegalArgumentException("howMany it too large: must be less than half the dimension of the parameter");
         }
 
         List<Integer> list = new ArrayList<>();
-        for (int i = 0; i < indcator.getDimension(); i++) {
+        for (int i = 0; i < indicator.getDimension(); i++) {
             list.add(i);
         }
         masterList = Collections.unmodifiableList(list);
@@ -56,13 +56,21 @@ public class BooleanSwapOperator extends Operator {
         int left, right;
 
         for (int i = 0; i < howMany; i++) {
-            left = allIndices.remove(Randomizer.nextInt(allIndices.size()));
-            right = allIndices.remove(Randomizer.nextInt(allIndices.size()));
-            indcator.swap(left, right);
+            left = allIndices.remove(Randomizer.nextInt(allIndices.size()));            
+        	right = allIndices.remove(Randomizer.nextInt(allIndices.size()));
+            
+            // repeat until left and right are different
+            if (indicator.getArrayValue(left)==indicator.getArrayValue(right)){
+            	return Double.NEGATIVE_INFINITY;
+            }            
+            
+            indicator.swap(left, right);
             if (realparameterInput.get()!=null){
             	parameter.swap(left, right);
             }
         }
+        
+
 
         return 0.0;
     }

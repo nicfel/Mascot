@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 import org.apache.commons.math3.util.FastMath;
 
+import beast.core.Citation;
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.Input.Validate;
@@ -16,6 +17,10 @@ import beast.mascot.glmmodel.GlmModel;
 
 @Description("Extracts the intervals from a tree. Points in the intervals " +
         "are defined by the heights of nodes in the tree.")
+@Citation(	"Nicola F. Müller, Gytis Dudas, Tanja Stadler (2018)\n"+
+			"  Inferring time-dependent migration and coalescence patterns\n" +
+			"  from genetic sequence and predictor data in structured populations\n"+
+			"  bioRxiv, doi: bty406, 10.1101/342329")
 public class GLM extends Dynamics implements Loggable {	
     
 	public Input<GlmModel> migrationGLMInput = new Input<>(

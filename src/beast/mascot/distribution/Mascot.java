@@ -182,6 +182,7 @@ public class Mascot extends StructuredTreeDistribution {
     		case 10: euler = new Euler2ndOrder10(); break;
     		default: euler = new Euler2ndOrder(); break;
     		}
+
         	euler.setup(MAX_SIZE, states, epsilonInput.get(), maxStepInput.get());
         	Log.warning("Using " + euler.getClass().getSimpleName());
     	}
@@ -413,6 +414,7 @@ public class Mascot extends StructuredTreeDistribution {
     	}
     	dynamics.setDynamicsKnown();
 		euler.setUpDynamics(coalescentRates, migrationRates, indicators, nextRateShift);
+
 	}
 
 	double [] storedMigrationRates = new double[0];

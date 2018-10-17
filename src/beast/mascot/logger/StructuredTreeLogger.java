@@ -11,6 +11,7 @@ import org.apache.commons.math3.ode.FirstOrderIntegrator;
 import org.apache.commons.math3.ode.nonstiff.ClassicalRungeKuttaIntegrator;
 import org.jblas.DoubleMatrix;
 
+import beast.core.Citation;
 import beast.core.Function;
 import beast.core.Input;
 import beast.core.Loggable;
@@ -30,6 +31,10 @@ import beast.mascot.ode.MascotODEUpDown;
 /**
  * @author Nicola Felix Mueller (nicola.felix.mueller@gmail.com)
  */
+@Citation(	"Nicola F. Müller, David A. Rasmussen, Tanja Stadler (2018)\n"+
+			"  MASCOT: parameter and state inference under the marginal\n"+
+			"  structured coalescent approximation\n"+
+			"  Bioinformatics, , bty406, https://doi.org/10.1093/bioinformatics/bty406")
 public class StructuredTreeLogger extends Tree implements Loggable {
 	
 	

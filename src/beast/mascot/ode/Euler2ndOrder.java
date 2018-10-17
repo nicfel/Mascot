@@ -13,7 +13,8 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	double max_step;
 	
 	double[] migration_rates; // flattened square matrix of migration rates
-	int n, n2; // dimension of migration rate matrix and indicators matrix
+	int n; // dimension of migration rate matrix and indicators matrix
+	int n2 = 2;
 	int[] multiplicator;
 	int[] indicators;
 	double[] coalescent_rates;
@@ -111,7 +112,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
         this.migration_rates = migration_rates;
         n = (int)(Math.sqrt(migration_rates.length) + 0.5);        
         this.indicators = indicators;
-        n2 = indicators.length / 2;
+        n2 = 2;
         this.coalescent_rates = coalescent_rates;
         this.lineages = lineages;
         this.states = states;

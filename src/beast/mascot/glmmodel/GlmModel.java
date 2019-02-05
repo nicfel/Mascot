@@ -50,8 +50,40 @@ public abstract class GlmModel extends CalculationNode implements Loggable {
 		return false;
 	}
 
-	public void setNrIntervals(int i){
+	public void setNrIntervals(int i, int dim, boolean isMigration){
 		nrIntervals = i;
+		if (isMigration){
+			// calc the two possible lengths of the covariates
+			int l1 = i*(dim*(dim-1));
+			int l2 = (i+1)*(dim*(dim-1));
+			
+			// check that the dimension of the covariates are correct
+			for (int j = 0; j < covariatesInput.get().size(); j++){
+				if (covariatesInput.get().get(j).getDimension()!=l1 &&
+						covariatesInput.get().get(j).getDimension()!=l2)
+				throw new RuntimeException("The dimension of the the covariate \"" + covariatesInput.get().get(j).getID() + "\" is wrong.\n" + 
+						"The current dimension is " + covariatesInput.get().get(j).getDimension() +
+						", but should be equal to the number of rate shifts\n"+
+						"(time intervals or time intervals+1) times states(states-1)\n" +
+						"i.e. it should either be " + l1 + " or " +l2 + "\n");
+			}
+		}else{
+			// calc the two possible lengths of the covariates
+			int l1 = i*dim;
+			int l2 = (i+1)*dim;
+			for (int j = 0; j < covariatesInput.get().size(); j++){
+				if (covariatesInput.get().get(j).getDimension()!=l1 &&
+						covariatesInput.get().get(j).getDimension()!=l2)
+				throw new RuntimeException("The dimension of the the covariate \"" + covariatesInput.get().get(j).getID() + "\" is wrong.\n" + 
+						"The current dimension is " + covariatesInput.get().get(j).getDimension() +
+						", but should be equal to the number of rate shifts\n"+
+						"(time intervals or time intervals+1) times states\n" +
+						"i.e. it should either be " + l1 + " or " +l2 + "\n");
+			}
+
+		}
+		
+		
 		verticalEntries = covariatesInput.get().get(0).getDimension()/nrIntervals;
 	}
 	

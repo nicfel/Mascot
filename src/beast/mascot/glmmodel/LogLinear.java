@@ -64,10 +64,11 @@ public class LogLinear extends GlmModel {
 	@Override
 	public void log(int sample, PrintStream out) {
 		for (int i = 0 ; i < scalerInput.get().getDimension(); i++){
-			if (indicatorInput.get().getArrayValue(i) > 0.5)
+			if (indicatorInput.get().getArrayValue(i) > 0.5){
 				out.print(scalerInput.get().getArrayValue(i) +"\t");
-			else
+			}else{
 				out.print("0.0\t");
+			}
 		}
 		
 	}

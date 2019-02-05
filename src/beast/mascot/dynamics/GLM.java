@@ -94,8 +94,8 @@ public class GLM extends Dynamics implements Loggable {
 			reverseTraitToType.put(i, splittedTypes[i]);
 		
 		// set the number of intervals for the GLM models
-		migrationGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension());
-		NeGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension());
+		migrationGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension(), dimensionInput.get(), true);
+		NeGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension(), dimensionInput.get(), false);
     }
 
     /**

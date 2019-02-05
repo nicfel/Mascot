@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 import org.apache.commons.math3.ode.FirstOrderIntegrator;
@@ -206,7 +207,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 	        	stateProbs = getStateProb(node.getNr());		        
 		        
 		        for (int i = 0 ; i < states; i++)
-		        	buf.append(String.format("%s=%.3f,", mascotInput.get().dynamicsInput.get().getStringStateValue(i), stateProbs.get(i)));
+		        	buf.append(String.format(Locale.US, "%s=%.3f,", mascotInput.get().dynamicsInput.get().getStringStateValue(i), stateProbs.get(i)));
 		        
 //		        buf.append(String.format("%.3f", stateProbs.get(states-1)));
 //		        buf.append("}");

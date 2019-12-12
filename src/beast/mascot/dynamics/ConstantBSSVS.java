@@ -41,8 +41,9 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
     @Override
     public void initAndValidate() {    	
     	super.initAndValidate();
+    	System.out.println(getNrTypes());
     	
-    	if (dimensionInput.get()<1)
+    	if (dimensionInput.get()<getNrTypes())
     		dimensionInput.set(getNrTypes());
 
     	

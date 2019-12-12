@@ -12,7 +12,7 @@ import beast.core.parameter.RealParameter;
 
 public abstract class GlmModel extends CalculationNode implements Loggable {
 	
-    public Input<List<RealParameter>> covariatesInput = new Input<>("covariates", "input of covariates", new ArrayList<>(), Validate.REQUIRED);
+    public Input<CovariateList> covariateListInput = new Input<>("covariateList", "input of covariates", Validate.REQUIRED);
     public Input<RealParameter> scalerInput = new Input<>("scaler", "input of covariates scaler", Validate.REQUIRED);    
     public Input<BooleanParameter> indicatorInput = new Input<>("indicator", "input of covariates scaler", Validate.REQUIRED);
     public Input<RealParameter> clockInput = new Input<>("clock", "clock rate of the parameter",Validate.REQUIRED);
@@ -58,11 +58,11 @@ public abstract class GlmModel extends CalculationNode implements Loggable {
 			int l2 = (i+1)*(dim*(dim-1));
 			
 			// check that the dimension of the covariates are correct
-			for (int j = 0; j < covariatesInput.get().size(); j++){
-				if (covariatesInput.get().get(j).getDimension()!=l1 &&
-						covariatesInput.get().get(j).getDimension()!=l2)
-				throw new RuntimeException("The dimension of the the covariate \"" + covariatesInput.get().get(j).getID() + "\" is wrong.\n" + 
-						"The current dimension is " + covariatesInput.get().get(j).getDimension() +
+			for (int j = 0; j < covariateListInput.get().size(); j++){
+				if (covariateListInput.get().get(j).getDimension()!=l1 &&
+						covariateListInput.get().get(j).getDimension()!=l2)
+				throw new RuntimeException("The dimension of the the covariate \"" + covariateListInput.get().get(j).getID() + "\" is wrong.\n" + 
+						"The current dimension is " + covariateListInput.get().get(j).getDimension() +
 						", but should be equal to the number of rate shifts\n"+
 						"(time intervals or time intervals+1) times states(states-1)\n" +
 						"i.e. it should either be " + l1 + " or " +l2 + "\n");
@@ -71,11 +71,11 @@ public abstract class GlmModel extends CalculationNode implements Loggable {
 			// calc the two possible lengths of the covariates
 			int l1 = i*dim;
 			int l2 = (i+1)*dim;
-			for (int j = 0; j < covariatesInput.get().size(); j++){
-				if (covariatesInput.get().get(j).getDimension()!=l1 &&
-						covariatesInput.get().get(j).getDimension()!=l2)
-				throw new RuntimeException("The dimension of the the covariate \"" + covariatesInput.get().get(j).getID() + "\" is wrong.\n" + 
-						"The current dimension is " + covariatesInput.get().get(j).getDimension() +
+			for (int j = 0; j < covariateListInput.get().size(); j++){
+				if (covariateListInput.get().get(j).getDimension()!=l1 &&
+						covariateListInput.get().get(j).getDimension()!=l2)
+				throw new RuntimeException("The dimension of the the covariate \"" + covariateListInput.get().get(j).getID() + "\" is wrong.\n" + 
+						"The current dimension is " + covariateListInput.get().get(j).getDimension() +
 						", but should be equal to the number of rate shifts\n"+
 						"(time intervals or time intervals+1) times states\n" +
 						"i.e. it should either be " + l1 + " or " +l2 + "\n");
@@ -84,8 +84,13 @@ public abstract class GlmModel extends CalculationNode implements Loggable {
 		}
 		
 		
-		verticalEntries = covariatesInput.get().get(0).getDimension()/nrIntervals;
+		verticalEntries = covariateListInput.get().get(0).getDimension()/nrIntervals;
 	}
+	
+	public void setNrDummy(){	
+		verticalEntries = 0;
+	}
+
 	
 
 }

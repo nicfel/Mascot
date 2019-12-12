@@ -103,8 +103,19 @@ public abstract class Dynamics extends CalculationNode  {
     			traitToType.put(unique.get(i), i);
     		for (int i = 0; i < unique.size(); i++)
     			reverseTraitToType.put(i, unique.get(i));
-
-    	}
+    		
+    		// set the types input (for BEAUTi purposes)
+    		String newTypes = "";
+    		for (int i = 0; i < unique.size();i++)
+    			newTypes = newTypes + " " + unique.get(i);
+    		
+    		typesInput = new Input<>("types", "names of the different sub-populaitons", newTypes);
+    		
+    		String[] splittedTypes = typesInput.get().split("\\s+");
+    		
+    		dimensionInput.set(splittedTypes.length);
+    	}   	
+   	
     	
     	if (dimensionInput.get()>1 && dimensionInput.get()<traitToType.size())
             throw new IllegalArgumentException("dimension is not -1 (undefined) and smaller " +

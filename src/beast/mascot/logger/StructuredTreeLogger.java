@@ -76,7 +76,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     @Override
     public void initAndValidate() {
     	// RRB: correct?
-    	tree = mascotInput.get().treeIntervalsInput.get().treeInput.get();
+    	tree = mascotInput.get().structuredTreeIntervalsInput.get().treeInput.get();
     	
         if (parameterInput.get().size() == 0 && clockModelInput.get() == null) {
         	someMetaDataNeedsLogging = false;
@@ -109,7 +109,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 
     @Override
     public void init(PrintStream out) {
-    	mascotInput.get().treeIntervalsInput.get().treeInput.get().init(out);
+    	mascotInput.get().structuredTreeIntervalsInput.get().treeInput.get().init(out);
     	states = mascotInput.get().dynamicsInput.get().getDimension();
    }
 
@@ -142,8 +142,8 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         BranchRateModel.Base branchRateModel = clockModelInput.get();
         // write out the log tree with meta data
         out.print("tree STATE_" + nSample + " = ");
-        mascotInput.get().treeIntervalsInput.get().treeInput.get().getRoot().sort();
-        root = mascotInput.get().treeIntervalsInput.get().treeInput.get().getRoot();
+        mascotInput.get().structuredTreeIntervalsInput.get().treeInput.get().getRoot().sort();
+        root = mascotInput.get().structuredTreeIntervalsInput.get().treeInput.get().getRoot();
         out.print(toNewick(root, metadata, branchRateModel));
         out.print(";");
         
@@ -292,7 +292,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 
 	@Override
     public void close(PrintStream out) {
-		mascotInput.get().treeIntervalsInput.get().treeInput.get().close(out);
+		mascotInput.get().structuredTreeIntervalsInput.get().treeInput.get().close(out);
     }
 	
 	//===================================================
@@ -329,19 +329,19 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 	
     private void CalculateNodeStates() throws Exception{  
     	// newly calculate tree intervals
-    	mascotInput.get().treeIntervalsInput.get().calculateIntervals();
+    	mascotInput.get().structuredTreeIntervalsInput.get().calculateIntervals();
     	// correctly calculate the daughter nodes at coalescent intervals in the case of
     	// bifurcation or in case two nodes are at the same height
-    	mascotInput.get().treeIntervalsInput.get().swap();    	
+    	mascotInput.get().structuredTreeIntervalsInput.get().swap();    	
  
-    	leftID = new int[mascotInput.get().treeIntervalsInput.get().getSampleCount()];
-    	rightID = new int[mascotInput.get().treeIntervalsInput.get().getSampleCount()];
+    	leftID = new int[mascotInput.get().structuredTreeIntervalsInput.get().getSampleCount()];
+    	rightID = new int[mascotInput.get().structuredTreeIntervalsInput.get().getSampleCount()];
 
     	
-    	stateProbabilities = new DoubleMatrix[mascotInput.get().treeIntervalsInput.get().getSampleCount()];
-    	stateProbabilitiesDown = new DoubleMatrix[mascotInput.get().treeIntervalsInput.get().getSampleCount()];
-    	TransitionProbabilities = new DoubleMatrix[mascotInput.get().treeIntervalsInput.get().getSampleCount()*2];        
-        nrSamples = mascotInput.get().treeIntervalsInput.get().getSampleCount() + 1;        
+    	stateProbabilities = new DoubleMatrix[mascotInput.get().structuredTreeIntervalsInput.get().getSampleCount()];
+    	stateProbabilitiesDown = new DoubleMatrix[mascotInput.get().structuredTreeIntervalsInput.get().getSampleCount()];
+    	TransitionProbabilities = new DoubleMatrix[mascotInput.get().structuredTreeIntervalsInput.get().getSampleCount()*2];        
+        nrSamples = mascotInput.get().structuredTreeIntervalsInput.get().getSampleCount() + 1;        
 
     	
         // Set up ArrayLists for the indices of active lineages and the lineage state probabilities
@@ -357,7 +357,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         migrationRates = mascotInput.get().dynamicsInput.get().getBackwardsMigration(ratesInterval);
 		indicators = mascotInput.get().dynamicsInput.get().getIndicators(ratesInterval);  
         // Time to the next rate shift or event on the tree
-        double nextTreeEvent = mascotInput.get().treeIntervalsInput.get().getInterval(treeInterval);
+        double nextTreeEvent = mascotInput.get().structuredTreeIntervalsInput.get().getInterval(treeInterval);
         double nextRateShift = mascotInput.get().dynamicsInput.get().getInterval(ratesInterval);
 
              
@@ -434,13 +434,13 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 			}
         	
         	if (nextTreeEvent <= nextRateShift){
- 	        	if (mascotInput.get().treeIntervalsInput.get().getIntervalType(treeInterval) == IntervalType.COALESCENT) {
+ 	        	if (mascotInput.get().structuredTreeIntervalsInput.get().getIntervalType(treeInterval) == IntervalType.COALESCENT) {
  	        		nrLineages--;													// coalescent event reduces the number of lineages by one
 	        		normalizeLineages();									// normalize all lineages before event		
         			coalesce(treeInterval);	  				// calculate the likelihood of the coalescent event
 	        	}
  	       		
- 	       		if (mascotInput.get().treeIntervalsInput.get().getIntervalType(treeInterval) == IntervalType.SAMPLE) { 	
+ 	       		if (mascotInput.get().structuredTreeIntervalsInput.get().getIntervalType(treeInterval) == IntervalType.SAMPLE) { 	
  	       			nrLineages++;													// sampling event increases the number of lineages by one
  	       			if (linProbs.length > 0)
  	       				normalizeLineages();								// normalize all lineages before event
@@ -450,7 +450,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
  	       		treeInterval++;
         		nextRateShift -= nextTreeEvent;   
         		try{
-        			nextTreeEvent = mascotInput.get().treeIntervalsInput.get().getInterval(treeInterval);
+        			nextTreeEvent = mascotInput.get().structuredTreeIntervalsInput.get().getInterval(treeInterval);
         		}catch(Exception e){
         			break;
         		}
@@ -464,10 +464,10 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         	}
         	
         }while(nextTreeEvent <= Double.POSITIVE_INFINITY);
-        currTreeInterval = mascotInput.get().treeIntervalsInput.get().getIntervalCount()-1;
+        currTreeInterval = mascotInput.get().structuredTreeIntervalsInput.get().getIntervalCount()-1;
         
         do{
-		  	if (mascotInput.get().treeIntervalsInput.get().getIntervalType(currTreeInterval) == IntervalType.COALESCENT) {
+		  	if (mascotInput.get().structuredTreeIntervalsInput.get().getIntervalType(currTreeInterval) == IntervalType.COALESCENT) {
 		  		coalesceDown(currTreeInterval);									// Set parent lineage state probs and remove children
 		   	}       	
 		  	currTreeInterval--;
@@ -504,7 +504,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     }
     
     private void sample(int currTreeInterval) {
-		int incomingLines = mascotInput.get().treeIntervalsInput.get().getLineagesAdded(currTreeInterval);
+		int incomingLines = mascotInput.get().structuredTreeIntervalsInput.get().getLineagesAdded(currTreeInterval);
 		// calculate the new length of the arrays for the transition and lineage states
 		int newLengthLineages = linProbs.length + 1*states;
 		int newLengthTransitions = transitionProbs.length + 1*states*states;
@@ -615,8 +615,8 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 //		}
 		
     	int [] coalLines = new int[] {
-    			mascotInput.get().treeIntervalsInput.get().getLineagesRemoved(currTreeInterval,0),
-    			mascotInput.get().treeIntervalsInput.get().getLineagesRemoved(currTreeInterval,1)
+    			mascotInput.get().structuredTreeIntervalsInput.get().getLineagesRemoved(currTreeInterval,0),
+    			mascotInput.get().structuredTreeIntervalsInput.get().getLineagesRemoved(currTreeInterval,1)
     	};
     	final int daughterIndex1 = activeLineages.indexOf(coalLines[0]);//.getNr());
 		final int daughterIndex2 = activeLineages.indexOf(coalLines[1]);//.getNr());
@@ -739,9 +739,9 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 			activeLineages.remove(daughterIndex1);
 		}
 		
-		if(tree.getNode(coalLines[0]).getParent().getNr() != mascotInput.get().treeIntervalsInput.get().treeInput.get().getNode(coalLines[1]/*.getNr()*/).getParent().getNr())
+		if(tree.getNode(coalLines[0]).getParent().getNr() != mascotInput.get().structuredTreeIntervalsInput.get().treeInput.get().getNode(coalLines[1]/*.getNr()*/).getParent().getNr())
 			System.err.println("wrong daughter parent");
-		if(tree.getNode(coalLines[1]).getParent().getNr() != mascotInput.get().treeIntervalsInput.get().treeInput.get().getNode(coalLines[0]/*.getNr()*/).getParent().getNr())
+		if(tree.getNode(coalLines[1]).getParent().getNr() != mascotInput.get().structuredTreeIntervalsInput.get().treeInput.get().getNode(coalLines[0]/*.getNr()*/).getParent().getNr())
 			System.err.println("wrong daughter parent");
 		if(tree.getNode(coalLines[1]).getParent().getNr() != tree.getNode(coalLines[0]).getParent().getNr())
 			System.err.println("coalescent nodes don't have the same parent");
@@ -751,7 +751,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     }
 
     private void coalesceDown(int currTreeInterval) {
-		int parentLines = mascotInput.get().treeIntervalsInput.get().getLineagesAdded(currTreeInterval);
+		int parentLines = mascotInput.get().structuredTreeIntervalsInput.get().getLineagesAdded(currTreeInterval);
 //		if (parentLines.size()!=1){
 //			System.err.println("to many lineages, while coalescening down");
 //			System.exit(0);

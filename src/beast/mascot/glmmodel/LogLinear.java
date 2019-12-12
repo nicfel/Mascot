@@ -9,11 +9,11 @@ public class LogLinear extends GlmModel {
 	@Override
 	public void initAndValidate() {
 		// set the dimension of the scalers, indicators and potentially the error term
-    	scalerInput.get().setDimension(covariatesInput.get().size());
-    	indicatorInput.get().setDimension(covariatesInput.get().size());
+    	scalerInput.get().setDimension(covariateListInput.get().size());
+    	indicatorInput.get().setDimension(covariateListInput.get().size());
     	
     	if (errorInput.get()!=null)
-    		errorInput.get().setDimension(covariatesInput.get().get(0).getDimension());
+    		errorInput.get().setDimension(covariateListInput.get().get(0).getDimension());
     	
     	if (constantErrorInput.get()!=null)
     		if (constantErrorInput.get().getDimension()<1)
@@ -28,11 +28,11 @@ public class LogLinear extends GlmModel {
     	for (int j = 0; j < logrates.length; j++)
     		logrates[j] = 0;
     	    	
-		for (int j = 0; j < covariatesInput.get().size(); j++){
+		for (int j = 0; j < covariateListInput.get().size(); j++){
 			if (indicatorInput.get().getArrayValue(j) > 0.0){
 				for (int k = 0; k < logrates.length; k++){
 					logrates[k] += scalerInput.get().getArrayValue(j)
-						*covariatesInput.get().get(j).getArrayValue(verticalEntries*i + k);
+						*covariateListInput.get().get(j).getArrayValue(verticalEntries*i + k);
 				}
 			}
 		}
@@ -57,7 +57,7 @@ public class LogLinear extends GlmModel {
 	@Override
 	public void init(PrintStream out) {
 		for (int i = 0 ; i < scalerInput.get().getDimension(); i++){
-			out.print(String.format("%sscaler.%s\t", getID(), covariatesInput.get().get(i).getID()));
+			out.print(String.format("%sscaler.%s\t", getID(), covariateListInput.get().get(i).getID()));
 		}
 	}
 

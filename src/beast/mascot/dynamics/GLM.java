@@ -34,6 +34,10 @@ public class GLM extends Dynamics implements Loggable {
      
 	public Input<Double> maxRateInput = new Input<>(
 			"maxRate", "maximum rate used for integration", Double.POSITIVE_INFINITY);
+	
+	public Input<Boolean> fromBeautiInput = new Input<>(
+			"fromBeauti", "defines if is in Beauti", false);
+
 
 	double[] intTimes;
 	
@@ -41,11 +45,12 @@ public class GLM extends Dynamics implements Loggable {
 	int firstlargerzero;
 	
 	public GLM(){
-    	typesInput.setRule(Input.Validate.REQUIRED);		
+    	
 	}
 	
     @Override
     public void initAndValidate() {
+    	super.initAndValidate();
     	
     	// if there are rate shifts as an input, use the stepwise glm model otherwise the constant
     	if (rateShiftsInput.get() != null){
@@ -72,8 +77,6 @@ public class GLM extends Dynamics implements Loggable {
 				break;
     		}
     	}
-    	
-    	String[] splittedTypes = typesInput.get().split("\\s+");
 
     	// check which rateshiftInput is the first above 0
     	firstlargerzero = intTimes.length-1;
@@ -83,19 +86,15 @@ public class GLM extends Dynamics implements Loggable {
 				break;
     		}
     	}
-    	
-		dimensionInput.set(splittedTypes.length);
-    	
-		traitToType = new HashMap<>();
-		reverseTraitToType = new HashMap<>();
-		for (int i = 0; i < splittedTypes.length; i++)
-			traitToType.put(splittedTypes[i], i);
-		for (int i = 0; i < splittedTypes.length; i++)
-			reverseTraitToType.put(i, splittedTypes[i]);
-		
+	
 		// set the number of intervals for the GLM models
-		migrationGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension(), dimensionInput.get(), true);
-		NeGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension(), dimensionInput.get(), false);
+		if (fromBeautiInput.get()) {
+			migrationGLMInput.get().setNrDummy();
+			NeGLMInput.get().setNrDummy();
+		}else {
+			migrationGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension(), dimensionInput.get(), true);
+			NeGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension(), dimensionInput.get(), false);
+		}
     }
 
     /**

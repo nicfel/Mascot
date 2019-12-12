@@ -9,6 +9,7 @@ import beast.core.CalculationNode;
 import beast.core.Citation;
 import beast.core.Description;
 import beast.core.Input;
+import beast.core.Input.Validate;
 import beast.core.util.Log;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TreeInterface;
@@ -97,11 +98,11 @@ public class Mascot extends StructuredTreeDistribution {
 	boolean useCache;
 	
     @Override
-    public void initAndValidate(){
+    public void initAndValidate(){  	
     	useCache = cacheInput.get();
     	dynamics = dynamicsInput.get();
-    	treeIntervals = treeIntervalsInput.get();
-    	tree = treeInput.get();
+    	treeIntervals = structuredTreeIntervalsInput.get();
+//    	tree = treeInput.get();
     	if (tree == null) {
     		tree = treeIntervals.treeInput.get();
     	}
@@ -578,6 +579,7 @@ public class Mascot extends StructuredTreeDistribution {
 		if (daughterIndex1 == -1 || daughterIndex2 == -1) {
 			System.out.println(coalLines0/*.getNr()*/ + " " + coalLines1/*.getNr()*/ + " " + activeLineages);
 			System.out.println("daughter lineages at coalescent event not found");
+			System.exit(0);
 			return Double.NaN;
 		}
 		DoubleMatrix lambda = DoubleMatrix.zeros(states);

@@ -56,12 +56,13 @@ public class TypeTraitSetInputEditor extends InputEditor.Base {
 
     @Override
     public void init(Input<?> input, BEASTInterface plugin, int itemNr, ExpandOption bExpandOption, boolean bAddButtons) {
+    	
 
         traitSet = (TraitSet)input.get();
         taxonSet = traitSet.taxaInput.get();
         tableModel = new TypeTraitTableModel(traitSet);
         JTable table = new JTable(tableModel);
-
+        
         JButton guessButton = new JButton("Guess");
         guessButton.addActionListener((ActionEvent e) -> {
             GuessPatternDialog dlg = new GuessPatternDialog(null,

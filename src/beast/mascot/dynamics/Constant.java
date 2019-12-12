@@ -36,7 +36,8 @@ public class Constant extends Dynamics implements Loggable  {
     public void initAndValidate() {
     	super.initAndValidate();
     	
-    	if (dimensionInput.get()<1)
+   	
+    	if (dimensionInput.get()<getNrTypes())
     		dimensionInput.set(getNrTypes());
     	
     	

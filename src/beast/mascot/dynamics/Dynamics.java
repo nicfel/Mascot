@@ -23,6 +23,10 @@ public abstract class Dynamics extends CalculationNode  {
     
     public Input<String> typesInput = new Input<>(
     		"types", "input of the different types, can be helpful for multilocus data", Validate.OPTIONAL);
+    
+	public Input<Boolean> fromBeautiInput = new Input<>(
+			"fromBeauti", "defines if is in Beauti", false);
+
 
     public boolean hasIndicators = false;
     
@@ -75,7 +79,7 @@ public abstract class Dynamics extends CalculationNode  {
 	
     @Override
     public void initAndValidate() {    	
-    	if (typesInput.get()!=null){
+    	if (typesInput.get()!=null && !fromBeautiInput.get()){
     		String[] splittedTypes = typesInput.get().split("\\s+");
     		
     		dimensionInput.set(splittedTypes.length);

@@ -8,7 +8,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Box;
@@ -26,7 +26,9 @@ import beast.app.beauti.BeautiDoc;
 import beast.app.draw.InputEditor;
 import beast.core.BEASTInterface;
 import beast.core.Input;
+import beast.core.parameter.BooleanParameter;
 import beast.mascot.glmmodel.CovariateList;
+import mascot.util.FChooserUtils;
 import beast.mascot.glmmodel.Covariate;
 
 public class CovariateListInputEditor extends InputEditor.Base {
@@ -50,6 +52,7 @@ public class CovariateListInputEditor extends InputEditor.Base {
 			boolean bAddButtons) {
 		covariateList = (CovariateList) input.get();
 		covs = covariateList.covariatesInput.get();
+		
 
 		JDialog dialog = new JDialog((JDialog) null, true);
 		dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -59,39 +62,41 @@ public class CovariateListInputEditor extends InputEditor.Base {
 		JButton addButton = new JButton("Add covariate from file");
 		JButton updateButton = new JButton("Update settings");
 
-		JFileChooser inFileChooser = new JFileChooser();
+		JFileChooser inFileChooser = FChooserUtils.getFileChooser();
+
+		
 		addButton.addActionListener(e -> {
-			inFileChooser.setDialogTitle("Select covariate file");
-			inFileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+			inFileChooser.setDialogTitle("Select covariate file");			
+
 			int returnVal = inFileChooser.showOpenDialog(dialog);
 			//
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				File fname = inFileChooser.getSelectedFile();
+				// get the id of the predictor
+				String id = fname.getName().replace(".csv", "");
+				
+				FChooserUtils.setLastDir(inFileChooser.getSelectedFile());
+				
 				// Read in File
 				BufferedReader reader;
 				try {
 					reader = new BufferedReader(new FileReader(fname));
 					String line = reader.readLine();
+					List<String> rawValues = new ArrayList<>();
 					while (line != null) {
-						String[] names = line.split(":");
-						System.out.println(Arrays.toString(names));
-
-						String[] vals_string = names[1].trim().split("\\s+");
-						System.out.println(Arrays.toString(vals_string));
-
-						Double[] new_vals = new Double[vals_string.length];
-						for (int i = 0; i < new_vals.length; i++) {
-							System.out.println(vals_string[i]);
-							new_vals[i] = Double.parseDouble(vals_string[i]);
-						}
-
-						Covariate newCov = new Covariate();
-						covariateList.covariatesInput.get().add(newCov);
-
+						rawValues.add(line);
 						// read next line
 						line = reader.readLine();
 					}
 					reader.close();
+					
+					Covariate newCov = new Covariate(rawValues, id);
+					covariateList.covariatesInput.get().add(newCov);
+					// String matching to see if it is a migration or Ne predictor
+					if (covariateList.getID().contains("migration"))
+						covariateList.initMigrationFromRawValues(covariateList.covariatesInput.get().size()-1);
+					else
+						covariateList.initNeFromRawValues(covariateList.covariatesInput.get().size()-1);
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
@@ -105,13 +110,13 @@ public class CovariateListInputEditor extends InputEditor.Base {
 			refreshPanel();
 		});
 
-		String[] columnNames = { "predictor name", "transform", "time invariant", "remove predictor" };
+		String[] columnNames = { "predictor name", "transform", "time dependent", "remove predictor" };
 
 		Object[][] data = new Object[covariateList.covariatesInput.get().size()][4];
 		for (int i = 0; i < covariateList.covariatesInput.get().size(); i++) {
 			data[i][0] = covariateList.covariatesInput.get().get(i).getID();
-			data[i][1] = covariateList.covariatesInput.get().get(i).logTransformInput.get();
-			data[i][2] = covariateList.covariatesInput.get().get(i).timeInvariantInput.get();
+			data[i][1] = covariateList.covariatesInput.get().get(i).transform;
+			data[i][2] = covariateList.covariatesInput.get().get(i).isTimeDependent;
 			data[i][3] = false;
 		}
 
@@ -128,9 +133,6 @@ public class CovariateListInputEditor extends InputEditor.Base {
 		table.getColumn("transform").setCellRenderer(new CheckBoxRenderer());
 		table.getColumn("transform").setCellEditor(new DefaultCellEditor(new JCheckBox()));
 
-		table.getColumn("time invariant").setCellRenderer(new CheckBoxRenderer());
-		table.getColumn("time invariant").setCellEditor(new DefaultCellEditor(new JCheckBox()));
-
 		table.getColumn("remove predictor").setCellRenderer(new CheckBoxRenderer());
 		table.getColumn("remove predictor").setCellEditor(new DefaultCellEditor(new JCheckBox()));
 
@@ -145,14 +147,29 @@ public class CovariateListInputEditor extends InputEditor.Base {
 				if ((boolean) table.getModel().getValueAt(i, 3)) {
 					covariateList.covariatesInput.get().remove(i);
 				}else {
-					covariateList.covariatesInput.get().get(i).logTransformInput.set(table.getModel().getValueAt(i, 1));
-					covariateList.covariatesInput.get().get(i).timeInvariantInput.set(table.getModel().getValueAt(i, 2));
+					covariateList.covariatesInput.get().get(i).transform = (Boolean) table.getModel().getValueAt(i, 1);
 				}
 
 			}
+			
+			// add a transformation vector
+			Boolean[] transform = new Boolean[covariateList.covariatesInput.get().size()];
+			for (int i = 0; i < transform.length; i++)
+				transform[i] = covariateList.covariatesInput.get().get(i).transform;
+			
+			covariateList.transformInput.set(new BooleanParameter(transform));
+				
 			refreshPanel();
 		});
-
+		
+		
+		// add a transformation vector
+		Boolean[] transform = new Boolean[covariateList.covariatesInput.get().size()];
+		for (int i = 0; i < transform.length; i++)
+			transform[i] = covariateList.covariatesInput.get().get(i).transform;
+		
+		covariateList.transformInput.set(new BooleanParameter(transform));
+		
 		add(boxVert);
 
 	}

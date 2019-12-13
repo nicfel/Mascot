@@ -20,7 +20,6 @@ public class Constant extends Dynamics implements Loggable  {
     public Input<RealParameter> b_mInput = new Input<>("backwardsMigration", "input of backwards in time migration rates");    
     public Input<RealParameter> f_mInput = new Input<>("forwardsMigration", "input of backwards in time migration rates", Validate.XOR, b_mInput);    
     public Input<Double> ploidyInput = new Input<>("ploidy", "Ploidy (copy number) for this gene, typically a whole number or half (default is 1).", 1.0);
-	public Input<Boolean> fromBeautiInput = new Input<>("fromBeauti", "if true reinitalize the dimensions", true);
 
 	private boolean isBackwardsMigration;
 	

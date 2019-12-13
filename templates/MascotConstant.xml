@@ -1,0 +1,33 @@
+<beast version='2.0'
+       namespace='beast.app.beauti:beast.core:beast.evolution.branchratemodel:beast.evolution.speciation:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood:beast.evolution:beast.math.distributions'>
+
+    <!-- tree priors -->
+    <mergewith point='treePriorTemplates'>
+        <subtemplate id='Constant' class='beast.mascot.dynamics.Constant' mainid='Constant.t:$(n)'
+          suppressInputs=""
+          inlineInputs="beast.mascot.distribution.Mascot.dynamics">
+            <![CDATA[
+              <dynamics spec="beast.mascot.dynamics.Constant" id="Constant.t:$(n)" dimension="-1">
+                  <Ne idref='NeConstant.t:$(n)'/>
+                  <backwardsMigration idref='migrationConstant.t:$(n)'/>
+                  <typeTrait id="typeTraitSet.t:$(n)" spec="mascot.util.InitializedTraitSet" traitname="type">
+                      <taxa spec="beast.evolution.alignment.TaxonSet" alignment="@$(n)"/>
+                  </typeTrait>
+              </dynamics>
+            <param id="NeConstant.t:$(n)" spec="beast.core.parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
+            <param id="migrationConstant.t:$(n)" spec="beast.core.parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
+        ]]>
+
+        <plate fragment="MascotConstantParameters" var="thisparam" range="Ne,migration"/>
+
+        <connect srcID='Constant.t:$(n)' targetID='tracelog' inputName='log'
+                if='inposterior(Mascot.t:$(n))
+                and inposterior(Tree.t:$(n))
+                and inposterior(Constant.t:$(n))'/>
+                
+      </subtemplate>
+
+
+
+    </mergewith>
+</beast>

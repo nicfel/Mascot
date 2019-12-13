@@ -1,6 +1,7 @@
 package beast.mascot.glmmodel;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import beast.core.CalculationNode;
@@ -21,6 +22,7 @@ public abstract class GlmModel extends CalculationNode implements Loggable {
     
     public int nrIntervals;
     public int verticalEntries;
+
     
 	public abstract double[] getRates(int i);
 	

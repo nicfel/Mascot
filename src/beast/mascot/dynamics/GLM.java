@@ -35,8 +35,6 @@ public class GLM extends Dynamics implements Loggable {
 	public Input<Double> maxRateInput = new Input<>(
 			"maxRate", "maximum rate used for integration", Double.POSITIVE_INFINITY);
 	
-	public Input<Boolean> fromBeautiInput = new Input<>(
-			"fromBeauti", "defines if is in Beauti", false);
 
 
 	double[] intTimes;
@@ -89,6 +87,9 @@ public class GLM extends Dynamics implements Loggable {
 	
 		// set the number of intervals for the GLM models
 		if (fromBeautiInput.get()) {
+			// the type to trait map is needed to read in predictors
+			migrationGLMInput.get().covariateListInput.get().traitToType = new HashMap<>(traitToType);
+			NeGLMInput.get().covariateListInput.get().traitToType = new HashMap<>(traitToType);
 			migrationGLMInput.get().setNrDummy();
 			NeGLMInput.get().setNrDummy();
 		}else {

@@ -56,37 +56,30 @@ public abstract class GlmModel extends CalculationNode implements Loggable {
 		nrIntervals = i;
 		if (isMigration){
 			// calc the two possible lengths of the covariates
-			int l1 = i*(dim*(dim-1));
-			int l2 = (i+1)*(dim*(dim-1));
+			int l2 = i*(dim*(dim-1));
 			
 			// check that the dimension of the covariates are correct
 			for (int j = 0; j < covariateListInput.get().size(); j++){
-				if (covariateListInput.get().get(j).getDimension()!=l1 &&
-						covariateListInput.get().get(j).getDimension()!=l2)
+				if (covariateListInput.get().get(j).getDimension()!=l2)
 				throw new RuntimeException("The dimension of the the covariate \"" + covariateListInput.get().get(j).getID() + "\" is wrong.\n" + 
 						"The current dimension is " + covariateListInput.get().get(j).getDimension() +
 						", but should be equal to the number of rate shifts\n"+
-						"(time intervals or time intervals+1) times states(states-1)\n" +
-						"i.e. it should either be " + l1 + " or " +l2 + "\n");
+						"i.e. it should either be " +l2 + "\n");
 			}
 		}else{
 			// calc the two possible lengths of the covariates
-			int l1 = i*dim;
-			int l2 = (i+1)*dim;
+			int l2 = i*dim;
 			for (int j = 0; j < covariateListInput.get().size(); j++){
-				if (covariateListInput.get().get(j).getDimension()!=l1 &&
-						covariateListInput.get().get(j).getDimension()!=l2)
+				if (covariateListInput.get().get(j).getDimension()!=l2)
 				throw new RuntimeException("The dimension of the the covariate \"" + covariateListInput.get().get(j).getID() + "\" is wrong.\n" + 
 						"The current dimension is " + covariateListInput.get().get(j).getDimension() +
 						", but should be equal to the number of rate shifts\n"+
-						"(time intervals or time intervals+1) times states\n" +
-						"i.e. it should either be " + l1 + " or " +l2 + "\n");
+						"i.e. it should either be " +l2 + "\n");
 			}
-
 		}
 		
 		
-		verticalEntries = covariateListInput.get().get(0).getDimension()/nrIntervals;
+		verticalEntries = covariateListInput.get().get(0).getDimension()/(nrIntervals-1);
 	}
 	
 	public void setNrDummy(){	

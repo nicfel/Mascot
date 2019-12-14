@@ -29,16 +29,13 @@ public class GLM extends Dynamics implements Loggable {
 	public Input<GlmModel> NeGLMInput = new Input<>(
 			"NeGLM", "input of migration GLM model", Validate.REQUIRED);
     
-    public Input<RealParameter> rateShiftsInput = new Input<>(
+    public Input<RateShifts> rateShiftsInput = new Input<>(
     		"rateShifts", "input of timings of rate shifts relative to the most recent sample", Validate.OPTIONAL);    
      
 	public Input<Double> maxRateInput = new Input<>(
 			"maxRate", "maximum rate used for integration", Double.POSITIVE_INFINITY);
 	
-
-
-	double[] intTimes;
-	
+	double[] intTimes;	
  
 	int firstlargerzero;
 	
@@ -48,53 +45,44 @@ public class GLM extends Dynamics implements Loggable {
 	
     @Override
     public void initAndValidate() {
-    	super.initAndValidate();
-    	
-    	// if there are rate shifts as an input, use the stepwise glm model otherwise the constant
-    	if (rateShiftsInput.get() != null){
-	    	intTimes = new double[(int) rateShiftsInput.get().getDimension()];
-	    	intTimes[0] = rateShiftsInput.get().getArrayValue(0);
-	    	for (int i = 1; i < rateShiftsInput.get().getDimension(); i++){
-	    		if (rateShiftsInput.get().getArrayValue(i-1)>=0){
-	    			intTimes[i] = rateShiftsInput.get().getArrayValue(i) - rateShiftsInput.get().getArrayValue(i-1); 
-	    		}else{
-	    			intTimes[i] = rateShiftsInput.get().getArrayValue(i);
-	    		}
-	    			
-	    	}
-	    }else{
-	    	intTimes = new double[1];
-	    	intTimes[0] = Double.POSITIVE_INFINITY;
-    	}
-    	
-    	// check which rateshiftInput is the first above 0
-    	firstlargerzero = intTimes.length-1;
-    	for (int i = 0 ; i < intTimes.length; i++){
-    		if (intTimes[i] >  0){
-    			firstlargerzero = i;
-				break;
-    		}
-    	}
+    	super.initAndValidate(); 
+		rateShiftsInput.get().initAndValidate();
 
-    	// check which rateshiftInput is the first above 0
-    	firstlargerzero = intTimes.length-1;
-    	for (int i = 0 ; i < intTimes.length; i++){
-    		if (intTimes[i] >  0){
-    			firstlargerzero = i;
-				break;
-    		}
-    	}
-	
 		// set the number of intervals for the GLM models
 		if (fromBeautiInput.get()) {
 			// the type to trait map is needed to read in predictors
 			migrationGLMInput.get().covariateListInput.get().traitToType = new HashMap<>(traitToType);
 			NeGLMInput.get().covariateListInput.get().traitToType = new HashMap<>(traitToType);
+
+			migrationGLMInput.get().covariateListInput.get().nrIntervals = rateShiftsInput.get().getDimension();
+			NeGLMInput.get().covariateListInput.get().nrIntervals = rateShiftsInput.get().getDimension();
+			
 			migrationGLMInput.get().setNrDummy();
 			NeGLMInput.get().setNrDummy();
-		}else {
+		}
+		if (rateShiftsInput.get()!=null) {	
+			
 			migrationGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension(), dimensionInput.get(), true);
 			NeGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension(), dimensionInput.get(), false);
+		}		
+	
+		//get the first non zero element
+		firstlargerzero = 0;
+		for (int i=0; i < rateShiftsInput.get().getDimension(); i++) {
+			if (rateShiftsInput.get().getValue(i)>0) {
+				firstlargerzero=i;
+				break;				
+			}
+		}
+		// initialize the intervals
+		intTimes = new double[rateShiftsInput.get().getDimension()-firstlargerzero];
+		for (int i=0; i < intTimes.length; i++) {
+			if (i==0) {
+				intTimes[i] = rateShiftsInput.get().getValue(i+firstlargerzero);						
+			}
+			else {
+				intTimes[i] = rateShiftsInput.get().getValue(i+firstlargerzero)-rateShiftsInput.get().getValue(i-1+firstlargerzero);
+			}
 		}
     }
 
@@ -103,10 +91,10 @@ public class GLM extends Dynamics implements Loggable {
      */
     @Override
     public double getInterval(int i) {
-    	if (i >= rateShiftsInput.get().getDimension()-firstlargerzero){
+    	if (i >= intTimes.length){
      		return Double.POSITIVE_INFINITY;
      	}else{
-			return intTimes[i+firstlargerzero];
+			return intTimes[i];
      	}
     }   
 
@@ -128,15 +116,15 @@ public class GLM extends Dynamics implements Loggable {
 	@Override
     public double[] getCoalescentRate(int i){
 		int intervalNr;
-    	if (i >= rateShiftsInput.get().getDimension()-firstlargerzero)
-    		intervalNr = rateShiftsInput.get().getDimension()-1;
+    	if (i >= rateShiftsInput.get().getDimension()-firstlargerzero-1)
+    		intervalNr = rateShiftsInput.get().getDimension()-2;
     	else
     		intervalNr = i + firstlargerzero;
-
+    	
     	double[] Ne = NeGLMInput.get().getRates(intervalNr);
 		double[] coal = new double[Ne.length];
 		for (int j = 0; j < Ne.length; j++){
-			coal[j] = FastMath.min(1/Ne[j],maxRateInput.get());
+			coal[j] = FastMath.min(1/Ne[j], maxRateInput.get());
 		}
 		return coal;
     }

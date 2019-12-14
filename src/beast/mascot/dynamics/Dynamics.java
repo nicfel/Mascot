@@ -78,7 +78,7 @@ public abstract class Dynamics extends CalculationNode  {
 	HashMap<Integer, String> reverseTraitToType;
 	
     @Override
-    public void initAndValidate() {    	
+    public void initAndValidate() { 
     	if (typesInput.get()!=null && !fromBeautiInput.get()){
     		String[] splittedTypes = typesInput.get().split("\\s+");
     		
@@ -113,9 +113,9 @@ public abstract class Dynamics extends CalculationNode  {
     		for (int i = 0; i < unique.size();i++)
     			newTypes = newTypes + " " + unique.get(i);
     		
-    		typesInput = new Input<>("types", "names of the different sub-populaitons", newTypes);
+    		typesInput = new Input<>("types", "names of the different sub-populations", newTypes);
     		
-    		String[] splittedTypes = typesInput.get().split("\\s+");
+    		String[] splittedTypes = typesInput.get().trim().split("\\s+");    		
     		
     		dimensionInput.set(splittedTypes.length);
     	}   	

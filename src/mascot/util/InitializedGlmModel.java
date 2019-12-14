@@ -35,23 +35,21 @@ public class InitializedGlmModel extends LogLinear {
 
 	@Override
 	public void init(PrintStream out) {
-		// TODO Auto-generated method stub
-		
+		super.init(out);
 	}
 
 	@Override
 	public void close(PrintStream out) {
-		// TODO Auto-generated method stub
-		
+		 super.close(out);		
 	}
 
 	@Override
 	public double[] getRates(int i) {
-		// TODO Auto-generated method stub
-		return null;
+		return super.getRates(i);
 	}
 
 	@Override
 	public void initAndValidate() {
+		super.initAndValidate();
 	}
 }

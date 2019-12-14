@@ -15,9 +15,12 @@ public class CovariateList extends BEASTObject {
     public Input<BooleanParameter> transformInput = new Input<>("transform", "whether covariates need transformation");
 
     List<Covariate> covariates;
+    boolean[] timeDependent;
 
     // needed to read in predictors with BEAUti
     public HashMap<String, Integer> traitToType = new HashMap<>(); 
+
+    public int nrIntervals=1; 
 
     
     public CovariateList() {
@@ -45,11 +48,11 @@ public class CovariateList extends BEASTObject {
 	}
 
 	public void initMigrationFromRawValues(int index) {
-		 covariatesInput.get().get(index).initMigrationFromRawValues(traitToType);
+		 covariatesInput.get().get(index).initMigrationFromRawValues(traitToType, nrIntervals);
 	}
 
 	public void initNeFromRawValues(int index) {
-		 covariatesInput.get().get(index).initNeFromRawValues(traitToType);
+		 covariatesInput.get().get(index).initNeFromRawValues(traitToType, nrIntervals);
 	}
 
 }

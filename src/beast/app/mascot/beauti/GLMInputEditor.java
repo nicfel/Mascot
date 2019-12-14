@@ -11,11 +11,11 @@ import beast.core.BEASTInterface;
 import beast.core.Input;
 import beast.mascot.dynamics.GLM;
 
-public class DynamicsInputEditor extends BEASTObjectInputEditor {
+public class GLMInputEditor extends BEASTObjectInputEditor {
 
 	GLM dyn;
 	
-	public DynamicsInputEditor(BeautiDoc doc) {
+	public GLMInputEditor(BeautiDoc doc) {
 		super(doc);
 	}
 

@@ -18,11 +18,10 @@ public class Covariate extends BEASTObject  {
 			new Input<>("value", "start value(s) for this parameter. If multiple values are specified, they should be separated by whitespace.", 
 					new ArrayList<>(), beast.core.Input.Validate.REQUIRED, getMax().getClass());
 
-
 	private Double[] values;
 	private List<String> rawValues;
 	private int dimension;
-	public Boolean isTimeDependent = false;
+	public String isTimeDependent = "false";
 	public Boolean transform = false;
 	
 	public Covariate() {}
@@ -51,6 +50,15 @@ public class Covariate extends BEASTObject  {
             values[i] = valuesString[i % valuesString.length];
         }
     }
+    
+    // log standardizes values
+    public void transform() {
+    	Double[] tmp_vals = new Double[values.length];
+    	double mean=0;
+    	for (int i = 0; i < values.length; i++) {
+    		
+    	}
+    }
 	
     public Double getValue() {
         return values[0];
@@ -73,8 +81,8 @@ public class Covariate extends BEASTObject  {
     }
     
     // from raw data to double values
-    public void initMigrationFromRawValues(HashMap<String, Integer> traitToType) {
-    	isTimeDependent = false;
+    public void initMigrationFromRawValues(HashMap<String, Integer> traitToType, int nrIntervals) {
+    	isTimeDependent = "false";
     	
     	// build int map for traits
     	int[][] indicesMap = new int[traitToType.size()][traitToType.size()];
@@ -86,7 +94,6 @@ public class Covariate extends BEASTObject  {
     				c++;
     			}    				
     		}  
-    		System.out.println(Arrays.toString(indicesMap[a]));
 		}
     	
     	// TODO, add possibility for time dependence
@@ -96,12 +103,18 @@ public class Covariate extends BEASTObject  {
     	String[] headervals = rawValues.get(0).replace("\\s+", "").split(",");  
     	
     	if ((headervals.length-1)%traitToType.size()!=0) {
-    		System.err.println("incorrect dimension of predictors, values either missing, or too many of them");
-    		return;
+			isTimeDependent = "wrong number of entries ";
+			return;
     	}
     	
     	int time_points = (headervals.length-1)/traitToType.size();
-    	int dimension = (traitToType.size()-1)*traitToType.size() *time_points;
+    	
+    	if (time_points!=1 && time_points!=nrIntervals) {
+			isTimeDependent = "wrong number of entries";
+			return;
+    	}
+    	
+    	int dimension = (traitToType.size()-1)*traitToType.size() * nrIntervals;
     	this.values = new Double[dimension]; 
     	
     	for (int a = 1; a < rawValues.size(); a++) {
@@ -116,7 +129,7 @@ public class Covariate extends BEASTObject  {
     			// check if there is a time information
     			if (headervals[b].contains(":")) {
     				timepoint = Integer.parseInt(headervals[b].split(":")[1]);
-    				isTimeDependent = true;
+    				isTimeDependent = "true";
     			}
     			
     			if (from!=to) {
@@ -125,6 +138,24 @@ public class Covariate extends BEASTObject  {
     			}
     		}    		    		
     	}
+    	
+    	if (isTimeDependent.contains("false")) {
+    		for (int timepoint = 1; timepoint < nrIntervals; timepoint++) {
+    			int index=0;
+    			int dims = traitToType.size()*(traitToType.size()-1);
+    	    	for (int a = 0; a < traitToType.size(); a++) {
+    	    		for (int b = 0; b < traitToType.size(); b++) {
+    	    			if (a!=b) {
+    	    				this.values[index + timepoint*dims] = this.values[index];
+    	    				index++;
+    	    			}    	    			
+    	    		}
+    	    	}
+    		}
+    	}
+    	
+    	
+    	
     	// convert values to arraylist
     	List<Double> inputvals = new ArrayList<>();
     	for (int i = 0; i < this.values.length;i++)
@@ -134,22 +165,26 @@ public class Covariate extends BEASTObject  {
     	valuesInput.set(inputvals);
     	
     }
-    
-    
-    
+        
     // from raw data to double values
-    public void initNeFromRawValues(HashMap<String, Integer> traitToType) {
+    public void initNeFromRawValues(HashMap<String, Integer> traitToType, int nrIntervals) {
     	// check if the first line starts with a location, if not, the predictor is time dependent    	
     	if (traitToType.containsKey(rawValues.get(0).replace("\\s+", "").split(",")[0]))
-        	isTimeDependent = false;
+        	isTimeDependent = "false";
     	else
-    		isTimeDependent = true;    	
+    		isTimeDependent = "true";    	
     	
-    	if (isTimeDependent) {
+    	if (isTimeDependent.contentEquals("true")) {
         	// get the header values
         	String[] headervals = rawValues.get(0).replace("\\s+", "").split(",");  
         	int time_points = headervals.length-1;
         	this.values = new Double[traitToType.size() *time_points]; 
+        	
+        	if (time_points!=1 && time_points!=nrIntervals) {
+        		isTimeDependent = "wrong number of entries";
+				return;
+        	}
+
         	
         	// skip first line
         	for (int a = 1; a < rawValues.size(); a++) {
@@ -169,15 +204,22 @@ public class Covariate extends BEASTObject  {
         	}
     	}else {
         	// skip first line
+        	this.values = new Double[traitToType.size()*nrIntervals]; 
+
         	for (int a = 0; a < rawValues.size(); a++) {
         		String[] splitvals = rawValues.get(a).replace("\\s+", "").split(",");
         		for (int b = 1; b < splitvals.length; b++) {
         			// get the from and to values
-        			int from = traitToType.get(splitvals[0]);
-        			        			
-	    			this.values[from ] = Double.parseDouble(splitvals[b]);        			
+        			int from = traitToType.get(splitvals[0]);       			        			
+	    			this.values[from] = Double.parseDouble(splitvals[b]);        			
         		}    		    		
         	}
+        	
+    		for (int timepoint = 1; timepoint < nrIntervals; timepoint++) {
+    	    	for (int a = 0; a < traitToType.size(); a++) {
+    				this.values[a + timepoint*traitToType.size()] = this.values[a];
+    	    	}
+    		}       	
     	}    	
 
     	// convert values to arraylist

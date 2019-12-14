@@ -30,6 +30,10 @@ public class CovariateList extends BEASTObject {
 	@Override
 	public void initAndValidate() {
     	covariates = covariatesInput.get();
+    	if (transformInput.get()!=null)
+    		for (int i = 0; i < covariates.size(); i++)
+    			if (transformInput.get().getArrayValue(i)>0.5)
+    				covariates.get(i).transform();
 	}
 
 	public int size() {

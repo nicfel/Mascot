@@ -92,13 +92,12 @@
                   <clock idref="NeClockGLM.t:$(n)"/>
                   <indicator idref="NeIndicatorGLM.t:$(n)"/>
                 </NeGLM>
-                <rateShifts idref="rateShifts.t:$(n)"/>
+                <rateShifts id="rateShifts.t:$(n)" spec="mascot.util.InitializedRateShifts"/>
                 <typeTrait id="typeTraitSet.t:$(n)" spec="mascot.util.InitializedTraitSet" traitname="type">
                     <taxa spec="beast.evolution.alignment.TaxonSet" alignment="@$(n)"/>
                 </typeTrait>
             </dynamics>
 
-          <param id="rateShifts.t:$(n)" spec="beast.core.parameter.RealParameter" value="0.0" estimate="false"/>
           <param id="transformMigrationCovariates.t:$(n)" spec="beast.core.parameter.BooleanParameter" value="false" estimate="false"/>
           <param id="transformNeCovariates.t:$(n)" spec="beast.core.parameter.BooleanParameter" value="false" estimate="false"/>
 

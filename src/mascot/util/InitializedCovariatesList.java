@@ -32,5 +32,6 @@ public class InitializedCovariatesList extends CovariateList {
 
 	@Override
 	public void initAndValidate() {
+		super.initAndValidate();
 	}
 }

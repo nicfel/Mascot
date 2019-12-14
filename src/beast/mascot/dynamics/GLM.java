@@ -47,6 +47,8 @@ public class GLM extends Dynamics implements Loggable {
     public void initAndValidate() {
     	super.initAndValidate(); 
 		rateShiftsInput.get().initAndValidate();
+		migrationGLMInput.get().covariateListInput.get().initAndValidate();
+		NeGLMInput.get().covariateListInput.get().initAndValidate();
 
 		// set the number of intervals for the GLM models
 		if (fromBeautiInput.get()) {
@@ -60,10 +62,11 @@ public class GLM extends Dynamics implements Loggable {
 			migrationGLMInput.get().setNrDummy();
 			NeGLMInput.get().setNrDummy();
 		}
-		if (rateShiftsInput.get()!=null) {	
-			
-			migrationGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension(), dimensionInput.get(), true);
-			NeGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension(), dimensionInput.get(), false);
+		if (rateShiftsInput.get().getDimension()>0) {	
+			if (migrationGLMInput.get().covariateListInput.get().size()>0)
+				migrationGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension(), dimensionInput.get(), true);
+			if (NeGLMInput.get().covariateListInput.get().size()>0)
+				NeGLMInput.get().setNrIntervals(rateShiftsInput.get().getDimension(), dimensionInput.get(), false);
 		}		
 	
 		//get the first non zero element

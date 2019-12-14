@@ -53,11 +53,28 @@ public class Covariate extends BEASTObject  {
     
     // log standardizes values
     public void transform() {
-    	Double[] tmp_vals = new Double[values.length];
-    	double mean=0;
+    	Double[] log_vals = new Double[values.length];
     	for (int i = 0; i < values.length; i++) {
-    		
+    		if (values[i]<=0.0)
+    			throw new IllegalArgumentException("predictor " + getID() + " should be log transformed and standardized but contains values that are 0 or smaller");
+    		log_vals[i] = Math.log(values[i]);
     	}
+    	double mean=0;
+    	for (int i = 0; i < log_vals.length; i++) 
+    		mean+=log_vals[i];
+    	
+    	mean/=log_vals.length;
+
+    	double std=0;
+    	for (int i = 0; i < log_vals.length; i++)
+    		std+= (log_vals[i]-mean)*(log_vals[i]-mean);
+    	
+    	std = Math.sqrt(std);
+    	std/=log_vals.length-1;
+    			
+    	for (int i = 0; i < log_vals.length; i++) 
+    		log_vals[i] =(log_vals[i]-mean)/std;
+		
     }
 	
     public Double getValue() {

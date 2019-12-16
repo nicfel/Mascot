@@ -1,9 +1,8 @@
 <packages>
     <package name="Mascot" version="2.0.0"
-         url="https://github.com/nicfel/CoupledMCMC/releases/download/v1.0.0/CoupledMCMC.v1.0.0.zip"
-         description="Coupled MCMC (parallel tempering or MC3)"
-         projectURL="https://github.com/nicfel/CoupledMCMC/">
-  <depends on="beast2" atleast="2.6.0"  atmost='2.6.9'/>
-  <depends on="BEASTLabs" atleast="1.9.0"/>
+         url="https://github.com/nicfel/Mascot/releases/download/v2.0.0/Mascot.v2.0.0.zip"
+	   description="Marginal approximation of the structured coalescent"
+	   projectURL="https://taming-the-beast.org/tutorials/Mascot-Tutorial/">
+		<depends on="beast2" atleast="2.5.0" atmost='2.6.9'/>
   </package>
 </packages>

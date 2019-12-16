@@ -59,14 +59,14 @@ public class CovariateListInputEditor extends InputEditor.Base {
 		dialog.setLocationRelativeTo(null);
 		dialog.setTitle("Isolation with Migration Annotator");
 
-		JButton addButton = new JButton("Add covariate from file");
+		JButton addButton = new JButton("Add predictor from file");
 		JButton updateButton = new JButton("Update settings");
 
 		JFileChooser inFileChooser = FChooserUtils.getFileChooser();
 
 		
 		addButton.addActionListener(e -> {
-			inFileChooser.setDialogTitle("Select covariate file");			
+			inFileChooser.setDialogTitle("Select predictor file");			
 
 			int returnVal = inFileChooser.showOpenDialog(dialog);
 			//

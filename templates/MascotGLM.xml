@@ -65,7 +65,7 @@
                <x id="$(thisparam).sumActivePredictors.t:$(n)" spec="util.Sum">
                    <arg idref="$(thisparam)GLM.t:$(n)"/>
                </x>
-               <distr spec="beast.math.distributions.Poisson" lambda='1' offset="1"/>
+               <distr spec="beast.math.distributions.Poisson" lambda='1' offset="0"/>
            </prior>
 
            <operator id='$(thisparam)GLMFlipper.t:$(n)' spec='BitFlipOperator' weight="3" parameter="@$(thisparam)GLM.t:$(n)"/>

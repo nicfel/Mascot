@@ -56,6 +56,8 @@ public class LogLinear extends GlmModel {
 
 	@Override
 	public void init(PrintStream out) {
+		out.print(String.format("%sClock\t", getID()));
+
 		for (int i = 0 ; i < scalerInput.get().getDimension(); i++){
 			out.print(String.format("%sscaler.%s\t", getID(), covariateListInput.get().get(i).getID()));
 		}
@@ -63,6 +65,8 @@ public class LogLinear extends GlmModel {
 
 	@Override
 	public void log(int sample, PrintStream out) {
+		out.print(clockInput.get().getValue() +"\t");
+
 		for (int i = 0 ; i < scalerInput.get().getDimension(); i++){
 			if (indicatorInput.get().getArrayValue(i) > 0.5){
 				out.print(scalerInput.get().getArrayValue(i) +"\t");

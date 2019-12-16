@@ -253,8 +253,6 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 
 	double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){
 		final double max_dotdotdot = maxAbs(pDotDotDot, length);	
-		
-		//double timeStep = FastMath.min(FastMath.pow(epsilon*6/max_dotdotdot, C), FastMath.min(duration, max_step));
 
 		double timeStep = FastMath.min(FastMath.cbrt(epsilon*6/max_dotdotdot), FastMath.min(duration, max_step));
 		double timeStepSquare = timeStep * timeStep * 0.5;

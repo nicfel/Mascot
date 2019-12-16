@@ -115,7 +115,7 @@ public class CovariateListInputEditor extends InputEditor.Base {
 		Object[][] data = new Object[covariateList.covariatesInput.get().size()][4];
 		for (int i = 0; i < covariateList.covariatesInput.get().size(); i++) {
 			data[i][0] = covariateList.covariatesInput.get().get(i).getID();
-			data[i][1] = covariateList.covariatesInput.get().get(i).transform;
+			data[i][1] = covariateList.covariatesInput.get().get(i).transformed;
 			data[i][2] = covariateList.covariatesInput.get().get(i).isTimeDependent;
 			data[i][3] = false;
 		}
@@ -147,7 +147,7 @@ public class CovariateListInputEditor extends InputEditor.Base {
 				if ((boolean) table.getModel().getValueAt(i, 3)) {
 					covariateList.covariatesInput.get().remove(i);
 				}else {
-					covariateList.covariatesInput.get().get(i).transform = (Boolean) table.getModel().getValueAt(i, 1);
+					covariateList.covariatesInput.get().get(i).transformed = (Boolean) table.getModel().getValueAt(i, 1);
 				}
 
 			}
@@ -155,7 +155,7 @@ public class CovariateListInputEditor extends InputEditor.Base {
 			// add a transformation vector
 			Boolean[] transform = new Boolean[covariateList.covariatesInput.get().size()];
 			for (int i = 0; i < transform.length; i++)
-				transform[i] = covariateList.covariatesInput.get().get(i).transform;
+				transform[i] = covariateList.covariatesInput.get().get(i).transformed;
 			
 			covariateList.transformInput.set(new BooleanParameter(transform));
 				
@@ -166,7 +166,7 @@ public class CovariateListInputEditor extends InputEditor.Base {
 		// add a transformation vector
 		Boolean[] transform = new Boolean[covariateList.covariatesInput.get().size()];
 		for (int i = 0; i < transform.length; i++)
-			transform[i] = covariateList.covariatesInput.get().get(i).transform;
+			transform[i] = covariateList.covariatesInput.get().get(i).transformed;
 		
 		covariateList.transformInput.set(new BooleanParameter(transform));
 		

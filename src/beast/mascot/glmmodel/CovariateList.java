@@ -34,6 +34,7 @@ public class CovariateList extends BEASTObject {
     		for (int i = 0; i < covariates.size(); i++)
     			if (transformInput.get().getArrayValue(i)>0.5)
     				covariates.get(i).transform();
+    			
 	}
 
 	public int size() {

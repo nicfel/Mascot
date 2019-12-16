@@ -30,6 +30,35 @@
                     and $(thisparam)GLM.t:$(n)/estimate=true'/>
          </fragment>
 
+         <fragment id='MascotGLMScalerParameters' spec="beast.app.beauti.Fragment">
+             <![CDATA[
+             <prior id='$(thisparam)GLMPrior.t:$(n)' x='@$(thisparam)GLM.t:$(n)'>
+               <distr spec="beast.math.distributions.Normal" mean='0' sigma='1'/>
+             </prior>
+             <operator id='$(thisparam)GLMScaler.t:$(n)' spec='RealRandomWalkOperator' windowSize="0.5" weight="3" parameter="@$(thisparam)GLM.t:$(n)"/>
+             ]]>
+
+             <connect srcID='$(thisparam)GLM.t:$(n)' targetID='state' inputName='stateNode'
+                      if='inposterior(Mascot.t:$(n))
+                      and inposterior(Tree.t:$(n))
+                      and inposterior($(thisparam)GLM.t:$(n))
+                      and inposterior(GLM.t:$(n))
+                      and $(thisparam)GLM.t:$(n)/estimate=true'/>
+            <connect srcID='$(thisparam)GLMPrior.t:$(n)' targetID='prior' inputName='distribution'
+                     if='inposterior(Mascot.t:$(n))
+                     and inposterior(Tree.t:$(n))
+                     and inposterior($(thisparam)GLM.t:$(n))
+                     and inposterior(GLM.t:$(n))
+                     and $(thisparam)GLM.t:$(n)/estimate=true'/>
+           <connect srcID='$(thisparam)GLMScaler.t:$(n)' targetID='mcmc' inputName='operator'
+                    if='inposterior(Mascot.t:$(n))
+                    and inposterior(Tree.t:$(n))
+                    and inposterior($(thisparam)GLM.t:$(n))
+                    and inposterior(GLM.t:$(n))
+                    and $(thisparam)GLM.t:$(n)/estimate=true'/>
+         </fragment>
+
+
        <fragment id='MascotGLMIndicators' spec="beast.app.beauti.Fragment">
            <![CDATA[
            <prior id="$(thisparam)ActivePredictorsPrior.t:$(n)" name="distribution">
@@ -110,10 +139,21 @@
           <param id="NeIndicatorGLM.t:$(n)" spec="beast.core.parameter.BooleanParameter" value="true" estimate="true"/>
       ]]>
 
+      <connect srcID='migrationGLM.t:$(n)' targetID='tracelog' inputName='log'
+              if='inposterior(Mascot.t:$(n))
+              and inposterior(Tree.t:$(n))
+              and inposterior(migrationGLM.t:$(n))'/>
+
+      <connect srcID='NeGLM.t:$(n)' targetID='tracelog' inputName='log'
+              if='inposterior(Mascot.t:$(n))
+              and inposterior(Tree.t:$(n))
+              and inposterior(migrationGLM.t:$(n))'/>
+
 
       <plate fragment="TreeOperators" var="m" range="Mascot"/>
 
-      <plate fragment="MascotGLMClockParameters" var="thisparam" range="migrationClock,NeClock,migrationScaler,NeScaler"/>
+      <plate fragment="MascotGLMClockParameters" var="thisparam" range="migrationClock,NeClock"/>
+      <plate fragment="MascotGLMScalerParameters" var="thisparam" range="migrationScaler,NeScaler"/>
       <plate fragment="MascotGLMIndicators" var="thisparam" range="migrationIndicator,NeIndicator"/>
 
       <!-- <plate fragment="MascotClockParameters" var="thisparam" range="migrationClockGLM"/> -->

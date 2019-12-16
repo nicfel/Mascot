@@ -1,5 +1,5 @@
 <packages>
-    <package name="CoupledMCMC" version="1.0.0"
+    <package name="Mascot" version="2.0.0"
          url="https://github.com/nicfel/CoupledMCMC/releases/download/v1.0.0/CoupledMCMC.v1.0.0.zip"
          description="Coupled MCMC (parallel tempering or MC3)"
          projectURL="https://github.com/nicfel/CoupledMCMC/">

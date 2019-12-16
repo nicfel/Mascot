@@ -22,7 +22,7 @@ public class Covariate extends BEASTObject  {
 	private List<String> rawValues;
 	private int dimension;
 	public String isTimeDependent = "false";
-	public Boolean transform = false;
+	public Boolean transformed = false;
 	
 	public Covariate() {}
 	
@@ -53,6 +53,9 @@ public class Covariate extends BEASTObject  {
     
     // log standardizes values
     public void transform() {
+    	if (transformed)
+    		return;
+
     	Double[] log_vals = new Double[values.length];
     	for (int i = 0; i < values.length; i++) {
     		if (values[i]<=0.0)
@@ -69,12 +72,14 @@ public class Covariate extends BEASTObject  {
     	for (int i = 0; i < log_vals.length; i++)
     		std+= (log_vals[i]-mean)*(log_vals[i]-mean);
     	
-    	std = Math.sqrt(std);
     	std/=log_vals.length-1;
+    	std = Math.sqrt(std);
     			
     	for (int i = 0; i < log_vals.length; i++) 
-    		log_vals[i] =(log_vals[i]-mean)/std;
-		
+    		log_vals[i] = (log_vals[i]-mean)/std;
+    	
+		System.arraycopy(log_vals, 0, values, 0, log_vals.length);
+		transformed = true;
     }
 	
     public Double getValue() {

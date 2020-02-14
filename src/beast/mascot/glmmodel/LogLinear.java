@@ -73,8 +73,7 @@ public class LogLinear extends GlmModel {
 			}else{
 				out.print("0.0\t");
 			}
-		}
-		
+		}		
 	}
 
 	@Override

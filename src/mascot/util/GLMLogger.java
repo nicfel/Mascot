@@ -18,7 +18,7 @@ public class GLMLogger extends CalculationNode implements Loggable {
 	public Input<Boolean> NeTimeVariantInput = new Input<>(
 			"NeTimeVariant", "input of GLM model", true);
 	public Input<Boolean> migTimeVariantInput = new Input<>(
-			"migTimeVariant", "input of GLM model", true);
+			"migTimeVariant", "input of GLM model", false);
 
 
 		

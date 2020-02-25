@@ -6,10 +6,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import beast.core.BEASTObject;
+import beast.core.CalculationNode;
 import beast.core.Input;
 import beast.evolution.tree.Tree;
 
-public class RateShifts extends BEASTObject {
+public class RateShifts extends CalculationNode {
 
     final public Input<String> dateTimeFormatInput = new Input<>("dateFormat", "the date/time format to be parsed, (e.g., 'dd/M/yyyy')", "dd/M/yyyy");
 	public Input<List<Double>> valuesInput = new Input<>(

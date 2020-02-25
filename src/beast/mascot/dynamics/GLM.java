@@ -211,13 +211,41 @@ public class GLM extends Dynamics implements Loggable {
 		// TODO Auto-generated method stub
 		
 	}
-
-//    @Override
-//	protected boolean requiresRecalculation(){
-//    	
-//    	return intervalIsDirty(0);
-//    }
-
+	
+    public double getNe(int state, int i){
+		int intervalNr;
+    	if (i >= rateShiftsInput.get().getDimension()-firstlargerzero-1)
+    		intervalNr = rateShiftsInput.get().getDimension()-2;
+    	else
+    		intervalNr = i + firstlargerzero;
+    	
+    	double[] Ne = NeGLMInput.get().getRates(intervalNr);
+		double[] coal = new double[Ne.length];
+		return Ne[state];
+    }
+    
+    public double getMig(int source, int sink, int i){
+		int intervalNr;
+    	if (i >= rateShiftsInput.get().getDimension()-firstlargerzero-1)
+    		intervalNr = rateShiftsInput.get().getDimension()-2;
+    	else
+    		intervalNr = i + firstlargerzero;
+    	
+		double[] mig = migrationGLMInput.get().getRates(intervalNr);
+		
+		
+		int c = 0;
+		for (int a = 0; a < dimensionInput.get(); a++){
+			for (int b = 0; b < dimensionInput.get(); b++){
+				if (a!=b){
+					if (a==source && b==sink)
+						return mig[c];
+					c++;
+				}
+			}
+		}
+    	return -1;
+    }
 
     @Override
     public int getEpochCount() {

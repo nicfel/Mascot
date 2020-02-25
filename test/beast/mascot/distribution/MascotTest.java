@@ -65,7 +65,7 @@ public class MascotTest  {
 		
 		Mascot mascot = new Mascot();
 		
-		mascot.initByName("structuredTreeIntervals", st, "dynamics", constant);
+		mascot.initByName("structuredTreeIntervals", st, "dynamics", constant, "tree", tree);
 		
 		double logP = mascot.calculateLogP();
 		Assert.assertEquals(logP,-6.870390751933608, 1e-15);
@@ -116,7 +116,7 @@ public class MascotTest  {
 		
 		Mascot mascot = new Mascot();
 		
-		mascot.initByName("structuredTreeIntervals", st, "dynamics", constant);
+		mascot.initByName("structuredTreeIntervals", st, "dynamics", constant, "tree", tree);
 		
 		// also set up the constant coalescent
 		TreeIntervals ti = new TreeIntervals();

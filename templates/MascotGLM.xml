@@ -137,6 +137,8 @@
           <param id="NeScalerGLM.t:$(n)" spec="beast.core.parameter.RealParameter" value="0.0" estimate="true"/>
           <param id="NeClockGLM.t:$(n)" spec="beast.core.parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
           <param id="NeIndicatorGLM.t:$(n)" spec="beast.core.parameter.BooleanParameter" value="true" estimate="true"/>
+
+          <plugin id='GLMRatesLogger.t:$(n)' spec='mascot.util.GLMLogger' glm='@GLM.t:$(n)'/>
       ]]>
 
       <connect srcID='migrationGLM.t:$(n)' targetID='tracelog' inputName='log'
@@ -147,8 +149,9 @@
       <connect srcID='NeGLM.t:$(n)' targetID='tracelog' inputName='log'
               if='inposterior(Mascot.t:$(n))
               and inposterior(Tree.t:$(n))
-              and inposterior(migrationGLM.t:$(n))'/>
+              and inposterior(NeGLM.t:$(n))'/>
 
+      <connect srcID='GLMRatesLogger.t:$(n)' targetID='tracelog' inputName='log' if='inposterior(Mascot.t:$(n)) and inposterior(GLM.t:$(n))'/>
 
       <plate fragment="TreeOperators" var="m" range="Mascot"/>
 

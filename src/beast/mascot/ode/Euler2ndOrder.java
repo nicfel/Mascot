@@ -117,7 +117,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
         this.lineages = lineages;
         this.states = states;
         this.dimension = this.lineages*this.states;
-    	sumStates = new double[states];tCR = new double[states];
+    	sumStates = new double[states];tCR = new double[states]; sumDotStates = new double[states];
     	hasIndicators = true;
     	hasMultiplicator = false;
     	
@@ -270,17 +270,17 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 
 				if (its > 10000) {
 //					System.err.println("cannot find proper time step, skip these parameter values");
-					p[length-1] = Double.NEGATIVE_INFINITY;
+					p[length] = Double.NEGATIVE_INFINITY;
 					break;					
 				}
 			}			
 		}
 		
 		
-		if (p[length-1]==Double.NEGATIVE_INFINITY)
+		if (p[length]==Double.NEGATIVE_INFINITY)
 			return 0.0;
 
-		updateP2(timeStep, timeStepSquare, p, length + 1, pDot, pDotDot);
+		updateP2(timeStep, timeStepSquare, p, length, pDot, pDotDot);
 		
 		// normalize to ensure stability
 		for (int i = 0; i < lineages; i ++) {
@@ -335,6 +335,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 			p[i] += pDot[i] * timeStep
 			     + pDotDot[i] * timeStepSquare;
 		}
+		p[length] += pDot[length] * timeStep;
 	}
 
 	public void computeDerivatives (double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length) {

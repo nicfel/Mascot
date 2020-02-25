@@ -227,11 +227,13 @@ public class Covariate extends BEASTObject  {
     	}else {
         	// skip first line
         	this.values = new Double[traitToType.size()*nrIntervals]; 
+        	System.out.println(traitToType);
 
         	for (int a = 0; a < rawValues.size(); a++) {
         		String[] splitvals = rawValues.get(a).replace("\\s+", "").split(",");
         		for (int b = 1; b < splitvals.length; b++) {
         			// get the from and to values
+        			System.out.println(Arrays.toString(splitvals));
         			int from = traitToType.get(splitvals[0]);       			        			
 	    			this.values[from] = Double.parseDouble(splitvals[b]);        			
         		}    		    		

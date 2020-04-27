@@ -64,7 +64,7 @@ public abstract class GlmModel extends CalculationNode implements Loggable {
 				throw new RuntimeException("The dimension of the the covariate \"" + covariateListInput.get().get(j).getID() + "\" is wrong.\n" + 
 						"The current dimension is " + covariateListInput.get().get(j).getDimension() +
 						", but should be equal to the number of rate shifts\n"+
-						"i.e. it should either be " +l2 + "\n");
+						"i.e. it should be " +l2 + "\n");
 			}
 		}else{
 			// calc the two possible lengths of the covariates
@@ -74,12 +74,12 @@ public abstract class GlmModel extends CalculationNode implements Loggable {
 				throw new RuntimeException("The dimension of the the covariate \"" + covariateListInput.get().get(j).getID() + "\" is wrong.\n" + 
 						"The current dimension is " + covariateListInput.get().get(j).getDimension() +
 						", but should be equal to the number of rate shifts\n"+
-						"i.e. it should either be " +l2 + "\n");
+						"i.e. it should be " +l2 + "\n");
 			}
 		}
 		
+		verticalEntries = covariateListInput.get().get(0).getDimension()/(nrIntervals);
 		
-		verticalEntries = covariateListInput.get().get(0).getDimension()/(nrIntervals-1);
 	}
 	
 	public void setNrDummy(){	

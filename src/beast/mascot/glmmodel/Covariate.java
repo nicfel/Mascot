@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
 import beast.core.BEASTObject;
 import beast.core.Function;
 import beast.core.Input;
@@ -103,7 +105,7 @@ public class Covariate extends BEASTObject  {
     }
     
     // from raw data to double values
-    public void initMigrationFromRawValues(HashMap<String, Integer> traitToType, int nrIntervals) {
+    public String initMigrationFromRawValues(HashMap<String, Integer> traitToType, int nrIntervals) {
     	isTimeDependent = "false";
     	
     	// build int map for traits
@@ -122,28 +124,49 @@ public class Covariate extends BEASTObject  {
     	
     	
     	// get the header values
-    	String[] headervals = rawValues.get(0).replace("\\s+", "").split(",");  
+    	String[] headervals = rawValues.get(0).replaceAll("\\s+", "").split(",");  
     	
     	if ((headervals.length-1)%traitToType.size()!=0) {
 			isTimeDependent = "wrong number of entries ";
-			return;
+			return "wrong number of entries";
     	}
     	
     	int time_points = (headervals.length-1)/traitToType.size();
     	
     	if (time_points!=1 && time_points!=nrIntervals) {
 			isTimeDependent = "wrong number of entries";
-			return;
+			return "wrong number of entries";
     	}
     	
     	int dimension = (traitToType.size()-1)*traitToType.size() * nrIntervals;
     	this.values = new Double[dimension]; 
+    	    	
     	
     	for (int a = 1; a < rawValues.size(); a++) {
-    		String[] splitvals = rawValues.get(a).replace("\\s+", "").split(",");
+    		String[] splitvals = rawValues.get(a).replaceAll("\\s+", "").split(",");
     		for (int b = 1; b < splitvals.length; b++) {
-    			// get the from and to values
+    			// get the from and to values   	
+    			if (traitToType.get(splitvals[0])==null) {
+    				String error = "could not find trait " + splitvals[0] + "\noptions are:\n" ;
+    				for (String s : traitToType.keySet()) {
+    					error = error + "\t*" + s + "\n";    					
+    				}
+    				return error;
+    			}
+
     			int from = traitToType.get(splitvals[0]);
+    			
+    			if (traitToType.get(headervals[b].split(":")[0])==null) {
+    				isTimeDependent = "at least on trait not found";
+
+    				String error = "could not find trait " + headervals[b].split(":")[0] + "\noptions are:\n" ;
+    				for (String s : traitToType.keySet()) {
+    					error = error + "\t*" + s + "\n";    					
+    				}
+    				return error;
+    			}
+
+    			
     			int to = traitToType.get(headervals[b].split(":")[0]);
     			
     			int timepoint = 0;
@@ -174,8 +197,7 @@ public class Covariate extends BEASTObject  {
     	    		}
     	    	}
     		}
-    	}
-    	
+    	}  	
     	
     	
     	// convert values to arraylist
@@ -185,11 +207,12 @@ public class Covariate extends BEASTObject  {
     	
     	// set the input values
     	valuesInput.set(inputvals);
+    	return "";
     	
     }
         
     // from raw data to double values
-    public void initNeFromRawValues(HashMap<String, Integer> traitToType, int nrIntervals) {
+    public String initNeFromRawValues(HashMap<String, Integer> traitToType, int nrIntervals) {
     	// check if the first line starts with a location, if not, the predictor is time dependent    	
     	if (traitToType.containsKey(rawValues.get(0).replace("\\s+", "").split(",")[0]))
         	isTimeDependent = "false";
@@ -204,7 +227,7 @@ public class Covariate extends BEASTObject  {
         	
         	if (time_points!=1 && time_points!=nrIntervals) {
         		isTimeDependent = "wrong number of entries";
-				return;
+				return "wrong number of entries";
         	}
 
         	
@@ -213,6 +236,15 @@ public class Covariate extends BEASTObject  {
         		String[] splitvals = rawValues.get(a).replace("\\s+", "").split(",");
         		for (int b = 1; b < splitvals.length; b++) {
         			// get the from and to values
+        			if (traitToType.get(splitvals[0])==null) {
+        				isTimeDependent = "at least on trait not found";
+        				String error = "could not find trait " + splitvals[0] + "\noptions are:\n" ;
+        				for (String s : traitToType.keySet()) {
+        					error = error + "\t*" + s + "\n";    					
+        				}
+        				return error;
+        			}
+        			
         			int from = traitToType.get(splitvals[0]);
         			
         			int timepoint = -1;
@@ -227,13 +259,11 @@ public class Covariate extends BEASTObject  {
     	}else {
         	// skip first line
         	this.values = new Double[traitToType.size()*nrIntervals]; 
-        	System.out.println(traitToType);
 
         	for (int a = 0; a < rawValues.size(); a++) {
         		String[] splitvals = rawValues.get(a).replace("\\s+", "").split(",");
         		for (int b = 1; b < splitvals.length; b++) {
         			// get the from and to values
-        			System.out.println(Arrays.toString(splitvals));
         			int from = traitToType.get(splitvals[0]);       			        			
 	    			this.values[from] = Double.parseDouble(splitvals[b]);        			
         		}    		    		
@@ -252,7 +282,9 @@ public class Covariate extends BEASTObject  {
     		inputvals.add(this.values[i]);
     	
     	// set the input values
-    	valuesInput.set(inputvals);    	
+    	valuesInput.set(inputvals);   
+    	
+    	return "";
     }
 
 }

@@ -52,12 +52,12 @@ public class CovariateList extends BEASTObject {
 		 covariatesInput.get().add(cov);
 	}
 
-	public void initMigrationFromRawValues(int index) {
-		 covariatesInput.get().get(index).initMigrationFromRawValues(traitToType, nrIntervals);
+	public String initMigrationFromRawValues(int index) {
+		 return covariatesInput.get().get(index).initMigrationFromRawValues(traitToType, nrIntervals);
 	}
 
-	public void initNeFromRawValues(int index) {
-		 covariatesInput.get().get(index).initNeFromRawValues(traitToType, nrIntervals);
+	public String initNeFromRawValues(int index) {
+		 return covariatesInput.get().get(index).initNeFromRawValues(traitToType, nrIntervals);
 	}
 
 }

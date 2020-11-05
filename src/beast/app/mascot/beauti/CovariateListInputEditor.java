@@ -17,6 +17,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.WindowConstants;
@@ -79,12 +80,14 @@ public class CovariateListInputEditor extends InputEditor.Base {
 				
 				// Read in File
 				BufferedReader reader;
+				String error = "";
 				try {
 					reader = new BufferedReader(new FileReader(fname));
 					String line = reader.readLine();
 					List<String> rawValues = new ArrayList<>();
 					while (line != null) {
-						rawValues.add(line);
+						if (line.contains(","))
+							rawValues.add(line);
 						// read next line
 						line = reader.readLine();
 					}
@@ -94,11 +97,20 @@ public class CovariateListInputEditor extends InputEditor.Base {
 					covariateList.covariatesInput.get().add(newCov);
 					// String matching to see if it is a migration or Ne predictor
 					if (covariateList.getID().contains("migration"))
-						covariateList.initMigrationFromRawValues(covariateList.covariatesInput.get().size()-1);
+						error = covariateList.initMigrationFromRawValues(covariateList.covariatesInput.get().size()-1);
 					else
-						covariateList.initNeFromRawValues(covariateList.covariatesInput.get().size()-1);
+						error = covariateList.initNeFromRawValues(covariateList.covariatesInput.get().size()-1);
+					
+					if (!error.contentEquals("")) {
+			            JOptionPane.showMessageDialog(this,
+			                    error,
+			                    "Predictor parsing error",
+			                    JOptionPane.ERROR_MESSAGE);
+
+					}
 				} catch (IOException ex) {
 					ex.printStackTrace();
+
 				}
 			}
 			try {

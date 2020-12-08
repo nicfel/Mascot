@@ -27,7 +27,6 @@ public class ConstantBSSVS extends Dynamics implements Loggable  {
 
     public Input<RealParameter> migrationClockInput = new Input<>("migrationClock", "input of backwards in time migration rates", Validate.REQUIRED);    
 
-    
 	private boolean isBackwardsMigration;
 	
 	private enum MigrationType {

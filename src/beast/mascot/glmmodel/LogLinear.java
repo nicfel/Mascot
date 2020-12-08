@@ -41,6 +41,7 @@ public class LogLinear extends GlmModel {
     		for (int k = 0; k < logrates.length; k++)
     			logrates[k] += errorInput.get().getArrayValue(verticalEntries*i + k);
     	
+    	
     	if (constantErrorInput.get()!=null)
     		for (int k = 0; k < logrates.length; k++)
     			logrates[k] += constantErrorInput.get().getArrayValue( k);

@@ -5,7 +5,7 @@
 	   projectURL="https://taming-the-beast.org/tutorials/Mascot-Tutorial/">
 		<depends on="beast2" atleast="2.5.0" atmost='2.6.9'/>
   </package>
-    <package name='StarBEAST2' version='0.15.11'
+    <package name='StarBEAST2' version='0.15.13'
             url="https://github.com/genomescale/starbeast2/releases/download/v0.15.13/StarBEAST2.zip"
             projectURL="https://github.com/genomescale/starbeast2"
             description="Multispecies coalescent inference using multi-locus and fossil data">

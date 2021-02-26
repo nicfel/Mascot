@@ -41,55 +41,55 @@ public class Mascot extends StructuredTreeDistribution {
 	public int nrSamples;
 	public DoubleMatrix[] stateProbabilities;
     
-    private int nrLineages;   
+	protected int nrLineages;   
 
     // current rates         
     //private double[] migrationRates;
     //private int [] indicators;
-    private double[] coalescentRates; 	
+    protected double[] coalescentRates; 	
 
     
     // Set up for lineage state probabilities
-    private ArrayList<Integer> activeLineages;
-	private double[] linProbs;
-	private double[] linProbsNew;
-	private int linProbsLength;
-	private int states;
+    protected ArrayList<Integer> activeLineages;
+    protected double[] linProbs;
+    protected double[] linProbsNew;
+    protected int linProbsLength;
+    protected int states;
 	
     // store the linProbs, multiplicators and logP's at coalescent points in jagged arrays from last time
-    private double[] coalLinProbs;
-    private int [] coalLinProbsLengths;
-    private double[] coalLogP;
-    private int[] coalRatesInterval;
+    protected double[] coalLinProbs;
+    protected int [] coalLinProbsLengths;
+    protected double[] coalLogP;
+    protected int[] coalRatesInterval;
     //private ArrayList<ArrayList<Integer>> coalActiveLineages;
     
     // deep store the things above for MCMC
-    private double[] storeLinProbs;
-    private int [] storedCoalLinProbsLengths;
-    private double[] storeLogP;
-    private int[] storeRatesInterval;
+    protected double[] storeLinProbs;
+    protected int [] storedCoalLinProbsLengths;
+    protected double[] storeLogP;
+    protected int[] storeRatesInterval;
     //private ArrayList<ArrayList<Integer>> storeActiveLineages;
 
     
-	private double [] nextTreeEvents;
-	private double [] storedNextTreeEvents;
-	private double [] nextRateShifts;
-	private double [] storedNextRateShifts;
+    protected double [] nextTreeEvents;
+    protected double [] storedNextTreeEvents;
+    protected double [] nextRateShifts;
+    protected double [] storedNextRateShifts;
 	//private int [] treeIntervalNrs;
 	//private int [] storedTreeIntervalNrs;
 	//private int [] lineagesAddded;
 	//private int [] storedLineagesAddded;
 
     // check if this is the first calculation
-    private int first = 0;
+    protected int first = 0;
 
 	
 	// maximum integration error tolerance
-    private double maxTolerance = 1e-3;            
-    private boolean recalculateLogP;
+    protected double maxTolerance = 1e-3;            
+    protected boolean recalculateLogP;
 	Euler2ndOrderBase euler;
 	TreeInterface tree;
-	Dynamics dynamics;
+	public Dynamics dynamics;
 	StructuredTreeIntervals treeIntervals;
 
 	int [] nodeType;
@@ -422,7 +422,7 @@ public class Mascot extends StructuredTreeDistribution {
 		return logP;  	
     }
 
-	private void setUpDynamics() {
+	protected void setUpDynamics() {
     	int n = dynamics.getEpochCount();
     	double [][] coalescentRates = new double[n][];
     	double [][] migrationRates = new double[n][];
@@ -442,7 +442,7 @@ public class Mascot extends StructuredTreeDistribution {
     double [] storedCoalescentRates = new double[0];
     int storedNrLineages = -1;
     
-	private double doEuler(double nextEventTime, int ratesInterval) {
+	public double doEuler(double nextEventTime, int ratesInterval) {
 		//for (int i = 0; i < linProbs.length; i++) linProbs_tmp[i] = linProbs[i];
 		if (linProbs_tmp.length != linProbsLength + 1) {
 			linProbs_tmp= new double[linProbsLength + 1];
@@ -510,7 +510,7 @@ public class Mascot extends StructuredTreeDistribution {
 //
 //    }
 //    
-    private void sample(int currTreeInterval, int currRatesInterval, double nextTreeEvent, double nextRateShift) {
+    protected void sample(int currTreeInterval, int currRatesInterval, double nextTreeEvent, double nextRateShift) {
     	if (debug) {
     		System.err.println("sample activeLineages " + currTreeInterval + " = " + activeLineages);
     	}
@@ -567,7 +567,7 @@ public class Mascot extends StructuredTreeDistribution {
        	storeNode(currTreeInterval, currRatesInterval, linProbs, logP, activeLineages, nextTreeEvent, nextRateShift, incomingLines);
     }
           
-    private double coalesce(int currTreeInterval, int currRatesInterval, double nextTreeEvent, double nextRateShift) {
+    protected double coalesce(int currTreeInterval, int currRatesInterval, double nextTreeEvent, double nextRateShift) {
     	int coalLines0 = treeIntervals.getLineagesRemoved(currTreeInterval,0);
     	int coalLines1 = treeIntervals.getLineagesRemoved(currTreeInterval,1);
     	if (debug) {

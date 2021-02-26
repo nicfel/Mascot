@@ -162,6 +162,11 @@ public abstract class Dynamics extends CalculationNode  {
     public void setDynamicsKnown(){
     	dynamicsKnown = true;
     }
+    
+    public void setDynamicsUnknown(){
+    	dynamicsKnown = true;
+    }
+
 
 	public int getDimension(){
 		return dimensionInput.get();

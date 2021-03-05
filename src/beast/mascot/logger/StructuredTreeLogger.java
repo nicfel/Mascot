@@ -27,6 +27,7 @@ import beast.evolution.tree.coalescent.IntervalType;
 import beast.mascot.distribution.Mascot;
 import beast.mascot.ode.Euler2ndOrderTransitions;
 import beast.mascot.ode.MascotODEUpDown;
+import cern.colt.Arrays;
 
 
 /**
@@ -49,7 +50,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     
     
     public Input<BranchRateModel.Base> clockModelInput = new Input<BranchRateModel.Base>("branchratemodel", "rate to be logged with branches of the tree");
-    public Input<List<Function>> parameterInput = new Input<List<Function>>("metadata", "meta data to be logged with the tree nodes",new ArrayList<>());
+    public Input<List<Function>> parameterInput = new Input<List<Function>>("metadata", "meta data to be logged with the tree nodes", new ArrayList<>());
     public Input<Boolean> maxStateInput = new Input<Boolean>("maxState", "report branch lengths as substitutions (branch length times clock rate for the branch)", false);
     public Input<BooleanParameter> conditionalStateProbsInput = new Input<BooleanParameter>("conditionalStateProbs", "report branch lengths as substitutions (branch length times clock rate for the branch)");
     public Input<Boolean> substitutionsInput = new Input<Boolean>("substitutions", "report branch lengths as substitutions (branch length times clock rate for the branch)", false);
@@ -118,6 +119,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     public void log(int nSample, PrintStream out) {
     	log((long) nSample, out);
     }
+    
     
     @Override
     public void log(long nSample, PrintStream out) {
@@ -329,7 +331,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     private boolean recalculateLogP;   
 
 	
-    private void CalculateNodeStates() throws Exception{  
+    public void CalculateNodeStates() throws Exception{  
     	// newly calculate tree intervals
     	mascot.structuredTreeIntervalsInput.get().calculateIntervals();
     	// correctly calculate the daughter nodes at coalescent intervals in the case of
@@ -772,33 +774,18 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 				
 				
 			DoubleMatrix conditional = flow.mmul(otherSideInfo);
+			
 			conditional = conditional.mul(start);
 			stateProbabilitiesDown[parentNode.getNr() - nrSamples] = conditional.div(conditional.sum());
 //			if (!(conditional.get(0) >= 0.0 && conditional.get(0)<=1.0))
 //				conditional.print();
 		}else{
-//			DoubleMatrix d1 = stateProbabilities[parentNode.getLeft().getNr() - nrSamples];
-//			DoubleMatrix d2 = stateProbabilities[parentNode.getRight().getNr() - nrSamples];
-//			DoubleMatrix f1 = TransitionProbabilities[parentNode.getLeft().getNr()];
-//			DoubleMatrix f2 = TransitionProbabilities[parentNode.getLeft().getNr()];
-//			d1.transpose().mmul(f1).print();
-//			d2.transpose().mmul(f2).print();
-//			d1.print();
-//			d2.print();
-//			System.out.println();
-//			f1.print();
-//			f2.print();
-//			System.out.println();
-//			stateProbabilities[parentNode.getNr() - nrSamples].print();
-//			
-//			System.out.println();
-//			System.exit(0);
 			stateProbabilitiesDown[parentNode.getNr() - nrSamples] = stateProbabilities[parentNode.getNr() - nrSamples];
     	}
 	}
 
     
-	private DoubleMatrix getStateProb(int nr) {
+	public DoubleMatrix getStateProb(int nr) {
 		if(useUpDown.get()){			
 			used[nr - nrSamples] = true;
 			return stateProbabilitiesDown[nr - nrSamples] ;
@@ -807,5 +794,27 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 			return stateProbabilities[nr - nrSamples] ;
 		}
 	}
+	
+	public DoubleMatrix getStateProbOnly(int nr) {
+		if(useUpDown.get()){			
+			return stateProbabilitiesDown[nr - nrSamples] ;
+		}else{
+			return stateProbabilities[nr - nrSamples] ;
+		}
+	}
+
+	
+    public void calcForTest() {
+    	states = mascotInput.get().dynamicsInput.get().getDimension();
+    	
+    	
+    	try {
+			CalculateNodeStates();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+
 	
 }

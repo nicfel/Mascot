@@ -64,7 +64,7 @@ public class MappedMascot extends Mascot implements Loggable {
 	protected boolean someMetaDataNeedsLogging;
 	protected boolean substitutions = false;
 
-	Tree mappedTree;
+	public Tree mappedTree;
 
 	List<Integer> activeStates;
 	double[] migrationRates;
@@ -108,6 +108,7 @@ public class MappedMascot extends Mascot implements Loggable {
 		treeIntervals.swap();
 		
 		mappedTree = new Tree(tree.getRoot().copy());
+		mappedTree.getRoot().sort();
 
 		intermediateStateProbs = new HashMap<>();
 		intermediateTimes = new HashMap<>();
@@ -365,9 +366,7 @@ public class MappedMascot extends Mascot implements Loggable {
 		double K = -Math.log(Randomizer.nextDouble());
 		double I = 0.0;
 		double currentTime = startTime;
-//		System.out.println(startTime);
-
-//		System.out.println(intermediateTimes.get(nodeNr));
+		
 		int currTimeInterval = intermediateTimes.get(nodeNr).indexOf(startTime);
 		if (currTimeInterval == -1) {
 			boolean cont = false;
@@ -389,70 +388,115 @@ public class MappedMascot extends Mascot implements Loggable {
 		double[] prob_start = intermediateStateProbs.get(nodeNr).get(currTimeInterval);
 
 		while (currentTime > endTime) {
+			
 			double[] prob_end = intermediateStateProbs.get(nodeNr).get(currTimeInterval - 1);
 
 			int currState = activeStates.get(index);
+			
+//			if (nodeNr==1)
+//				System.out.println(currState);
+			
 			double[] integral_state = new double[states];
+			
 			double dt = currentTime - intermediateTimes.get(nodeNr).get(currTimeInterval - 1);
+			
+//			ct += dt;
+			
 			double sumInt = 0;
 			for (int i = 0; i < states; i++) {
 				if (i != currState) {
-					double rates_start = migrationRates[i * states + currState] * prob_start[i] / prob_start[currState];
-					double rates_end = migrationRates[i * states + currState] * prob_end[i] / prob_end[currState];
+					double rates_start = migrationRates[i * states + currState] * 
+							prob_start[i] / prob_start[currState];
+					double rates_end = migrationRates[i * states + currState] * 
+							prob_end[i] / prob_end[currState];
 					
-					if (prob_start[currState]<=0 || prob_end[currState]<=0)
+					
+					if (prob_start[currState] <= 0 || prob_end[currState] <= 0) {
 						integral_state[i] = Double.POSITIVE_INFINITY;
-					else
+					}else if (prob_end[i]<=0 || prob_start[i] <= 0){
+						integral_state[i] = 0;
+					}else{
 						integral_state[i] = 0.5 * (rates_end + rates_start) * dt;
+					}
+
 					sumInt += integral_state[i];
 				}
 			}
-//			System.out.println(K);
-//			System.out.println(sumInt);
+			if (nodeNr==8) {
+//				System.out.println(sumInt + " " + K);
+			}
 
 			if ((I + sumInt) > K) {
 				// approximate the height of the new event
-				double intermediatePoint = (K - I) / sumInt;
-				currentTime = currentTime
-						- (currentTime - intermediateTimes.get(nodeNr).get(currTimeInterval - 1)) * intermediatePoint;
-				// update stateprobs for this point
-				for (int i = 0; i < states; i++)
-					prob_start[i] = (1 - intermediatePoint) * prob_start[i] + (intermediatePoint) * prob_end[i];
+				double intermediatePoint = Math.max(0.01, (K - I) / sumInt);
 				
-				int newState =-1;
+				currentTime = currentTime
+						- dt * (intermediatePoint);
+				
+//				// update stateprobs for this point
+				for (int i = 0; i < states; i++)
+					prob_start[i] = (intermediatePoint) * prob_start[i] + (1-intermediatePoint) * prob_end[i];
+				
+				int newState = -1;
 				boolean hasInf = false;
 				for (int i = 0; i < integral_state.length; i ++) {
-					if (integral_state[i]==Double.POSITIVE_INFINITY && prob_end[i]>0) {
+					if (integral_state[i] == Double.POSITIVE_INFINITY && prob_end[i] > 0) {
 						newState = i;
 						hasInf = true;
 					}
 				}
+				
 				// sample migration event
 				if (!hasInf)
 					newState = Randomizer.randomChoicePDF(integral_state);
 				
-				if (newState==currState)
+				if (newState == currState)
 					System.exit(0);
 				
-				// change states
-				Node n = mappedTree.getNode(nodeNr);
+			
+				// ad migration event
+				Node n = mappedTree.getNode(nodeNr);								
 				Node p = n.getParent();
-
+				
 				Node migNode = new Node();
+				migNode.setMetaData("location", currState);
 				migNode.setHeight(currentTime);
+				
+								
 				migNode.setParent(p);
 				migNode.addChild(n);
+
 
 				p.removeChild(n);
 				p.addChild(migNode);
 				
+
+				
+
 				n.setParent(migNode);
-				migNode.setMetaData("location", activeStates.get(index));
 				
 				activeStates.set(index, newState);
 
-				List<String> locs = new ArrayList<>();
-				locs.add("location");
+				
+//				if (nodeNr==1) {
+////					System.out.println(currState + " " + newState);
+//					System.out.println(n.getParent().getMetaData("location"));
+////					log(0,System.out);
+//					
+//					List<Function> metadata = parameterInput.get();
+//					for (int i = 0; i < metadata.size(); i++) {
+//						if (metadata.get(i) instanceof StateNode) {
+//							metadata.set(i, ((StateNode) metadata.get(i)).getCurrent());
+//						}
+//					}
+//					
+//					BranchRateModel.Base branchRateModel = clockModelInput.get();
+//					// write out the log tree with meta data
+//					root = mappedTree.getRoot();
+//
+//					System.out.println(toNewick(root, metadata, branchRateModel));
+//				}
+
 
 				// reset "timers"
 				K = -Math.log(Randomizer.nextDouble());
@@ -466,7 +510,12 @@ public class MappedMascot extends Mascot implements Loggable {
 				prob_start = intermediateStateProbs.get(nodeNr).get(currTimeInterval);
 				currentTime = intermediateTimes.get(nodeNr).get(currTimeInterval);
 			}
+//			if (nodeNr==8)
+//				System.out.println(I);
 		}
+//		System.exit(0);
+
+//		System.out.println(ct);
 	}
 
 	private void coalesceDown(int currTreeInterval) {
@@ -475,20 +524,24 @@ public class MappedMascot extends Mascot implements Loggable {
 
 		int lineageToAdd = tree.getNode(coalLines0).getParent().getNr();
 		
+		
 
 		int currState = activeStates.get(activeLineages.indexOf(lineageToAdd));
 		mappedTree.getNode(lineageToAdd).setMetaData("location", currState);
 		activeStates.remove(activeLineages.indexOf(lineageToAdd));
 		activeLineages.remove(activeLineages.indexOf(lineageToAdd));
 
+
 		activeLineages.add(coalLines0);
 		activeLineages.add(coalLines1);
 		activeStates.add(currState);
 		activeStates.add(currState);
+
 	}
 	
 
 	private void sampleDown(int currTreeInterval) {
+		
 		int incomingLines = treeIntervals.getLineagesAdded(currTreeInterval);
 		mappedTree.getNode(incomingLines).setMetaData("location", activeStates.get(activeLineages.indexOf(incomingLines)));
 		mappedTree.getNode(incomingLines).getMetaData("location");
@@ -543,7 +596,6 @@ public class MappedMascot extends Mascot implements Loggable {
 		BranchRateModel.Base branchRateModel = clockModelInput.get();
 		// write out the log tree with meta data
 		out.print("tree STATE_" + nSample + " = ");
-		mappedTree.getRoot().sort();
 		root = mappedTree.getRoot();
 		out.print(toNewick(root, metadata, branchRateModel));
 		out.print(";");
@@ -609,9 +661,12 @@ public class MappedMascot extends Mascot implements Loggable {
 				sampleState = Integer.parseInt(splits[splits.length - 1]); // samples states (or priors) should
 																			// eventually be specified in the XML
 			}
+			
+			if ( node.getMetaData("location")!=null) {
 			buf.append("[&");
 			buf.append(dynamics.typeTraitInput.getName() + "=" + dynamics.getStringStateValue((int) node.getMetaData("location")));
 			buf.append(']');
+			}
 
 		}
 
@@ -627,6 +682,10 @@ public class MappedMascot extends Mascot implements Loggable {
 	@Override
 	public void close(PrintStream out) {
 		mappedTree.close(out);
+	}
+
+	public int getNodeState(int nr) {
+		return (int) mappedTree.getNode(nr).getMetaData("location");
 	}
 
 }

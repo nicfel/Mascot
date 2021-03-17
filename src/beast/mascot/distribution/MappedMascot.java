@@ -371,7 +371,7 @@ public class MappedMascot extends Mascot implements Loggable {
 		if (currTimeInterval == -1) {
 			boolean cont = false;
 			for (int i = 0; i < intermediateTimes.get(nodeNr).size(); i++)
-				if (Math.abs(intermediateTimes.get(nodeNr).get(i) - startTime) < 1e-15) {
+				if (Math.abs(intermediateTimes.get(nodeNr).get(i) - startTime) < 1e-14) {
 					currTimeInterval = i;
 					cont = true;
 					break;
@@ -380,6 +380,9 @@ public class MappedMascot extends Mascot implements Loggable {
 			if (!cont) {
 				for (int i = 0; i < intermediateTimes.get(nodeNr).size(); i++)
 					System.err.println(intermediateTimes.get(nodeNr).get(i) - startTime);
+				
+//				System.out.println(mappedTree);
+				
 
 				throw new IllegalArgumentException("timing not found");
 			}
@@ -663,9 +666,10 @@ public class MappedMascot extends Mascot implements Loggable {
 			}
 			
 			if ( node.getMetaData("location")!=null) {
-			buf.append("[&");
-			buf.append(dynamics.typeTraitInput.getName() + "=" + dynamics.getStringStateValue((int) node.getMetaData("location")));
-			buf.append(']');
+				buf.append("[&");
+				buf.append(dynamics.typeTraitInput.getName() + "="
+						+ dynamics.getStringStateValue((int) node.getMetaData("location")));
+				buf.append(']');
 			}
 
 		}
@@ -679,6 +683,10 @@ public class MappedMascot extends Mascot implements Loggable {
 		return buf.toString();
 	}
 
+	public Node getRoot(){
+		return mappedTree.getRoot();
+	}
+	
 	@Override
 	public void close(PrintStream out) {
 		mappedTree.close(out);

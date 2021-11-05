@@ -6,7 +6,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jblas.DoubleMatrix;
+//import org.jblas.DoubleMatrix;
 
 import beast.core.CalculationNode;
 import beast.core.Description;
@@ -141,7 +141,7 @@ public class mappedProbLogger extends CalculationNode implements Loggable {
 //				System.out.println(node.getNr());
 //				System.out.println(node.getHeight());
 //				stl.log(0, System.out);
-				double[] probs = stl.getStateProbOnly(node.getNr()).toArray();
+				double[] probs = stl.getStateProbOnly(node.getNr());
 				for (int j = 0; j < probs.length; j++) {
 					buf.append("," + mappedInput.get().dynamics.getStringStateValue(j) + "=");
 					buf.append(probs[j]);					

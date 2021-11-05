@@ -3,7 +3,7 @@ package beast.mascot.distribution;
 
 import java.util.ArrayList;
 
-import org.jblas.DoubleMatrix;
+//import org.jblas.DoubleMatrix;
 
 import beast.core.CalculationNode;
 import beast.core.Citation;
@@ -39,7 +39,7 @@ public class Mascot extends StructuredTreeDistribution {
     
 	public int samples;
 	public int nrSamples;
-	public DoubleMatrix[] stateProbabilities;
+	public double[][] stateProbabilities;
     
 	protected int nrLineages;   
 
@@ -107,7 +107,7 @@ public class Mascot extends StructuredTreeDistribution {
     		tree = treeIntervals.treeInput.get();
     	}
     	treeIntervals.calculateIntervals();       
-    	stateProbabilities = new DoubleMatrix[treeIntervals.getSampleCount()];
+    	stateProbabilities = new double[treeIntervals.getSampleCount()][states];
         nrSamples = treeIntervals.getSampleCount() + 1;    
         states = dynamics.getDimension();
                 
@@ -290,6 +290,7 @@ public class Mascot extends StructuredTreeDistribution {
  	           	if (pos0 < 0 || pos1 < 0) {
  	           		System.out.println(coalLines0/*.getNr()*/ + " " + coalLines1/*.getNr()*/ + " " + activeLineages);
  	           		System.out.println("daughter lineages at coalescent event not found");
+// 	           		return Double.NEGATIVE_INFINITY;
  	           		throw new RuntimeException("coalesceX went wrong at 1");
  	           	}
  	           	if (pos0 > pos1) {
@@ -582,8 +583,10 @@ public class Mascot extends StructuredTreeDistribution {
 			System.exit(0);
 			return Double.NaN;
 		}
-		DoubleMatrix lambda = DoubleMatrix.zeros(states);
-		
+		double[] lambda = new double[states];
+		double lambdaSum = 0;
+		boolean isNegative = false;
+
 		/*
 		 * Calculate the overall probability for two strains to coalesce 
 		 * independent of the state at which this coalescent event is 
@@ -593,7 +596,10 @@ public class Mascot extends StructuredTreeDistribution {
         for (int k = 0; k < states; k++) { 
         	Double pairCoalRate = coalescentRates[k] * linProbs[daughterIndex1*states + k] * linProbs[daughterIndex2*states + k];			
 			if (!Double.isNaN(pairCoalRate)){
-				lambda.put(k, pairCoalRate);
+				lambda[k] =  pairCoalRate;
+				lambdaSum += pairCoalRate;
+				if (pairCoalRate<0)
+					isNegative = true;
 			} else {
 				return Double.NEGATIVE_INFINITY;
 			}
@@ -603,9 +609,9 @@ public class Mascot extends StructuredTreeDistribution {
         activeLineages.add(lineageToAdd);        
         
         // get the node state probabilities
-		DoubleMatrix pVec = new DoubleMatrix();
-		pVec.copy(lambda);
-		pVec = pVec.div(pVec.sum());
+		double[] pVec = new double[states];
+		for (int i = 0; i < pVec.length; i++)
+			pVec[i] = lambda[i]/lambdaSum;
 		
 		stateProbabilities[tree.getNode(coalLines0).getParent().getNr() - nrSamples] = pVec;
 		
@@ -623,7 +629,7 @@ public class Mascot extends StructuredTreeDistribution {
 		}
 		// add the parent lineage
 		for (int j = 0; j < states; j++){
-			linProbsNew[linCount*states + j] = pVec.get(j);
+			linProbsNew[linCount*states + j] = pVec[j];
 		}
 		// set p to pnew
 		//double [] tmp = linProbs;
@@ -643,29 +649,29 @@ public class Mascot extends StructuredTreeDistribution {
 			activeLineages.remove(daughterIndex1);			
 		}		
      
-		if (lambda.min()<0.0){
-			System.err.println("Coalescent probability is: " + lambda.min());
+		if (isNegative){
+			System.err.println("Coalescent probability is: " + Arrays.toString(lambda));
 			return Double.NEGATIVE_INFINITY;
 		}				
 		
 		// store the node
-        storeNode(currTreeInterval, currRatesInterval, linProbs, logP + Math.log(lambda.sum()), activeLineages, nextTreeEvent, nextRateShift, lineageToAdd);
+        storeNode(currTreeInterval, currRatesInterval, linProbs, logP + Math.log(lambdaSum), activeLineages, nextTreeEvent, nextRateShift, lineageToAdd);
 		
-		if (lambda.sum()==0)
+		if (lambdaSum==0)
 			return Double.NEGATIVE_INFINITY;
 		else
-			return Math.log(lambda.sum());
+			return Math.log(lambdaSum);
     }
      
   
-    public DoubleMatrix getStateProb(int nr){
+    public double[] getStateProb(int nr){
     	if (mascotImpl != null) {
     		return mascotImpl.getStateProb(nr);
     	}
     	return stateProbabilities[nr - nrSamples];
     }    
     
-    public DoubleMatrix getRootState(){
+    public double[] getRootState(){
     	if (mascotImpl != null) {
     		return mascotImpl.getRootState();
     	}

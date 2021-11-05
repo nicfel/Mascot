@@ -10,7 +10,7 @@ import java.util.Locale;
 import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 import org.apache.commons.math3.ode.FirstOrderIntegrator;
 import org.apache.commons.math3.ode.nonstiff.ClassicalRungeKuttaIntegrator;
-import org.jblas.DoubleMatrix;
+//import org.jblas.DoubleMatrix;
 
 import beast.core.Citation;
 import beast.core.Function;
@@ -206,19 +206,17 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         	if (!takeMax){	        
 		        buf.append("[&");
 		        
-		        DoubleMatrix stateProbs = new DoubleMatrix();
-		        
-	        	stateProbs = getStateProb(node.getNr());		        
+		        double[] stateProbs = getStateProb(node.getNr());		        
 		        
 		        for (int i = 0 ; i < states; i++)
-		        	buf.append(String.format(Locale.US, "%s=%.3f,", mascot.dynamicsInput.get().getStringStateValue(i), stateProbs.get(i)));
+		        	buf.append(String.format(Locale.US, "%s=%.3f,", mascot.dynamicsInput.get().getStringStateValue(i), stateProbs[i]));
 		        
 //		        buf.append(String.format("%.3f", stateProbs.get(states-1)));
 //		        buf.append("}");
 	        
 		        buf.append("max=");
 		        buf.append(String.format("%s", 
-		        		mascot.dynamicsInput.get().getStringStateValue(stateProbs.argmax())));
+		        		mascot.dynamicsInput.get().getStringStateValue(whichMax(stateProbs))));
 		        
 //		        if (node.getLeft().isLeaf()){
 //		        	buf.append(String.format("left=%d,", (int) mascot.dynamicsInput.get().typeTraitInput.get().getValue(node.getLeft().getID() )) );
@@ -239,11 +237,9 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 		        buf.append(']');
         	}else{
 		        buf.append("[&max" + type + "=");
-		        DoubleMatrix stateProbs = new DoubleMatrix();
-		        
-	        	stateProbs = getStateProb(node.getNr());
+		        double[] stateProbs = getStateProb(node.getNr());		        
 
-		        buf.append(String.format("%d", stateProbs.argmax() ));
+		        buf.append(String.format("%d", whichMax(stateProbs) ));
 		        
 		        if (branchRateModel != null) {
 		            buf.append(",rate=");
@@ -307,9 +303,9 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 	//===================================================
 	public int samples;
 	public int nrSamples;
-	public DoubleMatrix[] stateProbabilities;
-	public DoubleMatrix[] stateProbabilitiesDown;
-	public DoubleMatrix[] TransitionProbabilities;	  
+	public double[][] stateProbabilities;
+	public double[][] stateProbabilitiesDown;
+	public double[][][] TransitionProbabilities;	  
 	public int[] leftID;
 	public int[] rightID;
     
@@ -342,9 +338,9 @@ public class StructuredTreeLogger extends Tree implements Loggable {
     	rightID = new int[mascot.structuredTreeIntervalsInput.get().getSampleCount()];
 
     	
-    	stateProbabilities = new DoubleMatrix[mascot.structuredTreeIntervalsInput.get().getSampleCount()];
-    	stateProbabilitiesDown = new DoubleMatrix[mascot.structuredTreeIntervalsInput.get().getSampleCount()];
-    	TransitionProbabilities = new DoubleMatrix[mascot.structuredTreeIntervalsInput.get().getSampleCount()*2];        
+    	stateProbabilities = new double[mascot.structuredTreeIntervalsInput.get().getSampleCount()][];
+    	stateProbabilitiesDown = new double[mascot.structuredTreeIntervalsInput.get().getSampleCount()][];
+    	TransitionProbabilities = new double[mascot.structuredTreeIntervalsInput.get().getSampleCount()*2][][];        
         nrSamples = mascot.structuredTreeIntervalsInput.get().getSampleCount() + 1;        
 
     	
@@ -627,7 +623,8 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 			System.out.println("daughter lineages at coalescent event not found");
     		System.exit(0);
 		}
-		DoubleMatrix lambda = DoubleMatrix.zeros(states);
+		double[] lambda = new double[states];
+		double lambdaSum = 0;
 
 		/*
 		 * Calculate the overall probability for two strains to coalesce 
@@ -637,7 +634,8 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         for (int k = 0; k < states; k++) { 
         	Double pairCoalRate = coalescentRates[k] * linProbs[daughterIndex1*states + k] * linProbs[daughterIndex2*states + k];			
 			if (!Double.isNaN(pairCoalRate)){
-				lambda.put(k, pairCoalRate);
+				lambda[k] =  pairCoalRate;
+				lambdaSum += pairCoalRate;
 			}else{
 //	    		System.exit(0);
 			}
@@ -647,19 +645,21 @@ public class StructuredTreeLogger extends Tree implements Loggable {
         
         
         // get the node state probabilities
-		DoubleMatrix pVec = new DoubleMatrix();
-		pVec.copy(lambda);
-		pVec = pVec.div(pVec.sum());
+		double[] pVec = new double[states];
+		for (int i = 0; i < pVec.length; i++)
+			pVec[i] = lambda[i]/lambdaSum;
 		
 		// save the node states conditioned on the subtree
 		stateProbabilities[tree.getNode(coalLines[0]).getParent().getNr() - nrSamples] = pVec;
 
 		
 		// get the transition probabilities of daughter lineage 1
-		DoubleMatrix tP1 = DoubleMatrix.zeros(states,states);
+		double[][] tP1 = new double[states][states];
+		
 		for (int i = 0; i< states; i++){
 			for (int j = 0; j< states; j++){
-				tP1.put(i, j, transitionProbs[daughterIndex1*states*states+i*states+j]);
+				tP1[i][j] = transitionProbs[daughterIndex1*states*states+i*states+j];
+//				tP1.put(i, j, transitionProbs[daughterIndex1*states*states+i*states+j]);
 			}
 		}
 //		tP1.print();
@@ -676,10 +676,11 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 //		}
 		
 		// get the transition probabilities of daughter lineage 2
-		DoubleMatrix tP2 = DoubleMatrix.zeros(states,states);
+		double[][] tP2 = new double[states][states];
 		for (int i = 0; i< states; i++){
 			for (int j = 0; j< states; j++){
-				tP2.put(i, j, transitionProbs[daughterIndex2*states*states+i*states+j]);
+				tP2[i][j] = transitionProbs[daughterIndex2*states*states+i*states+j];
+//				tP2.put(i, j, transitionProbs[daughterIndex2*states*states+i*states+j]);
 			}
 		}	
 		
@@ -697,7 +698,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 		}
 		// add the parent lineage
 		for (int j = 0; j < states; j++){
-			linProbsNew[linCount*states + j] = pVec.get(j);
+			linProbsNew[linCount*states + j] = pVec[j];
 		}
 		// set p to pnew
 		linProbs = linProbsNew;	
@@ -762,21 +763,43 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 		Node parentNode = tree.getNode(parentLines);
 		
 		if (!parentNode.isRoot()){
-			DoubleMatrix start = stateProbabilities[parentNode.getNr() - nrSamples];
-			DoubleMatrix end = stateProbabilitiesDown[parentNode.getParent().getNr() - nrSamples];
-			DoubleMatrix flow = TransitionProbabilities[parentNode.getNr()];
-			DoubleMatrix otherSideInfo = end.div(start.transpose().mmul(flow));
-			// get rid of NaN from division by 0
-			for (int i = 0; i < otherSideInfo.length; i++)
-				if (Double.isNaN(otherSideInfo.get(i)))
-					otherSideInfo.put(i, 0.0);
-				
-				
-				
-			DoubleMatrix conditional = flow.mmul(otherSideInfo);
+			double[] start = stateProbabilities[parentNode.getNr() - nrSamples];
+			double[] end = stateProbabilitiesDown[parentNode.getParent().getNr() - nrSamples];
+			double[][] flow = TransitionProbabilities[parentNode.getNr()];
+			double[] otherSideInfo = new double[states];
+			for (int a = 0; a < states; a++) {
+				double sum = 0;
+				for (int b = 0; b < states; b++) { 
+					sum += start[b] * flow[b][a];
+				}
+				otherSideInfo[a] = end[a]/sum;
+				if (Double.isNaN(otherSideInfo[a]))
+					otherSideInfo[a] = 0;
+//				DoubleMatrix otherSideInfo = end.div(start.transpose().mmul(flow));
+			}
+//			// get rid of NaN from division by 0
+//			for (int i = 0; i < otherSideInfo.length; i++)
+//				if (Double.isNaN(otherSideInfo.get(i)))
+//					otherSideInfo.put(i, 0.0);
+
+			double[] conditional = new double[states];
+			double condsum = 0;
+			for (int a = 0; a < states; a++) {
+				double sum = 0;
+				for (int b = 0; b < states; b++) { 
+					sum += flow[a][b] * otherSideInfo[b];
+				}
+				conditional[a] = sum *start[a];
+				condsum += conditional[a];
+			}
+			for (int a = 0; a < states; a++)
+				conditional[a] /= condsum;
+
+
+//			DoubleMatrix conditional = flow.mmul(otherSideInfo);
 			
-			conditional = conditional.mul(start);
-			stateProbabilitiesDown[parentNode.getNr() - nrSamples] = conditional.div(conditional.sum());
+//			conditional = conditional.mul(start);
+			stateProbabilitiesDown[parentNode.getNr() - nrSamples] = conditional;
 //			if (!(conditional.get(0) >= 0.0 && conditional.get(0)<=1.0))
 //				conditional.print();
 		}else{
@@ -785,7 +808,7 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 	}
 
     
-	public DoubleMatrix getStateProb(int nr) {
+	public double[] getStateProb(int nr) {
 		if(useUpDown.get()){			
 			used[nr - nrSamples] = true;
 			return stateProbabilitiesDown[nr - nrSamples] ;
@@ -795,12 +818,24 @@ public class StructuredTreeLogger extends Tree implements Loggable {
 		}
 	}
 	
-	public DoubleMatrix getStateProbOnly(int nr) {
+	public double[] getStateProbOnly(int nr) {
 		if(useUpDown.get()){			
 			return stateProbabilitiesDown[nr - nrSamples] ;
 		}else{
 			return stateProbabilities[nr - nrSamples] ;
 		}
+	}
+	
+	public int whichMax(double[] stateProbs) {
+		double max_val = -1;
+		int max_ind = 1;
+		for (int i = 0; i < stateProbs.length;i++) {
+			if (stateProbs[i]>max_val) {
+				max_val = stateProbs[i];
+				max_ind = i;
+			}
+		}
+		return max_ind;
 	}
 
 	

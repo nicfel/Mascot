@@ -4,7 +4,7 @@ package beast.mascot.dynamics;
 import java.io.PrintStream;
 import java.util.Arrays;
 
-import org.jblas.DoubleMatrix;
+//import org.jblas.DoubleMatrix;
 
 import beast.core.Description;
 import beast.core.Input;

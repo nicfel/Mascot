@@ -2,7 +2,7 @@ package beast.mascot.logger;
 
 import java.io.PrintStream;
 
-import org.jblas.DoubleMatrix;
+//import org.jblas.DoubleMatrix;
 
 import beast.core.CalculationNode;
 import beast.core.Description;
@@ -24,7 +24,7 @@ public class RootStateLogger extends CalculationNode implements Loggable {
 	private int states;
 	@Override
 	public void init(PrintStream out) {
-		DoubleMatrix RootStates = mascotInput.get().getRootState();
+		double[] RootStates = mascotInput.get().getRootState();
 		states = RootStates.length;
 		for (int i = 0 ; i < states; i++){
 			out.print("RootProbability." + i + "\t");
@@ -34,10 +34,10 @@ public class RootStateLogger extends CalculationNode implements Loggable {
 
 	@Override
 	public void log(int sample, PrintStream out) {
-		DoubleMatrix RootStates = mascotInput.get().getRootState();
+		double[] RootStates = mascotInput.get().getRootState();
 		states = RootStates.length;
 		for (int i = 0 ; i < states; i++){
-			out.print(RootStates.get(i) + "\t");
+			out.print(RootStates[i] + "\t");
 		}
 	}
 

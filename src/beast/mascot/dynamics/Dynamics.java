@@ -74,7 +74,7 @@ public abstract class Dynamics extends CalculationNode  {
 	}
 
 
-	HashMap<String, Integer> traitToType = new HashMap<>(); 
+	protected HashMap<String, Integer> traitToType = new HashMap<>(); 
 	HashMap<Integer, String> reverseTraitToType;
 	
     @Override
@@ -178,6 +178,7 @@ public abstract class Dynamics extends CalculationNode  {
 	}
 
 	public int getValue(String id) {
+		System.out.println(id);
 		return traitToType.get(typeTraitInput.get().getStringValue(id));	
 	}
 		

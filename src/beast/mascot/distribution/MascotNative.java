@@ -5,7 +5,7 @@ package beast.mascot.distribution;
 import java.util.List;
 import java.util.Random;
 
-import org.jblas.DoubleMatrix;
+//import org.jblas.DoubleMatrix;
 
 import beast.core.Description;
 import beast.core.Distribution;
@@ -490,18 +490,18 @@ public class MascotNative extends Distribution {
     }
      
   
-    public DoubleMatrix getStateProb(int nr){
-    	DoubleMatrix p = new DoubleMatrix(states);
+    public double[] getStateProb(int nr){
+    	double[]  p = new double[states];
     	for (int i = 0; i < states; i++) {
-    		p.put(i, stateProbabilities[(nr - nrSamples) * states + i]);
+    		p[i] = stateProbabilities[(nr - nrSamples) * states + i];
     	}
     	return p;
     }    
     
-    public DoubleMatrix getRootState(){
-    	DoubleMatrix p = new DoubleMatrix(states);
+    public double[] getRootState(){
+    	double[]  p = new double[states];
     	for (int i = 0; i < states; i++) {
-    		p.put(i, stateProbabilities[(nrSamples-2) * states + i]);
+    		p[i] = stateProbabilities[(nrSamples-2) * states + i];
     	}
     	return p;
     }

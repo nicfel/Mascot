@@ -42,6 +42,9 @@ public class MappedMascot extends Mascot implements Loggable {
 
 	public Input<Double> maxIntegrationStepMappingInput = new Input<>("maxIntegrationStepMapping",
 			"maxIntegrationStepMappingas percentage of tree height", 0.001);
+	public Input<Double> maxDiffInput = new Input<>("maxDiff",
+			"maximial difference to be considered the same intermediate result", 1e-14);
+
 
 	public Input<BranchRateModel.Base> clockModelInput = new Input<BranchRateModel.Base>("branchratemodel",
 			"rate to be logged with branches of the tree");
@@ -106,7 +109,12 @@ public class MappedMascot extends Mascot implements Loggable {
 
 	public void calcForLogging(long sample) {
 		if (lastLog!=sample) {
-			calculateLogP();
+			try {
+				calculateLogP();
+			}catch (Exception e) {
+				System.out.println(e);
+				System.out.println(calculateLogP());
+			}
 			lastLog=sample;
 		}
 	}
@@ -384,7 +392,7 @@ public class MappedMascot extends Mascot implements Loggable {
 		if (currTimeInterval == -1) {
 			boolean cont = false;
 			for (int i = 0; i < intermediateTimes.get(nodeNr).size(); i++)
-				if (Math.abs(intermediateTimes.get(nodeNr).get(i) - startTime) < 1e-14) {
+				if (Math.abs(intermediateTimes.get(nodeNr).get(i) - startTime) < maxDiffInput.get()) {
 					currTimeInterval = i;
 					cont = true;
 					break;
@@ -403,7 +411,7 @@ public class MappedMascot extends Mascot implements Loggable {
 
 		double[] prob_start = intermediateStateProbs.get(nodeNr).get(currTimeInterval);
 
-		while (currentTime > (endTime+1e-14)) {
+		while (currentTime > (endTime+maxDiffInput.get())) {
 			
 			double[] prob_end = intermediateStateProbs.get(nodeNr).get(currTimeInterval - 1);
 
@@ -621,7 +629,12 @@ public class MappedMascot extends Mascot implements Loggable {
 //			System.out.println(lalala);
 			
 			buf.append("[&");
-			buf.append(dynamics.typeTraitInput.getName() + "=" + dynamics.getStringStateValue((int) node.getMetaData("location")));
+			try {
+				buf.append(dynamics.typeTraitInput.getName() + "=" + dynamics.getStringStateValue((int) node.getMetaData("location")));
+			}catch (Exception e) {
+				System.out.println(node.getMetaData("location"));
+				System.out.println(e);
+			}
 			
 		
 			if (branchRateModel != null) {
@@ -685,7 +698,13 @@ public class MappedMascot extends Mascot implements Loggable {
 
 			if (!node.isLeaf()) {
 				buf.append("[&");
-				buf.append(dynamics.typeTraitInput.getName() + "=" + dynamics.getStringStateValue((int) node.getMetaData("location")));
+				try {
+					buf.append(dynamics.typeTraitInput.getName() + "=" + dynamics.getStringStateValue((int) node.getMetaData("location")));
+				}catch (Exception e){
+					System.out.println(e);
+					throw new IllegalArgumentException("node not mapped");
+					
+				}
 				
 			
 				if (branchRateModel != null) {

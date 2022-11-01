@@ -178,7 +178,6 @@ public abstract class Dynamics extends CalculationNode  {
 	}
 
 	public int getValue(String id) {
-		System.out.println(id);
 		return traitToType.get(typeTraitInput.get().getStringValue(id));	
 	}
 		

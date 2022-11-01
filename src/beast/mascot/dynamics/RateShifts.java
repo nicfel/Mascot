@@ -67,7 +67,7 @@ public class RateShifts extends CalculationNode {
 		}else{
 			if (i==0)
 				return rateShifts[i]/2;
-			else
+			else	
 				return (rateShifts[i]+rateShifts[i-1])/2;
 					
 		}

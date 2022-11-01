@@ -161,7 +161,6 @@ public class CovariateListInputEditor extends InputEditor.Base {
 				}else {
 					covariateList.covariatesInput.get().get(i).transformed = (Boolean) table.getModel().getValueAt(i, 1);
 				}
-
 			}
 			
 			// add a transformation vector

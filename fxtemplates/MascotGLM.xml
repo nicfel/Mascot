@@ -1,0 +1,168 @@
+<beast version='2.0'
+       namespace='beast.app.beauti:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.branchratemodel:beast.base.evolution.speciation:beast.base.evolution.tree.coalescent:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.evolution:beast.base.math.distributions'>
+
+       <mergewith point='misc'>
+         <fragment id='MascotGLMClockParameters' spec="beastfx.app.beauti.Fragment">
+             <![CDATA[
+             <prior id='$(thisparam)GLMPrior.t:$(n)' x='@$(thisparam)GLM.t:$(n)'>
+               <distr spec="beast.base.inference.distribution.Exponential" mean='1'/>
+             </prior>
+             <operator id='$(thisparam)GLMScaler.t:$(n)' spec='ScaleOperator' scaleFactor="0.75" weight="3" parameter="@$(thisparam)GLM.t:$(n)"/>
+             ]]>
+
+             <connect srcID='$(thisparam)GLM.t:$(n)' targetID='state' inputName='stateNode'
+                      if='inposterior(Mascot.t:$(n))
+                      and inposterior(Tree.t:$(n))
+                      and inposterior($(thisparam)GLM.t:$(n))
+                      and inposterior(GLM.t:$(n))
+                      and $(thisparam)GLM.t:$(n)/estimate=true'/>
+            <connect srcID='$(thisparam)GLMPrior.t:$(n)' targetID='prior' inputName='distribution'
+                     if='inposterior(Mascot.t:$(n))
+                     and inposterior(Tree.t:$(n))
+                     and inposterior($(thisparam)GLM.t:$(n))
+                     and inposterior(GLM.t:$(n))
+                     and $(thisparam)GLM.t:$(n)/estimate=true'/>
+           <connect srcID='$(thisparam)GLMScaler.t:$(n)' targetID='mcmc' inputName='operator'
+                    if='inposterior(Mascot.t:$(n))
+                    and inposterior(Tree.t:$(n))
+                    and inposterior($(thisparam)GLM.t:$(n))
+                    and inposterior(GLM.t:$(n))
+                    and $(thisparam)GLM.t:$(n)/estimate=true'/>
+         </fragment>
+
+         <fragment id='MascotGLMScalerParameters' spec="beastfx.app.beauti.Fragment">
+             <![CDATA[
+             <prior id='$(thisparam)GLMPrior.t:$(n)' x='@$(thisparam)GLM.t:$(n)'>
+               <distr spec="beast.base.inference.distribution.Normal" mean='0' sigma='1'/>
+             </prior>
+             <operator id='$(thisparam)GLMScaler.t:$(n)' spec='RealRandomWalkOperator' windowSize="0.5" weight="3" parameter="@$(thisparam)GLM.t:$(n)"/>
+             ]]>
+
+             <connect srcID='$(thisparam)GLM.t:$(n)' targetID='state' inputName='stateNode'
+                      if='inposterior(Mascot.t:$(n))
+                      and inposterior(Tree.t:$(n))
+                      and inposterior($(thisparam)GLM.t:$(n))
+                      and inposterior(GLM.t:$(n))
+                      and $(thisparam)GLM.t:$(n)/estimate=true'/>
+            <connect srcID='$(thisparam)GLMPrior.t:$(n)' targetID='prior' inputName='distribution'
+                     if='inposterior(Mascot.t:$(n))
+                     and inposterior(Tree.t:$(n))
+                     and inposterior($(thisparam)GLM.t:$(n))
+                     and inposterior(GLM.t:$(n))
+                     and $(thisparam)GLM.t:$(n)/estimate=true'/>
+           <connect srcID='$(thisparam)GLMScaler.t:$(n)' targetID='mcmc' inputName='operator'
+                    if='inposterior(Mascot.t:$(n))
+                    and inposterior(Tree.t:$(n))
+                    and inposterior($(thisparam)GLM.t:$(n))
+                    and inposterior(GLM.t:$(n))
+                    and $(thisparam)GLM.t:$(n)/estimate=true'/>
+         </fragment>
+
+
+       <fragment id='MascotGLMIndicators' spec="beastfx.app.beauti.Fragment">
+           <![CDATA[
+           <prior id="$(thisparam)ActivePredictorsPrior.t:$(n)" name="distribution">
+               <x id="$(thisparam).sumActivePredictors.t:$(n)" spec="util.Sum">
+                   <arg idref="$(thisparam)GLM.t:$(n)"/>
+               </x>
+               <distr spec="beast.base.inference.distribution.Poisson" lambda='1' offset="0"/>
+           </prior>
+
+           <operator id='$(thisparam)GLMFlipper.t:$(n)' spec='BitFlipOperator' weight="3" parameter="@$(thisparam)GLM.t:$(n)"/>
+           ]]>
+
+           <connect srcID='$(thisparam)GLM.t:$(n)' targetID='state' inputName='stateNode'
+                    if='inposterior(Mascot.t:$(n))
+                    and inposterior(Tree.t:$(n))
+                    and inposterior($(thisparam)GLM.t:$(n))
+                    and inposterior(GLM.t:$(n))
+                    and $(thisparam)GLM.t:$(n)/estimate=true'/>
+          <connect srcID='$(thisparam)ActivePredictorsPrior.t:$(n)' targetID='prior' inputName='distribution'
+                   if='inposterior(Mascot.t:$(n))
+                   and inposterior(Tree.t:$(n))
+                   and inposterior($(thisparam)GLM.t:$(n))
+                   and inposterior(GLM.t:$(n))
+                   and $(thisparam)GLM.t:$(n)/estimate=true'/>
+         <connect srcID='$(thisparam)GLMFlipper.t:$(n)' targetID='mcmc' inputName='operator'
+                  if='inposterior(Mascot.t:$(n))
+                  and inposterior(Tree.t:$(n))
+                  and inposterior($(thisparam)GLM.t:$(n))
+                  and inposterior(GLM.t:$(n))
+                  and $(thisparam)GLM.t:$(n)/estimate=true'/>
+        <connect srcID='$(thisparam).sumActivePredictors.t:$(n)' targetID='tracelog' inputName='log'
+                   if='inposterior(Mascot.t:$(n))
+                   and inposterior(Tree.t:$(n))
+                   and inposterior($(thisparam)GLM.t:$(n))
+                   and inposterior(GLM.t:$(n))
+                   and $(thisparam)GLM.t:$(n)/estimate=true'/>
+
+       </fragment>
+     </mergewith>
+
+
+
+    <!-- tree priors -->
+    <mergewith point='treePriorTemplates'>
+      <subtemplate id='GLM' class='mascot.dynamics.GLM' mainid='GLM.t:$(n)'
+        suppressInputs="mascot.dynamics.GLM.migrationGLM.scaler"
+        inlineInputs="mascot.glmmodel.CovariateList.covariates">
+          <![CDATA[
+
+            <dynamics spec="mascot.dynamics.GLM" id="GLM.t:$(n)" dimension="-1" fromBeauti="true">
+                <migrationGLM id='migrationGLM.t:$(n)' spec="mascot.util.InitializedGlmModel">
+                  <covariateList id="migrationCovariates.t:$(n)" spec="mascot.util.InitializedCovariatesList" transform="@transformMigrationCovariates.t:$(n)"/>
+                  <scaler idref="migrationScalerGLM.t:$(n)"/>
+    							<clock idref="migrationClockGLM.t:$(n)"/>
+                  <indicator idref="migrationIndicatorGLM.t:$(n)"/>
+                </migrationGLM>
+                <NeGLM id='NeGLM.t:$(n)' spec="mascot.util.InitializedGlmModel">
+                  <covariateList id="NeCovariates.t:$(n)" spec="mascot.util.InitializedCovariatesList" transform="@transformNeCovariates.t:$(n)"/>
+                  <scaler idref="NeScalerGLM.t:$(n)"/>
+                  <clock idref="NeClockGLM.t:$(n)"/>
+                  <indicator idref="NeIndicatorGLM.t:$(n)"/>
+                </NeGLM>
+                <rateShifts id="rateShifts.t:$(n)" spec="mascot.util.InitializedRateShifts"/>
+                <typeTrait id="typeTraitSet.t:$(n)" spec="mascot.util.InitializedTraitSet" traitname="type">
+                    <taxa spec="beast.base.evolution.alignment.TaxonSet" alignment="@$(n)"/>
+                </typeTrait>
+            </dynamics>
+
+          <param id="transformMigrationCovariates.t:$(n)" spec="beast.base.inference.parameter.BooleanParameter" value="false" estimate="false"/>
+          <param id="transformNeCovariates.t:$(n)" spec="beast.base.inference.parameter.BooleanParameter" value="false" estimate="false"/>
+
+          <param id="migrationScalerGLM.t:$(n)" spec="beast.base.inference.parameter.RealParameter" value="0.0" estimate="true"/>
+          <param id="migrationClockGLM.t:$(n)" spec="beast.base.inference.parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
+          <param id="migrationIndicatorGLM.t:$(n)" spec="beast.base.inference.parameter.BooleanParameter" value="true" estimate="true"/>
+
+          <param id="NeScalerGLM.t:$(n)" spec="beast.base.inference.parameter.RealParameter" value="0.0" estimate="true"/>
+          <param id="NeClockGLM.t:$(n)" spec="beast.base.inference.parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
+          <param id="NeIndicatorGLM.t:$(n)" spec="beast.base.inference.parameter.BooleanParameter" value="true" estimate="true"/>
+
+          <plugin id='GLMRatesLogger.t:$(n)' spec='mascot.util.GLMLogger' glm='@GLM.t:$(n)'/>
+      ]]>
+
+      <connect srcID='migrationGLM.t:$(n)' targetID='tracelog' inputName='log'
+              if='inposterior(Mascot.t:$(n))
+              and inposterior(Tree.t:$(n))
+              and inposterior(migrationGLM.t:$(n))'/>
+
+      <connect srcID='NeGLM.t:$(n)' targetID='tracelog' inputName='log'
+              if='inposterior(Mascot.t:$(n))
+              and inposterior(Tree.t:$(n))
+              and inposterior(NeGLM.t:$(n))'/>
+
+      <connect srcID='GLMRatesLogger.t:$(n)' targetID='tracelog' inputName='log' if='inposterior(Mascot.t:$(n)) and inposterior(GLM.t:$(n))'/>
+
+      <plate fragment="TreeOperators" var="m" range="Mascot"/>
+
+      <plate fragment="MascotGLMClockParameters" var="thisparam" range="migrationClock,NeClock"/>
+      <plate fragment="MascotGLMScalerParameters" var="thisparam" range="migrationScaler,NeScaler"/>
+      <plate fragment="MascotGLMIndicators" var="thisparam" range="migrationIndicator,NeIndicator"/>
+
+      <!-- <plate fragment="MascotClockParameters" var="thisparam" range="migrationClockGLM"/> -->
+
+    </subtemplate>
+
+
+    </mergewith>
+</beast>

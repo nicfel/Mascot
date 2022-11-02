@@ -1,18 +1,18 @@
 package mascot.util;
 
-import beast.app.beauti.BeautiDoc;
-import beast.core.BEASTInterface;
-import beast.core.BEASTObject;
-import beast.core.MCMC;
-import beast.core.Operator;
-import beast.core.parameter.Parameter;
-import beast.core.parameter.RealParameter;
-import beast.evolution.likelihood.GenericTreeLikelihood;
-import beast.evolution.operators.UpDownOperator;
-import beast.evolution.tree.TraitSet;
-import beast.evolution.tree.Tree;
-import beast.mascot.dynamics.StructuredSkyline;
-import beast.mascot.parameterDynamics.NotSet;
+import beastfx.app.inputeditor.BeautiDoc;
+import beast.base.core.BEASTInterface;
+import beast.base.core.BEASTObject;
+import beast.base.inference.MCMC;
+import beast.base.inference.Operator;
+import beast.base.inference.parameter.Parameter;
+import beast.base.inference.parameter.RealParameter;
+import beast.base.evolution.likelihood.GenericTreeLikelihood;
+import beast.base.inference.operator.UpDownOperator;
+import beast.base.evolution.tree.TraitSet;
+import beast.base.evolution.tree.Tree;
+import mascot.dynamics.StructuredSkyline;
+import mascot.parameterdynamics.NotSet;
 
 import java.util.*;
 

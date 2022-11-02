@@ -1,0 +1,110 @@
+<beast version='2.0'
+       namespace='beast.app.beauti:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.branchratemodel:beast.base.evolution.speciation:beast.base.evolution.tree.coalescent:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.evolution:beast.base.math.distributions'>
+       <mergewith point='misc'>
+         <fragment id='MascotConstantBSSVSParameters' spec="beastfx.app.beauti.Fragment">
+             <![CDATA[
+             <prior id='$(thisparam)ConstantBSSVSPrior.t:$(n)' x='@$(thisparam)ConstantBSSVS.t:$(n)'>
+               <distr spec="beast.base.inference.distribution.Exponential" mean='1'/>
+             </prior>
+             <operator id='$(thisparam)ConstantBSSVSScaler.t:$(n)' spec='ScaleOperator' scaleFactor="0.75" weight="3" parameter="@$(thisparam)ConstantBSSVS.t:$(n)"/>
+             ]]>
+
+             <connect srcID='$(thisparam)ConstantBSSVS.t:$(n)' targetID='state' inputName='stateNode'
+                      if='inposterior(Mascot.t:$(n))
+                      and inposterior(Tree.t:$(n))
+                      and inposterior($(thisparam)ConstantBSSVS.t:$(n))
+                      and inposterior(ConstantBSSVS.t:$(n))
+                      and $(thisparam)ConstantBSSVS.t:$(n)/estimate=true'/>
+            <connect srcID='$(thisparam)ConstantBSSVSPrior.t:$(n)' targetID='prior' inputName='distribution'
+                     if='inposterior(Mascot.t:$(n))
+                     and inposterior(Tree.t:$(n))
+                     and inposterior($(thisparam)ConstantBSSVS.t:$(n))
+                     and inposterior(ConstantBSSVS.t:$(n))
+                     and $(thisparam)ConstantBSSVS.t:$(n)/estimate=true'/>
+           <connect srcID='$(thisparam)ConstantBSSVSScaler.t:$(n)' targetID='mcmc' inputName='operator'
+                    if='inposterior(Mascot.t:$(n))
+                    and inposterior(Tree.t:$(n))
+                    and inposterior($(thisparam)ConstantBSSVS.t:$(n))
+                    and inposterior(ConstantBSSVS.t:$(n))
+                    and $(thisparam)ConstantBSSVS.t:$(n)/estimate=true'/>
+         </fragment>
+       </mergewith>
+
+
+    <!-- tree priors -->
+    <mergewith point='treePriorTemplates'>
+      <subtemplate id='ConstantBSSVS' class='mascot.dynamics.ConstantBSSVS' mainid='ConstantBSSVS.t:$(n)'
+        suppressInputs=""
+        inlineInputs="mascot.distribution.Mascot.dynamics">
+          <![CDATA[
+
+            <dynamics spec="mascot.dynamics.ConstantBSSVS" id="ConstantBSSVS.t:$(n)" dimension="-1">
+                <Ne idref='NeConstantBSSVS.t:$(n)'/>
+                <backwardsMigration idref='relativeMigrationRatesConstantBSSVS.t:$(n)'/>
+                <migrationClock idref='migrationClockConstantBSSVS.t:$(n)'/>
+                <indicators idref='indicatorsConstantBSSVS.t:$(n)'/>
+                <typeTrait id="typeTraitSet.t:$(n)" spec="mascot.util.InitializedTraitSet" traitname="type">
+                    <taxa spec="beast.base.evolution.alignment.TaxonSet" alignment="@$(n)"/>
+                </typeTrait>
+            </dynamics>
+
+          <param id="NeConstantBSSVS.t:$(n)" spec="beast.base.inference.parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
+          <param id="relativeMigrationRatesConstantBSSVS.t:$(n)" spec="beast.base.inference.parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
+          <param id="migrationClockConstantBSSVS.t:$(n)" spec="beast.base.inference.parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
+
+
+          <param id="indicatorsConstantBSSVS.t:$(n)" spec="beast.base.inference.parameter.BooleanParameter" value="true" estimate="true"/>
+
+
+          <prior id="nonZeroRatePrior.t:$(n)">
+            <x id="sumNonZeroRates.t:$(n)" spec="util.Sum">
+                <arg idref="indicatorsConstantBSSVS.t:$(n)"/>
+            </x>
+            <distr spec="beast.base.inference.distribution.Poisson" lambda='1' offset="1"/>
+          </prior>
+
+          <scale id="indicatorFlip.t:$(n)" spec="BitFlipOperator" parameter="@indicatorsConstantBSSVS.t:$(n)" weight="3"/>
+
+      ]]>
+
+      <plate fragment="MascotConstantBSSVSParameters" var="thisparam" range="relativeMigrationRates,migrationClock,Ne"/>
+
+      <connect srcID='indicatorsConstantBSSVS.t:$(n)' targetID='state' inputName='stateNode'
+               if='inposterior(Mascot.t:$(n))
+               and inposterior(Tree.t:$(n))
+               and inposterior(indicatorsConstantBSSVS.t:$(n))
+               and inposterior(ConstantBSSVS.t:$(n))
+               and indicatorsConstantBSSVS.t:$(n)/estimate=true'/>
+     <connect srcID='nonZeroRatePrior.t:$(n)' targetID='prior' inputName='distribution'
+              if='inposterior(Mascot.t:$(n))
+              and inposterior(Tree.t:$(n))
+              and inposterior(indicatorsConstantBSSVS.t:$(n))
+              and inposterior(ConstantBSSVS.t:$(n))
+              and indicatorsConstantBSSVS.t:$(n)/estimate=true'/>
+    <connect srcID='indicatorFlip.t:$(n)' targetID='mcmc' inputName='operator'
+             if='inposterior(Mascot.t:$(n))
+             and inposterior(Tree.t:$(n))
+             and inposterior(indicatorsConstantBSSVS.t:$(n))
+             and inposterior(ConstantBSSVS.t:$(n))
+             and indicatorsConstantBSSVS.t:$(n)/estimate=true'/>
+     <connect srcID="ConstantBSSVS.t:$(n)" targetID="tracelog" inputName="log"
+            if="inposterior(Mascot.t:$(n))
+            and inposterior(ConstantBSSVS.t:$(n))
+            and inposterior(Tree.t:$(n))"/>
+      <connect srcID='sumNonZeroRates.t:$(n)' targetID='tracelog' inputName='log'
+             if='inposterior(Mascot.t:$(n))
+             and inposterior(Tree.t:$(n))
+             and inposterior(indicatorsConstantBSSVS.t:$(n))
+             and inposterior(ConstantBSSVS.t:$(n))
+             and indicatorsConstantBSSVS.t:$(n)/estimate=true'/>
+
+
+
+
+
+
+    </subtemplate>
+
+
+    </mergewith>
+</beast>

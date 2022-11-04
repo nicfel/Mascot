@@ -1,14 +1,12 @@
 package mascot.app.beauti;
 
-
-
-import javax.swing.Box;
-import javax.swing.JButton;
-
-import beastfx.app.inputeditor.BeautiDoc;
-import beastfx.app.inputeditor.BEASTObjectInputEditor;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
+import beastfx.app.inputeditor.BEASTObjectInputEditor;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.util.FXUtils;
+import javafx.scene.control.Button;
+import javafx.scene.layout.HBox;
 import mascot.dynamics.GLM;
 
 public class GLMInputEditor extends BEASTObjectInputEditor {
@@ -27,29 +25,29 @@ public class GLMInputEditor extends BEASTObjectInputEditor {
 	@Override
 	public void init(Input<?> input, BEASTInterface beastObject, int itemNr, ExpandOption bExpandOption,
 			boolean addButtons) {
-		
+		super.init(input, beastObject, itemNr, ExpandOption.TRUE, addButtons);
+
 		dyn = (GLM) input.get();
 
-		JButton updateButton = new JButton("Update settings");
+		Button updateButton = new Button("Update settings");
 
-		
 		// adds a new dummy variable to the covariates list
-		updateButton.addActionListener(e -> {
+		updateButton.setOnAction(e -> {
 			dyn.initAndValidate();
 			super.init(input, beastObject, itemNr, bExpandOption, addButtons);
 			refreshPanel();
 		});
 
-		Box boxVert = Box.createVerticalBox();
+//		VBox boxVert = FXUtils.newVBox();
 
-		Box boxHoriz = Box.createHorizontalBox();
-		boxHoriz.add(Box.createHorizontalGlue());
-		boxHoriz.add(updateButton);
-		boxVert.add(boxHoriz);
-		
-		add(boxHoriz);
+		HBox boxHoriz = FXUtils.newHBox();
+//        boxHoriz.add(Box.createHorizontalGlue());
+		boxHoriz.getChildren().add(updateButton);
+//		boxVert.getChildren().add(boxHoriz);
 
+		this.pane = FXUtils.newHBox();
+		getChildren().add(pane);
 
-		super.init(input, beastObject, itemNr, bExpandOption, addButtons);
+		pane.getChildren().add(boxHoriz);
 	}
 }

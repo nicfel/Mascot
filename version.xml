@@ -1,4 +1,4 @@
-<package name='Mascot' version='2.3.0'>
+<package name='Mascot' version='3.0.0'>
   <depends on='BEAST.base' atleast='2.7.2'/>
   <depends on='BEAST.app' atleast='2.7.2'/>
 
@@ -10,7 +10,7 @@
           <provider classname="mascot.app.beauti.NeDynamicsInputEditor"/>
           <provider classname="mascot.app.beauti.NeDynamicsListInputEditor"/>
           <provider classname="mascot.app.beauti.RateShiftInputEditor"/>
-          <provider classname="mascot.app.beauti.TypeTraitSetInputEditor"/>
+<!--          <provider classname="beastfx.app.beauti.TypeTraitSetInputEditor"/>-->
     </service>
 
 

@@ -1,22 +1,22 @@
 package mascot.app.beauti;
 
+import beast.base.core.BEASTInterface;
+import beast.base.core.Input;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.inputeditor.InputEditor;
+import beastfx.app.util.FXUtils;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import mascot.dynamics.RateShifts;
+
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JTextField;
-
-import beastfx.app.inputeditor.BeautiDoc;
-import beastfx.app.inputeditor.InputEditor;
-import beast.base.core.BEASTInterface;
-import beast.base.core.Input;
-import mascot.dynamics.RateShifts;
 
 public class RateShiftInputEditor extends InputEditor.Base {
 
@@ -38,47 +38,53 @@ public class RateShiftInputEditor extends InputEditor.Base {
 		rateShifts = (RateShifts) input.get();
     	rateShifts.dateTimeFormatInput.setValue("decimal", rateShifts);
 
-		JButton updateButton = new JButton("Compute rate shifts");
+		Button updateButton = new Button("Compute rate shifts");
 		
-		JLabel FormatLabel = new JLabel("Date format");
+		Label FormatLabel = new Label("Date format");//TODO not used?
 
-        String[] dateFormatExamples = {
-        		"decimal",
-                "dd/M/yyyy",
-                "M/dd/yyyy",
-                "yyyy/M/dd",
-                "dd-M-yyyy",
-                "M-dd-yyyy",
-                "yyyy-M-dd"};
-        
-        JComboBox dateFormatComboBox = new JComboBox<>(dateFormatExamples);
-        dateFormatComboBox.setToolTipText("Set format used to parse date values");
+		ObservableList<String> dateFormatExamples = FXCollections.observableArrayList();
+		dateFormatExamples.addAll(List.of(
+				"decimal",
+				"dd/M/yyyy",
+				"M/dd/yyyy",
+				"yyyy/M/dd",
+				"dd-M-yyyy",
+				"M-dd-yyyy",
+				"yyyy-M-dd"));
+
+        ComboBox<String> dateFormatComboBox = new ComboBox<>(dateFormatExamples);
+        dateFormatComboBox.setTooltip(new Tooltip("Set format used to parse date values"));
         dateFormatComboBox.setEditable(true);
-        dateFormatComboBox.setMaximumSize(dateFormatComboBox.getPreferredSize());
-        dateFormatComboBox.setSelectedItem(dateFormatComboBox.getSelectedItem());        
+//        dateFormatComboBox.setMaximumSize(dateFormatComboBox.getPreferredSize());
+//        dateFormatComboBox.setSelectedItem(dateFormatComboBox.getSelectedItem());
         
-        dateFormatComboBox.addActionListener(e -> {
-        	rateShifts.dateTimeFormatInput.setValue(dateFormatComboBox.getSelectedItem(), rateShifts);
+        dateFormatComboBox.setOnAction(e -> {
+        	rateShifts.dateTimeFormatInput.setValue(dateFormatComboBox.getSelectionModel().getSelectedItem(), rateShifts);
         	System.out.println(rateShifts.dateTimeFormatInput.get());
         });    
 		
-		JLabel mrsiLabel = new JLabel("Most Recent Sample");
-		JLabel fromLabel = new JLabel("From");
-		JLabel toLabel = new JLabel("To (further in the past)");
-		JLabel intervalLabel = new JLabel("interval length");
-		JLabel ratesShiftsLabel = new JLabel("rateShifts");
+		Label mrsiLabel = new Label("Most Recent Sample");
+		Label fromLabel = new Label("From");
+		Label toLabel = new Label("To (further in the past)");
+		Label intervalLabel = new Label("interval length");
+		Label ratesShiftsLabel = new Label("rateShifts");
 
-		JTextField mrsiField = new JTextField(10);
-		JTextField fromField = new JTextField(10);
-		JTextField toField = new JTextField(10);
-		JTextField intervalField = new JTextField(5);
+		TextField mrsiField = new TextField();
+		mrsiField.setPrefColumnCount(10);
+		TextField fromField = new TextField();
+		fromField.setPrefColumnCount(10);
+		TextField toField = new TextField();
+		toField.setPrefColumnCount(10);
+		TextField intervalField = new TextField();
+		intervalField.setPrefColumnCount(5);
 		
 		mrsiField.setEditable(true);
 		fromField.setEditable(true);
 		toField.setEditable(true);
 		intervalField.setEditable(true);		
 		
-		JTextField timeIntervals = new JTextField(30);
+		TextField timeIntervals = new TextField();
+		timeIntervals.setPrefColumnCount(30);
 		if (rateShifts.valuesInput.get()==null)
 			timeIntervals.setText("not computed yet");
 		else
@@ -91,39 +97,42 @@ public class RateShiftInputEditor extends InputEditor.Base {
 		
 		
 		// adds a new dummy variable to the covariates list
-		updateButton.addActionListener(e -> {
+		updateButton.setOnAction(e -> {
     		rateShifts.valuesInput.setValue(updateRatesShifts(fromField.getText(), toField.getText(), mrsiField.getText(), intervalField.getText()), rateShifts);
 			refreshPanel();
 		});
 
-		Box boxVert = Box.createVerticalBox();
+		VBox boxVert = FXUtils.newVBox();
 
-		Box boxHoriz = Box.createHorizontalBox();
-		boxHoriz.add(Box.createHorizontalGlue());
-		boxHoriz.add(mrsiLabel);
-		boxHoriz.add(mrsiField);
-		boxHoriz.add(fromLabel);
-		boxHoriz.add(fromField);
-		boxHoriz.add(toLabel);
-		boxHoriz.add(toField);
-		boxHoriz.add(intervalLabel);
-		boxHoriz.add(intervalField);
-		
-		Box boxHoriz2 = Box.createHorizontalBox();
-		boxHoriz2.add(Box.createHorizontalGlue());
-		boxHoriz2.add(ratesShiftsLabel);
-		boxHoriz2.add(timeIntervals);
-		
-		Box boxHoriz3 = Box.createHorizontalBox();
-		boxHoriz3.add(Box.createHorizontalGlue());
-		boxHoriz3.add(updateButton);
-		boxHoriz3.add(dateFormatComboBox);
+		HBox boxHoriz = FXUtils.newHBox();
+//		boxHoriz.add(Box.createHorizontalGlue());
+		boxHoriz.getChildren().add(mrsiLabel);
+		boxHoriz.getChildren().add(mrsiField);
+		boxHoriz.getChildren().add(fromLabel);
+		boxHoriz.getChildren().add(fromField);
+		boxHoriz.getChildren().add(toLabel);
+		boxHoriz.getChildren().add(toField);
+		boxHoriz.getChildren().add(intervalLabel);
+		boxHoriz.getChildren().add(intervalField);
 
-		boxVert.add(boxHoriz3);
-		boxVert.add(boxHoriz);
-		boxVert.add(boxHoriz2);		
-		
-		add(boxVert);
+		HBox boxHoriz2 = FXUtils.newHBox();
+//		boxHoriz2.add(Box.createHorizontalGlue());
+		boxHoriz2.getChildren().add(ratesShiftsLabel);
+		boxHoriz2.getChildren().add(timeIntervals);
+
+		HBox boxHoriz3 = FXUtils.newHBox();
+//		boxHoriz3.add(Box.createHorizontalGlue());
+		boxHoriz3.getChildren().add(updateButton);
+		boxHoriz3.getChildren().add(dateFormatComboBox);
+
+		boxVert.getChildren().add(boxHoriz3);
+		boxVert.getChildren().add(boxHoriz);
+		boxVert.getChildren().add(boxHoriz2);
+
+		this.pane = FXUtils.newHBox();
+		getChildren().add(pane);
+
+		pane.getChildren().add(boxVert);
 
 	}
 	

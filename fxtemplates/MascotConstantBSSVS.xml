@@ -1,6 +1,14 @@
-<beast version='2.0'
-       namespace='beast.app.beauti:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.branchratemodel:beast.base.evolution.speciation:beast.base.evolution.tree.coalescent:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.evolution:beast.base.math.distributions'>
-       <mergewith point='misc'>
+<beast version='2.7'
+       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:
+       beast.base.evolution.branchratemodel:beast.base.evolution.speciation:
+       beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:
+       beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:
+       beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:
+       beast.evolution:beast.base.math.distributions:
+       mascot.distribution:mascot.dynamics:mascot.glmmodel:mascot.logger:mascot.mapped:
+       mascot.ode:mascot.operators:mascot.parameterdynamics:mascot.skyline:mascot.util'>
+
+    <mergewith point='misc'>
          <fragment id='MascotConstantBSSVSParameters' spec="beastfx.app.beauti.Fragment">
              <![CDATA[
              <prior id='$(thisparam)ConstantBSSVSPrior.t:$(n)' x='@$(thisparam)ConstantBSSVS.t:$(n)'>
@@ -57,7 +65,7 @@
 
 
           <prior id="nonZeroRatePrior.t:$(n)">
-            <x id="sumNonZeroRates.t:$(n)" spec="util.Sum">
+            <x id="sumNonZeroRates.t:$(n)" spec="beast.base.evolution.Sum">
                 <arg idref="indicatorsConstantBSSVS.t:$(n)"/>
             </x>
             <distr spec="beast.base.inference.distribution.Poisson" lambda='1' offset="1"/>

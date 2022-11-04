@@ -1,20 +1,13 @@
 package mascot.app.beauti;
 
 
-
-import java.awt.Component;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.Box;
-import javax.swing.JButton;
-
-import beastfx.app.inputeditor.BeautiDoc;
-import beastfx.app.inputeditor.InputEditor;
-import beastfx.app.inputeditor.ListInputEditor;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.inputeditor.ListInputEditor;
 import mascot.parameterdynamics.EffectivePopulationSizeDynamics;
+
+import java.util.List;
 
 
 
@@ -47,13 +40,13 @@ public class NeDynamicsListInputEditor extends ListInputEditor {
     }
 
 
-    /**
+    /**TODO
      * add components to box that are specific for the beastObject.
      * By default, this just inserts a label with the beastObject ID
      *
      * @param itemBox box to add components to
      * @param beastObject  beastObject to add
-     */
+
     @Override
     protected InputEditor addPluginItem(Box itemBox, BEASTInterface beastObject) {
 		try {
@@ -66,7 +59,7 @@ public class NeDynamicsListInputEditor extends ListInputEditor {
 			e.printStackTrace();
 		}
 		return this;
-    }	
+    }	*/
 
     @Override
     protected void addItem() {

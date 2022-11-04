@@ -1,5 +1,12 @@
-<beast version='2.0'
-       namespace='beast.app.beauti:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.branchratemodel:beast.base.evolution.speciation:beast.base.evolution.tree.coalescent:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.evolution:beast.base.math.distributions'>
+<beast version='2.7'
+       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:
+       beast.base.evolution.branchratemodel:beast.base.evolution.speciation:
+       beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:
+       beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:
+       beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:
+       beast.evolution:beast.base.math.distributions:
+       mascot.distribution:mascot.dynamics:mascot.glmmodel:mascot.logger:mascot.mapped:
+       mascot.ode:mascot.operators:mascot.parameterdynamics:mascot.skyline:mascot.util'>
 
        <mergewith point='misc'>
          <fragment id='MascotGLMClockParameters' spec="beastfx.app.beauti.Fragment">
@@ -62,7 +69,7 @@
        <fragment id='MascotGLMIndicators' spec="beastfx.app.beauti.Fragment">
            <![CDATA[
            <prior id="$(thisparam)ActivePredictorsPrior.t:$(n)" name="distribution">
-               <x id="$(thisparam).sumActivePredictors.t:$(n)" spec="util.Sum">
+               <x id="$(thisparam).sumActivePredictors.t:$(n)" spec="beast.base.evolution.Sum">
                    <arg idref="$(thisparam)GLM.t:$(n)"/>
                </x>
                <distr spec="beast.base.inference.distribution.Poisson" lambda='1' offset="0"/>

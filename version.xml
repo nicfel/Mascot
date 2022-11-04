@@ -10,7 +10,7 @@
           <provider classname="mascot.app.beauti.NeDynamicsInputEditor"/>
           <provider classname="mascot.app.beauti.NeDynamicsListInputEditor"/>
           <provider classname="mascot.app.beauti.RateShiftInputEditor"/>
-<!--          <provider classname="beastfx.app.beauti.TypeTraitSetInputEditor"/>-->
+          <provider classname="beastfx.app.inputeditor.TypeTraitSetInputEditor"/>
     </service>
 
 

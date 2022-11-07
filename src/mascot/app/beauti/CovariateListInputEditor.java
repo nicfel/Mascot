@@ -90,10 +90,10 @@ public class CovariateListInputEditor extends InputEditor.Base {
 					else
 						error = covariateList.initNeFromRawValues(covariateList.covariatesInput.get().size()-1);
 					
-					if (!error.contentEquals("")) {//TODO
-//						Alert.showMessageDialog(this,
-//								error,"Predictor parsing error",
-//								Alert.ERROR_MESSAGE);
+					if (!error.contentEquals("")) {
+						beastfx.app.util.Alert.showMessageDialog(this,
+								error,"Predictor parsing error",
+								beastfx.app.util.Alert.ERROR_MESSAGE);
 					}
 				} catch (IOException ex) {
 					ex.printStackTrace();
@@ -120,7 +120,6 @@ public class CovariateListInputEditor extends InputEditor.Base {
 //		boxHoriz.add(Box.createHorizontalGlue());
 		boxVert.getChildren().add(boxHoriz);
 
-//		JTable table = new JTable(data, columnNames);
 		table = new TableView<>();
 		table.setEditable(true);
 		table.setPrefWidth(600);
@@ -156,7 +155,7 @@ public class CovariateListInputEditor extends InputEditor.Base {
 		TableColumn<CovariateRow, Boolean> column4 = new TableColumn<>("remove predictor");
 		column4.setPrefWidth(100);
 		column4.setEditable(true);
-		column4.setCellValueFactory(new PropertyValueFactory<>("removPredictor"));
+		column4.setCellValueFactory(new PropertyValueFactory<>("removePredictor"));
 		column4.setCellFactory(CheckBoxTableCell.forTableColumn(column4));
 		column4.setOnEditCommit(
 				t -> t.getTableView().getItems().

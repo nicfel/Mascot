@@ -7,8 +7,8 @@
     <service type="beastfx.app.inputeditor.InputEditor">
           <provider classname="mascot.app.beauti.CovariateListInputEditor"/>
           <provider classname="mascot.app.beauti.GLMInputEditor"/>
-          <provider classname="mascot.app.beauti.NeDynamicsInputEditor"/>
-          <provider classname="mascot.app.beauti.NeDynamicsListInputEditor"/>
+<!--          <provider classname="mascot.app.beauti.NeDynamicsInputEditor"/>-->
+<!--          <provider classname="mascot.app.beauti.NeDynamicsListInputEditor"/>-->
           <provider classname="mascot.app.beauti.RateShiftInputEditor"/>
           <provider classname="beastfx.app.inputeditor.TypeTraitSetInputEditor"/>
     </service>

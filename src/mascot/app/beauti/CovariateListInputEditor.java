@@ -5,12 +5,13 @@ import beast.base.core.Input;
 import beast.base.inference.parameter.BooleanParameter;
 import beastfx.app.inputeditor.BeautiDoc;
 import beastfx.app.inputeditor.InputEditor;
-import beastfx.app.util.Alert;
 import beastfx.app.util.FXUtils;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import mascot.glmmodel.Covariate;
@@ -26,9 +27,9 @@ import java.util.List;
 
 public class CovariateListInputEditor extends InputEditor.Base {
 //	CovariateList covariateList;
-	private ObservableList<CovariateWrapper> covariateObList;
+	private ObservableList<CovariateRow> covariateObList;
 
-	TableView<CovariateWrapper> table;
+	TableView<CovariateRow> table;
 
 	public CovariateListInputEditor(BeautiDoc doc) {
 		super(doc);
@@ -43,7 +44,10 @@ public class CovariateListInputEditor extends InputEditor.Base {
 	public void init(Input<?> input, BEASTInterface beastObject, int itemNr, ExpandOption bExpandOption,
 			boolean addButtons) {
 		super.init(input, beastObject, itemNr, ExpandOption.TRUE, addButtons);
+		pane.getChildren().clear();
+		pane = FXUtils.newHBox();
 
+		covariateObList = FXCollections.observableArrayList();
 		CovariateList covariateList = (CovariateList) input.get();
 
 //TODO not used. What they do?
@@ -86,10 +90,10 @@ public class CovariateListInputEditor extends InputEditor.Base {
 					else
 						error = covariateList.initNeFromRawValues(covariateList.covariatesInput.get().size()-1);
 					
-					if (!error.contentEquals("")) {
-						Alert.showMessageDialog(this,
-								error,"Predictor parsing error",
-								Alert.ERROR_MESSAGE);
+					if (!error.contentEquals("")) {//TODO
+//						Alert.showMessageDialog(this,
+//								error,"Predictor parsing error",
+//								Alert.ERROR_MESSAGE);
 					}
 				} catch (IOException ex) {
 					ex.printStackTrace();
@@ -103,18 +107,10 @@ public class CovariateListInputEditor extends InputEditor.Base {
 			}
 
 			//TODO update table
-
+			covariateToCovariateRow(covariateList);
+			table.refresh();
 			refreshPanel();
 		});
-
-//		String[] columnNames = { "predictor name", "transform", "time dependent", "remove predictor" };
-//		Object[][] data = new Object[covariateList.covariatesInput.get().size()][4];
-//		for (int i = 0; i < covariateList.covariatesInput.get().size(); i++) {
-//			data[i][0] = covariateList.covariatesInput.get().get(i).getID();
-//			data[i][1] = covariateList.covariatesInput.get().get(i).transformed;
-//			data[i][2] = covariateList.covariatesInput.get().get(i).isTimeDependent;
-//			data[i][3] = false;
-//		}
 
 		VBox boxVert = FXUtils.newVBox();
 
@@ -127,42 +123,53 @@ public class CovariateListInputEditor extends InputEditor.Base {
 //		JTable table = new JTable(data, columnNames);
 		table = new TableView<>();
 		table.setEditable(true);
-		table.setPrefWidth(1024);
+		table.setPrefWidth(600);
 		table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-		TableColumn<CovariateWrapper, String> column1 = new TableColumn<>("predictor name");
-		column1.setCellValueFactory(new PropertyValueFactory<>("name"));
+		TableColumn<CovariateRow, String> column1 = new TableColumn<>("predictor name");
+		column1.setCellValueFactory(new PropertyValueFactory<>("id"));
 		column1.setPrefWidth(250);
 		column1.setEditable(false);
 
-		TableColumn<CovariateWrapper, Boolean> column2 = new TableColumn<>("transform");
-		column2.setPrefWidth(250);
+		TableColumn<CovariateRow, Boolean> column2 = new TableColumn<>("transform");
+		column2.setPrefWidth(100);
 		column2.setEditable(true);
-		column2.setCellValueFactory(new PropertyValueFactory<>("time dependent"));
+		column2.setCellValueFactory(new PropertyValueFactory<>("transformed"));
 		column2.setCellFactory(CheckBoxTableCell.forTableColumn(column2));
+		column2.setOnEditCommit(
+				t -> t.getTableView().getItems().
+						get(t.getTablePosition().getRow()).
+						setTransformed(t.getNewValue())
+		);
 
-		TableColumn<CovariateWrapper, String> column3 = new TableColumn<>("time dependent");
-		column3.setCellValueFactory(new PropertyValueFactory<>("name"));
-		column3.setPrefWidth(250);
+		TableColumn<CovariateRow, String> column3 = new TableColumn<>("time dependent");
+		column3.setCellValueFactory(new PropertyValueFactory<>("timeDependent"));
+		column3.setPrefWidth(150);
 		column3.setEditable(true);
+		column3.setCellFactory(TextFieldTableCell.forTableColumn());
+		column3.setOnEditCommit(
+				t -> t.getTableView().getItems().
+						get(t.getTablePosition().getRow()).
+						setTimeDependent(t.getNewValue())
+		);
 
-		TableColumn<CovariateWrapper, Boolean> column4 = new TableColumn<>("remove predictor");
-		column4.setPrefWidth(250);
+		TableColumn<CovariateRow, Boolean> column4 = new TableColumn<>("remove predictor");
+		column4.setPrefWidth(100);
 		column4.setEditable(true);
-		column4.setCellValueFactory(new PropertyValueFactory<>("location"));
+		column4.setCellValueFactory(new PropertyValueFactory<>("removPredictor"));
 		column4.setCellFactory(CheckBoxTableCell.forTableColumn(column4));
+		column4.setOnEditCommit(
+				t -> t.getTableView().getItems().
+						get(t.getTablePosition().getRow()).
+						setRemovePredictor(t.getNewValue())
+		);
 
+		table.getColumns().add(column1);
+		table.getColumns().add(column2);
+		table.getColumns().add(column3);
+		table.getColumns().add(column4);
 
-//		table.getColumn("transform").setCellRenderer(new CheckBoxRenderer());
-//		table.getColumn("transform").setCellEditor(new DefaultCellEditor(new JCheckBox()));
-//		table.getColumn("remove predictor").setCellRenderer(new CheckBoxRenderer());
-//		table.getColumn("remove predictor").setCellEditor(new DefaultCellEditor(new JCheckBox()));
-
-		List<Covariate> covs = covariateList.covariatesInput.get();
-		for (Covariate cov : covs) {
-			CovariateWrapper cw = new CovariateWrapper(cov.getID(), cov.transformed, cov.isTimeDependent, false);
-			covariateObList.add(cw);
-		}
+		covariateToCovariateRow(covariateList);
 		table.setItems(covariateObList);
 
 		ScrollPane scrollPane = new ScrollPane(table);
@@ -192,6 +199,8 @@ public class CovariateListInputEditor extends InputEditor.Base {
 			assert covariateObList.size() == covariateList.covariatesInput.get().size();
 			
 			//TODO update table
+			covariateToCovariateRow(covariateList);
+			table.refresh();
 			refreshPanel();
 		});
 		
@@ -203,23 +212,32 @@ public class CovariateListInputEditor extends InputEditor.Base {
 		
 		covariateList.transformInput.set(new BooleanParameter(transform));
 
-		this.pane = FXUtils.newHBox();
-		getChildren().add(pane);
-
 		pane.getChildren().add(boxVert);
 
+		getChildren().add(pane);
 	}
+
+	private void covariateToCovariateRow(CovariateList covariateList) {
+		covariateObList.clear();
+		// add data
+		List<Covariate> covs = covariateList.covariatesInput.get();
+		for (Covariate cov : covs) {
+			CovariateRow cw = new CovariateRow(cov.getID(), cov.transformed, cov.isTimeDependent, false);
+			covariateObList.add(cw);
+		}
+	}
+
 
 	/**
 	 * table model
 	 */
-	public class CovariateWrapper {
+	public class CovariateRow {
 		String id;
 		boolean transformed;
 		String timeDependent;
 		boolean removePredictor;
 
-		public CovariateWrapper(String id, boolean transformed, String timeDependent, boolean removePredictor) {
+		public CovariateRow(String id, boolean transformed, String timeDependent, boolean removePredictor) {
 			this.id = id;
 			this.transformed = transformed;
 			this.timeDependent = timeDependent;

@@ -38,9 +38,9 @@ public class RateShiftInputEditor extends InputEditor.Base {
 		rateShifts = (RateShifts) input.get();
     	rateShifts.dateTimeFormatInput.setValue("decimal", rateShifts);
 
-		Button updateButton = new Button("Compute rate shifts");
+		Button computeButton = new Button("Compute rate shifts");
 		
-		Label FormatLabel = new Label("Date format");//TODO not used?
+//		Label FormatLabel = new Label("Date format");//TODO not used?
 
 		ObservableList<String> dateFormatExamples = FXCollections.observableArrayList();
 		dateFormatExamples.addAll(List.of(
@@ -55,8 +55,8 @@ public class RateShiftInputEditor extends InputEditor.Base {
         ComboBox<String> dateFormatComboBox = new ComboBox<>(dateFormatExamples);
         dateFormatComboBox.setTooltip(new Tooltip("Set format used to parse date values"));
         dateFormatComboBox.setEditable(true);
+		dateFormatComboBox.getSelectionModel().selectFirst();
 //        dateFormatComboBox.setMaximumSize(dateFormatComboBox.getPreferredSize());
-//        dateFormatComboBox.setSelectedItem(dateFormatComboBox.getSelectedItem());
         
         dateFormatComboBox.setOnAction(e -> {
         	rateShifts.dateTimeFormatInput.setValue(dateFormatComboBox.getSelectionModel().getSelectedItem(), rateShifts);
@@ -94,12 +94,11 @@ public class RateShiftInputEditor extends InputEditor.Base {
 		fromField.setText("");
 		toField.setText("");
 		intervalField.setText("");
-		
-		
+
 		// adds a new dummy variable to the covariates list
-		updateButton.setOnAction(e -> {
+		computeButton.setOnAction(e -> {
     		rateShifts.valuesInput.setValue(updateRatesShifts(fromField.getText(), toField.getText(), mrsiField.getText(), intervalField.getText()), rateShifts);
-			refreshPanel();
+			refreshPanel(); //TODO rateShifts textfield not update
 		});
 
 		VBox boxVert = FXUtils.newVBox();
@@ -122,7 +121,7 @@ public class RateShiftInputEditor extends InputEditor.Base {
 
 		HBox boxHoriz3 = FXUtils.newHBox();
 //		boxHoriz3.add(Box.createHorizontalGlue());
-		boxHoriz3.getChildren().add(updateButton);
+		boxHoriz3.getChildren().add(computeButton);
 		boxHoriz3.getChildren().add(dateFormatComboBox);
 
 		boxVert.getChildren().add(boxHoriz3);

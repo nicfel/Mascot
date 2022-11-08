@@ -15,6 +15,7 @@ import mascot.dynamics.RateShifts;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -97,8 +98,16 @@ public class RateShiftInputEditor extends InputEditor.Base {
 
 		// adds a new dummy variable to the covariates list
 		computeButton.setOnAction(e -> {
-    		rateShifts.valuesInput.setValue(updateRatesShifts(fromField.getText(), toField.getText(), mrsiField.getText(), intervalField.getText()), rateShifts);
-			refreshPanel(); //TODO rateShifts textfield not update
+    		try {
+				// suggest trim spaces
+				rateShifts.valuesInput.setValue(updateRatesShifts(fromField.getText().trim(),
+						toField.getText().trim(), mrsiField.getText().trim(), intervalField.getText().trim()), rateShifts);
+			} catch (DateTimeParseException dtpe) {
+				beastfx.app.util.Alert.showMessageDialog(this,
+						dtpe.getMessage(),"Date parsing error",
+						beastfx.app.util.Alert.ERROR_MESSAGE);
+			}
+			refreshPanel();
 		});
 
 		VBox boxVert = FXUtils.newVBox();

@@ -59,24 +59,24 @@ public class GLMInputEditor extends BEASTObjectInputEditor {
 				boxVert.getChildren().add(label);
 				boxVert.getChildren().add(updateButton);
 				pane.getChildren().add(0, boxVert);
-			} else if (node instanceof VBox vBox) { // hard code
+//			} else if (node instanceof VBox vBox) { // hard code
 //				paintPane(vBox);
-				pane.getChildren().add(vBox);
+//				pane.getChildren().add(vBox);
 			} else
 				pane.getChildren().add(node);
 		}
 		getChildren().add(pane);
 	}
 
-	private void paintPane(VBox vBox) {
+//	private void paintPane(VBox vBox) {
 		// redraw everything
-		ObservableList<Node> nodes = FXCollections.observableArrayList(vBox.getChildren());
+//		ObservableList<Node> nodes = FXCollections.observableArrayList(vBox.getChildren());
 //		pane.getChildren().clear();
 //		pane = FXUtils.newHBox();
 //		VBox boxVert = FXUtils.newVBox();
 //
 //		//2 nodes: Label, HBox from super.init
-		for (Node node : nodes) {
+//		for (Node node : nodes) {
 //			if (updateButton != null && node instanceof Label label) {
 //				boxVert.getChildren().add(label);
 //				boxVert.getChildren().add(updateButton);
@@ -85,7 +85,7 @@ public class GLMInputEditor extends BEASTObjectInputEditor {
 //				paintPane(vBox, null);
 //			} else
 //				pane.getChildren().add(node);
-		}
+//		}
 //		getChildren().add(pane);
-	}
+//	}
 }

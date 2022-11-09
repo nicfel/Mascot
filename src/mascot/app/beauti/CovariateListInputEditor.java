@@ -183,6 +183,8 @@ public class CovariateListInputEditor extends InputEditor.Base {
 
 		// adds a new dummy variable to the covariates list
 		updateButton.setOnAction(e -> {
+			// Note: table.getItems() get ObservableList<>, not the GUI selections.
+			// This is completely different to Swing table.getModel().getValueAt.
 			if (table.getItems().size() != covariateList.covariatesInput.get().size())
 				throw new IllegalArgumentException();
 
@@ -256,7 +258,7 @@ public class CovariateListInputEditor extends InputEditor.Base {
 			this.removePredictor = new SimpleBooleanProperty(false);
 
 			this.transformed.addListener((ov, t, t1) -> {
-//					System.out.println(id + " removePredictor : " + t + " => " + t1);
+//					System.out.println(id + " transformed : " + t + " => " + t1);
 				setTransformed(t1);
 			});
 
@@ -299,65 +301,4 @@ public class CovariateListInputEditor extends InputEditor.Base {
 		}
 	}
 
-/*
-	public class CheckBoxRenderer extends JCheckBox implements TableCellRenderer {
-
-		CheckBoxRenderer() {
-		}
-
-		public Component getTableCellRendererComponent(JTable table, Object value,
-            boolean isSelected, boolean hasFocus, int row, int column) {        	
-			setSelected((value != null && ((Boolean) value).booleanValue()));
-			return this;
-        }
-	}
-
-	class CheckEditor extends DefaultCellEditor {
-		protected JCheckBox button;
-
-		private String label;
-
-		private boolean value;
-
-		public CheckEditor(JCheckBox checkBox, boolean value) {
-			super(checkBox);
-			button = new JCheckBox();
-			button.setText("Enable logging");
-			button.setSelected(false);
-			this.value = value;
-
-			button.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					fireEditingStopped();
-				}
-			});
-		}
-
-		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row,
-				int column) {
-			if (isSelected) {
-				setForeground(table.getSelectionForeground());
-				// super.setBackground(table.getSelectionBackground());
-				setBackground(table.getSelectionBackground());
-			} else {
-				setForeground(table.getForeground());
-				setBackground(table.getBackground());
-			}
-			this.value = !this.value;
-			return button;
-		}
-
-		public Object getCellEditorValue() {
-			return value;
-		}
-
-		public boolean stopCellEditing() {
-			return super.stopCellEditing();
-		}
-
-		protected void fireEditingStopped() {
-			super.fireEditingStopped();
-		}
-	}
-*/
 }

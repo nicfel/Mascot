@@ -48,7 +48,7 @@ public class CovariateListInputEditor extends InputEditor.Base {
 			boolean addButtons) {
 		super.init(input, beastObject, itemNr, ExpandOption.TRUE, addButtons);
 		pane.getChildren().clear();
-		pane = FXUtils.newHBox();
+//		pane = FXUtils.newHBox();
 
 		ObservableList<CovariateRow> covariateObList = FXCollections.observableArrayList();
 		covariateList = (CovariateList) input.get();
@@ -216,7 +216,7 @@ public class CovariateListInputEditor extends InputEditor.Base {
 		addTransfVector(covariateList);
 
 		pane.getChildren().add(boxVert);
-		getChildren().add(pane);
+//		getChildren().add(pane);
 	}
 
 	private void addTransfVector(CovariateList covariateList) {

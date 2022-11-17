@@ -1,7 +1,7 @@
 package mascot.util;
 
-import beast.core.Input;
-import beast.evolution.tree.TraitSet;
+import beast.base.core.Input;
+import beast.base.evolution.tree.TraitSet;
 
 import java.util.stream.Collectors;
 

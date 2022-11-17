@@ -1,0 +1,40 @@
+<beast version='2.7'
+       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:
+       beast.base.evolution.branchratemodel:beast.base.evolution.speciation:
+       beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:
+       beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:
+       beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:
+       beast.evolution:beast.base.math.distributions:
+       mascot.distribution:mascot.dynamics:mascot.glmmodel:mascot.logger:mascot.mapped:
+       mascot.ode:mascot.operators:mascot.parameterdynamics:mascot.skyline:mascot.util'>
+
+    <!-- tree priors -->
+    <mergewith point='treePriorTemplates'>
+        <subtemplate id='Constant' class='mascot.dynamics.Constant' mainid='Constant.t:$(n)'
+          suppressInputs=""
+          inlineInputs="mascot.distribution.Mascot.dynamics">
+            <![CDATA[
+              <dynamics spec="mascot.dynamics.Constant" id="Constant.t:$(n)" dimension="-1">
+                  <Ne idref='NeConstant.t:$(n)'/>
+                  <backwardsMigration idref='migrationConstant.t:$(n)'/>
+                  <typeTrait id="typeTraitSet.t:$(n)" spec="mascot.util.InitializedTraitSet" traitname="type">
+                      <taxa spec="beast.base.evolution.alignment.TaxonSet" alignment="@$(n)"/>
+                  </typeTrait>
+              </dynamics>
+            <param id="NeConstant.t:$(n)" spec="beast.base.inference.parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
+            <param id="migrationConstant.t:$(n)" spec="beast.base.inference.parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
+        ]]>
+
+        <plate fragment="MascotConstantParameters" var="thisparam" range="Ne,migration"/>
+
+        <connect srcID='Constant.t:$(n)' targetID='tracelog' inputName='log'
+                if='inposterior(Mascot.t:$(n))
+                and inposterior(Tree.t:$(n))
+                and inposterior(Constant.t:$(n))'/>
+                
+      </subtemplate>
+
+
+
+    </mergewith>
+</beast>

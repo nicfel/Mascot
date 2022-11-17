@@ -1,0 +1,113 @@
+<beast version='2.7'
+       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:
+       beast.base.evolution.branchratemodel:beast.base.evolution.speciation:
+       beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:
+       beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:
+       beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:
+       beast.evolution:beast.base.math.distributions:
+       mascot.distribution:mascot.dynamics:mascot.glmmodel:mascot.logger:mascot.mapped:
+       mascot.ode:mascot.operators:mascot.parameterdynamics:mascot.skyline:mascot.util'>
+
+       <mergewith point='misc'>
+         <fragment id='MascotConstantParameters' spec="beastfx.app.beauti.Fragment">
+             <![CDATA[
+             <prior id='$(thisparam)ConstantPrior.t:$(n)' x='@$(thisparam)Constant.t:$(n)'>
+               <distr spec="beast.base.inference.distribution.Exponential" mean='1'/>
+             </prior>
+             <operator id='$(thisparam)ConstantScaler.t:$(n)' spec='ScaleOperator' scaleFactor="0.75" weight="3" parameter="@$(thisparam)Constant.t:$(n)"/>
+             ]]>
+
+             <connect srcID='$(thisparam)Constant.t:$(n)' targetID='state' inputName='stateNode'
+                      if='inposterior(Mascot.t:$(n))
+                      and inposterior(Tree.t:$(n))
+                      and inposterior($(thisparam)Constant.t:$(n))
+                      and inposterior(Constant.t:$(n))
+                      and $(thisparam)Constant.t:$(n)/estimate=true'/>
+            <connect srcID='$(thisparam)ConstantPrior.t:$(n)' targetID='prior' inputName='distribution'
+                     if='inposterior(Mascot.t:$(n))
+                     and inposterior(Tree.t:$(n))
+                     and inposterior($(thisparam)Constant.t:$(n))
+                     and inposterior(Constant.t:$(n))
+                     and $(thisparam)Constant.t:$(n)/estimate=true'/>
+           <connect srcID='$(thisparam)ConstantScaler.t:$(n)' targetID='mcmc' inputName='operator'
+                    if='inposterior(Mascot.t:$(n))
+                    and inposterior(Tree.t:$(n))
+                    and inposterior($(thisparam)Constant.t:$(n))
+                    and inposterior(Constant.t:$(n))
+                    and $(thisparam)Constant.t:$(n)/estimate=true'/>
+         </fragment>
+       </mergewith>
+
+    <!-- tree priors -->
+    <mergewith point='treePriorTemplates'>
+        <!-- Yule -->
+        <subtemplate id='Mascot' class='mascot.distribution.Mascot' mainid='Mascot.t:$(n)'
+          suppressInputs="mascot.distribution.Mascot.epsilon,
+          mascot.distribution.Mascot.maxStep,
+          mascot.distribution.Mascot.useCache,
+          mascot.distribution.Mascot.implementation,
+          mascot.distribution.Mascot.structuredTreeIntervals,
+          mascot.distribution.Mascot.tree,
+          mascot.distribution.Mascot.treeIntervals,
+          mascot.dynamics.Constant.fromBeauti,
+          mascot.dynamics.Constant.dimension,
+          mascot.dynamics.Constant.types,
+          mascot.dynamics.GLM.fromBeauti,
+          mascot.dynamics.GLM.dimension,
+          mascot.dynamics.GLM.maxRate,
+          mascot.dynamics.ConstantBSSVS.fromBeauti,
+          mascot.dynamics.ConstantBSSVS.dimension,
+          mascot.dynamics.ConstantBSSVS.types"
+          inlineInputs="mascot.distribution.Mascot.dynamics,
+          mascot.dynamics.GLM.migrationGLM,
+          mascot.glmmodel.LogLinear.covariateList,
+          mascot.dynamics.GLM.NeGLM">
+            <![CDATA[
+
+            <plugin spec='mascot.distribution.Mascot' id="Mascot.t:$(n)" tree="@Tree.t:$(n)">
+              <structuredTreeIntervals spec="mascot.distribution.StructuredTreeIntervals" id="StructuredTreeIntervals.t:$(n)" tree="@Tree.t:$(n)"/>
+              <dynamics spec="mascot.dynamics.Constant" id="Constant.t:$(n)" dimension="-1">
+                  <Ne idref='NeConstant.t:$(n)'/>
+                  <backwardsMigration idref='migrationConstant.t:$(n)'/>
+                  <typeTrait id="typeTraitSet.t:$(n)" spec="mascot.util.InitializedTraitSet" traitname="type">
+                      <taxa spec="beast.base.evolution.alignment.TaxonSet" alignment="@$(n)"/>
+                  </typeTrait>
+              </dynamics>
+            </plugin>
+
+            <param id="NeConstant.t:$(n)" spec="beast.base.inference.parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
+            <param id="migrationConstant.t:$(n)" spec="beast.base.inference.parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
+
+            <logger id="typedTreelogger.t:$(n)" fileName="$(filebase).$(tree).trees" logEvery="1000" mode="tree">
+                <log id="structuredTreelog.t:$(n)" spec="mascot.logger.StructuredTreeLogger" mascot="@Mascot.t:$(n)"/>
+            </logger>
+
+        ]]>
+
+	      <plate fragment="TreeOperators" var="m" range="Mascot"/>
+
+        <connect srcID='Mascot.t:$(n)' targetID='prior' inputName='distribution'
+                 if='inposterior(Mascot.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Mascot
+            prior on tree t:$(n)
+        </connect>
+
+        <plate fragment="MascotConstantParameters" var="thisparam" range="Ne,migration"/>
+
+        <connect srcID="typedTreelogger.t:$(n)" targetID="mcmc" inputName="logger" if="inposterior(Mascot.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+
+        <connect srcID="Mascot.t:$(n)" targetID="tracelog" inputName="log"
+                 if="inposterior(Mascot.t:$(n))
+                 and inposterior(Tree.t:$(n))"/>
+
+         <connect srcID="Constant.t:$(n)" targetID="tracelog" inputName="log"
+                if="inposterior(Mascot.t:$(n))
+                and inposterior(Constant.t:$(n))
+                and inposterior(Tree.t:$(n))"/>
+
+
+
+    </subtemplate>
+
+
+    </mergewith>
+</beast>

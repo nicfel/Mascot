@@ -1,7 +1,7 @@
 package mascot.util;
 
-import beast.core.Input;
-import beast.mascot.dynamics.RateShifts;
+import beast.base.core.Input;
+import mascot.dynamics.RateShifts;
 
 
 /**

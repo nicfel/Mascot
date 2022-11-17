@@ -1,12 +1,12 @@
 package mascot.util;
 
-import beast.core.Input;
-import beast.core.Input.Validate;
-import beast.core.parameter.BooleanParameter;
-import beast.core.parameter.RealParameter;
-import beast.evolution.tree.TraitSet;
-import beast.mascot.glmmodel.GlmModel;
-import beast.mascot.glmmodel.LogLinear;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+import beast.base.inference.parameter.BooleanParameter;
+import beast.base.inference.parameter.RealParameter;
+import beast.base.evolution.tree.TraitSet;
+import mascot.glmmodel.GlmModel;
+import mascot.glmmodel.LogLinear;
 
 import java.io.PrintStream;
 import java.util.ArrayList;

@@ -3,9 +3,8 @@ package mascot.parameterdynamics;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.parameter.RealParameter;
-import mascot.parameterdynamics.EffectivePopulationSizeDynamics;
 
-public class ConstantNe extends EffectivePopulationSizeDynamics {
+public class ConstantNe extends NeDynamics {
 	
     public Input<RealParameter> NeInput = new Input<>(
     		"logNe", "input of the Ne at the time of the most recent sampled ancestor", Validate.REQUIRED);    

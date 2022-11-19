@@ -4,11 +4,10 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.parameter.RealParameter;
-import mascot.parameterdynamics.EffectivePopulationSizeDynamics;
 
 @Description("Skygrid style dynamics for MASCOT. These assume constant effective population sizes within one state "+
 				"and that these effective population sizes only change within one interval")
-public class StructuredSkygrid extends EffectivePopulationSizeDynamics {
+public class StructuredSkygrid extends NeDynamics {
 	
     public Input<RealParameter> NeLogInput = new Input<>(
     		"NeLog", "input of the log effective population sizes", Validate.REQUIRED);    

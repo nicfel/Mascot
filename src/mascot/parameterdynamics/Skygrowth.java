@@ -7,14 +7,13 @@ import beast.base.core.Input;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.evolution.tree.coalescent.PopulationFunction;
 import mascot.dynamics.RateShifts;
-import mascot.parameterdynamics.EffectivePopulationSizeDynamics;
 
 
 /**
  * @author Nicola F. Mueller
  */
 @Description("Populaiton function with values at certain time points that are interpolated in between. Parameter has to be in log space")
-public class Skygrowth extends EffectivePopulationSizeDynamics {
+public class Skygrowth extends NeDynamics {
 	
     final public Input<RealParameter> NeInput = new Input<>("logNe",
             "Nes over time in log space", Input.Validate.REQUIRED);

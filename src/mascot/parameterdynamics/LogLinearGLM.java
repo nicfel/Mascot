@@ -7,9 +7,8 @@ import beast.base.core.Input.Validate;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
 import mascot.glmmodel.CovariateList;
-import mascot.parameterdynamics.EffectivePopulationSizeDynamics;
 
-public class LogLinearGLM extends EffectivePopulationSizeDynamics {	
+public class LogLinearGLM extends NeDynamics {	
     public Input<CovariateList> covariateListInput = new Input<>("covariateList", "input of covariates", Validate.REQUIRED);
     public Input<RealParameter> scalerInput = new Input<>("scaler", "input of covariates scaler", Validate.REQUIRED);    
     public Input<BooleanParameter> indicatorInput = new Input<>("indicator", "input of covariates scaler", Validate.REQUIRED);

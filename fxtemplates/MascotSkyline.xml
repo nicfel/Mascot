@@ -1,0 +1,154 @@
+<beast version='2.7'
+       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:
+       beast.base.evolution.branchratemodel:beast.base.evolution.speciation:
+       beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:
+       beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:
+       beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:
+       beast.evolution:beast.base.math.distributions:
+       mascot.distribution:mascot.dynamics:mascot.glmmodel:mascot.logger:mascot.mapped:
+       mascot.ode:mascot.operators:mascot.parameterdynamics:mascot.skyline:mascot.util'>
+
+       
+       <mergewith point='misc'>
+         <fragment id='MascotSkylineParameters' spec="beastfx.app.beauti.Fragment">
+             <![CDATA[
+             <prior id='$(thisparam)SkylinePrior.t:$(n)' x='@$(thisparam)Skyline.t:$(n)'>
+                <distr spec="beast.base.inference.distribution.Exponential">
+                    <parameter spec="parameter.RealParameter" estimate="false" name="mean">1.0</parameter>
+                </distr>
+             </prior>
+             
+             <operator id="AVMNOperator.Mascot.$(n)" spec="beast.base.evolution.operator.kernel.AdaptableVarianceMultivariateNormalOperator" weight="1"
+                 coefficient="1.0"
+                 scaleFactor="1"
+                 beta="0.05"
+                 initial="800"
+                 burnin="400"
+                 every="1" allowNonsense="true">
+                 <transformations id="AVMNSumTransform.Mascot.$(n)" spec="beast.base.inference.operator.kernel.Transform$LogConstrainedSumTransform" sum="1.0">
+                     <!-- frequencies -->
+                 </transformations>
+                 <transformations id="AVMNLogTransform.Mascot.$(n)" spec="beast.base.inference.operator.kernel.Transform$LogTransform">
+                      <!-- site and substitution model parameters -->
+                 </transformations>
+                 <transformations id="AVMNNoTransform.Mascot.$(n)" spec="beast.base.inference.operator.kernel.Transform$NoTransform">
+                      <!-- tree -->
+                 </transformations>
+             </operator>
+             
+             <operator id="$(thisparam)Scaler.s:$(n)" spec="beast.base.evolution.operator.AdaptableOperatorSampler" weight="1">
+                 <parameter idref="$(thisparam)Skyline.t:$(n)"/>
+                 <operator idref="AVMNOperator.Mascot.$(n)"/>
+                 <operator id='$(thisparam)ScalerX.s:$(n)' spec='kernel.BactrianScaleOperator' scaleFactor="0.5" weight="1" parameter="@$(thisparam)Skyline.t:$(n)"/>
+             </operator>
+                         
+             ]]>
+
+             <connect srcID='$(thisparam)Skyline.t:$(n)' targetID='state' inputName='stateNode'
+                      if='inposterior(Mascot.t:$(n))
+                      and inposterior(Tree.t:$(n))
+                      and inposterior($(thisparam)Skyline.t:$(n))
+                      and inposterior(StructuredSkyline.t:$(n))
+                      and $(thisparam)Skyline.t:$(n)/estimate=true'/>
+
+             
+            <connect srcID='$(thisparam)SkylinePrior.t:$(n)' targetID='prior' inputName='distribution'
+                     if='inposterior(Mascot.t:$(n))
+                     and inposterior(Tree.t:$(n))
+                     and inposterior($(thisparam)Skyline.t:$(n))
+                     and inposterior(StructuredSkyline.t:$(n))
+                     and $(thisparam)Skyline.t:$(n)/estimate=true'/>
+                     
+           <connect srcID='$(thisparam)Scaler.s:$(n)' targetID='mcmc' inputName='operator'
+           if='inposterior($(thisparam)Skyline.t:$(n))
+           and $(thisparam)Skyline.t:$(n)/estimate=true'/>
+
+           <connect srcID='$(thisparam)Skyline.t:$(n)' targetID='AVMNLogTransform.Mascot.$(n)' inputName='f'
+                    if='inposterior($(thisparam)Skyline.t:$(n))
+                    and inposterior($(thisparam)Skyline.t:$(n))
+                    and $(thisparam)Skyline.t:$(n)/estimate=true'/>
+         </fragment>
+       </mergewith>
+
+
+    <!-- tree priors -->
+    <mergewith point='treePriorTemplates'>
+      <subtemplate id='Skyline' class='mascot.dynamics.StructuredSkyline' mainid='StructuredSkyline.t:$(n)'
+        suppressInputs="mascot.dynamics.StructuredSkyline.dimension,mascot.dynamics.StructuredSkyline.fromBeauti"
+        inlineInputs="mascot.parameterdynamics.NeDynamicsList.neDynamics">
+          <![CDATA[
+
+          <dynamics spec="mascot.dynamics.StructuredSkyline" id="StructuredSkyline.t:$(n)" dimension="-1" fromBeauti="true">
+                <NeDynamics id="NeDynamicsList.t:$(n)" spec="mascot.util.InitializedNeDynamicsList"/>
+                <forwardsMigration idref='migrationRatesSkyline.t:$(n)'/>
+                <indicators idref='indicatorsSkyline.t:$(n)'/>
+                <rateShifts id="rateShifts.t:$(n)" spec="mascot.util.InitializedRateShifts"/>
+                <typeTrait id="typeTraitSet.t:$(n)" spec="mascot.util.InitializedTraitSet" traitname="type">
+                    <taxa spec="beast.evolution.alignment.TaxonSet" alignment="@$(n)"/>
+                </typeTrait>
+            </dynamics>
+
+          <param id="migrationRatesSkyline.t:$(n)" spec="beast.base.inference.parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
+          <param id="indicatorsSkyline.t:$(n)" spec="beast.base.inference.parameter.BooleanParameter" value="true" estimate="false"/>
+
+          <prior id="nonZeroRatePrior.t:$(n)">
+            <x id="sumNonZeroRates.t:$(n)" spec="beast.base.evolution.Sum">
+                <arg idref="indicatorsSkyline.t:$(n)"/>
+            </x>
+            <distr spec="beast.base.inference.distribution.Poisson" lambda='1' offset="1"/>
+          </prior>
+
+          <scale id="indicatorFlip.t:$(n)" spec="BitFlipOperator" parameter="@indicatorsSkyline.t:$(n)" weight="3"/>
+          
+
+      ]]>
+     
+      <plate fragment="MascotSkylineParameters" var="thisparam" range="migrationRates"/>
+      
+      <connect method="mascot.util.BEAUtiConnector.customConnector"/>
+      <connect method="mascot.util.BEAUtiConnector.customConnectorPriorCleaner"/>
+
+      
+      <connect srcID='indicatorsSkyline.t:$(n)' targetID='state' inputName='stateNode'
+               if='inposterior(Mascot.t:$(n))
+               and inposterior(Tree.t:$(n))
+               and inposterior(indicatorsSkyline.t:$(n))
+               and inposterior(StructuredSkyline.t:$(n))
+               and indicatorsSkyline.t:$(n)/estimate=true'/>
+     <connect srcID='nonZeroRatePrior.t:$(n)' targetID='prior' inputName='distribution'
+              if='inposterior(Mascot.t:$(n))
+              and inposterior(Tree.t:$(n))
+              and inposterior(indicatorsSkyline.t:$(n))
+              and inposterior(StructuredSkyline.t:$(n))
+              and indicatorsSkyline.t:$(n)/estimate=true'/>
+    <connect srcID='indicatorFlip.t:$(n)' targetID='mcmc' inputName='operator'
+             if='inposterior(Mascot.t:$(n))
+             and inposterior(Tree.t:$(n))
+             and inposterior(indicatorsSkyline.t:$(n))
+             and inposterior(StructuredSkyline.t:$(n))
+             and indicatorsSkyline.t:$(n)/estimate=true'/>
+     <connect srcID="StructuredSkyline.t:$(n)" targetID="tracelog" inputName="log"
+            if="inposterior(Mascot.t:$(n))
+            and inposterior(StructuredSkyline.t:$(n))
+            and inposterior(Tree.t:$(n))"/>
+      <connect srcID='sumNonZeroRates.t:$(n)' targetID='tracelog' inputName='log'
+             if='inposterior(Mascot.t:$(n))
+             and inposterior(Tree.t:$(n))
+             and inposterior(indicatorsSkyline.t:$(n))
+             and inposterior(StructuredSkyline.t:$(n))
+             and indicatorsSkyline.t:$(n)/estimate=true'/>
+             
+             
+             
+     <connect srcID="StructuredSkyline.t:$(n)" targetID="mascotEventsTreelog.t:$(n)" inputName="dynamics"
+     if="inposterior(Mascot.t:$(n))
+     and inposterior(Tree.t:$(n))
+     and Tree.t:$(n)/estimate=true
+     and inposterior(StructuredSkyline.t:$(n))"/>
+
+
+    </subtemplate>
+      
+    </mergewith>
+    
+</beast>

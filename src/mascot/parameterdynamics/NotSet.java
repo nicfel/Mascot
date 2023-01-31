@@ -3,9 +3,8 @@ package mascot.parameterdynamics;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.parameter.RealParameter;
-import mascot.parameterdynamics.EffectivePopulationSizeDynamics;
 
-public class NotSet extends EffectivePopulationSizeDynamics {
+public class NotSet extends NeDynamics {
 	
     public Input<Boolean> notSet = new Input<>(
     		"button that does nothing", "notSet", false);    

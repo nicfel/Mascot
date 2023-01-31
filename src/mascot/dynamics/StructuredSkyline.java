@@ -3,8 +3,6 @@ package mascot.dynamics;
 
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
@@ -14,16 +12,14 @@ import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
 import mascot.dynamics.Dynamics;
 import mascot.dynamics.RateShifts;
-import mascot.parameterdynamics.EffectivePopulationSizeDynamics;
-import mascot.parameterdynamics.NeDynamics;
+import mascot.parameterdynamics.NeDynamicsList;
 
 
 @Description("Wrapper class that takes parametric and non parametric dynamics as input.")
 public class StructuredSkyline extends Dynamics implements Loggable {	
-    
-    
-    public Input<List<EffectivePopulationSizeDynamics>> parametricFunctionInput = new Input<>(
-    		"NeDynamics", "input of the log effective population sizes", new ArrayList<>());    
+        
+    public Input<NeDynamicsList> parametricFunctionInput = new Input<>(
+    		"NeDynamics", "input of the log effective population sizes", Validate.REQUIRED);    
     
     public Input<RealParameter> f_mInput = new Input<>(
     		"forwardsMigration", "input of backwards in time migration rates", Validate.REQUIRED);  
@@ -46,14 +42,14 @@ public class StructuredSkyline extends Dynamics implements Loggable {
 	
 	RealParameter migration;
 	
-	List<EffectivePopulationSizeDynamics> parametricFunction;
+	NeDynamicsList parametricFunction;
 	
 	int[][] dirs;
 	
 		
     @Override
-    public void initAndValidate() {
-    	
+    public void initAndValidate() {    	
+   	
     	super.initAndValidate();
     	
     	if (dimensionInput.get()<1)

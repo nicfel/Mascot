@@ -1,20 +1,18 @@
 package mascot.util;
 
 import beastfx.app.inputeditor.BeautiDoc;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import beast.base.core.BEASTInterface;
-import beast.base.core.BEASTObject;
-import beast.base.inference.MCMC;
-import beast.base.inference.Operator;
-import beast.base.inference.parameter.Parameter;
+import beast.base.inference.CompoundDistribution;
+import beast.base.inference.Distribution;
+import beast.base.inference.State;
+import beast.base.inference.distribution.Prior;
 import beast.base.inference.parameter.RealParameter;
-import beast.base.evolution.likelihood.GenericTreeLikelihood;
-import beast.base.inference.operator.UpDownOperator;
-import beast.base.evolution.tree.TraitSet;
-import beast.base.evolution.tree.Tree;
 import mascot.dynamics.StructuredSkyline;
 import mascot.parameterdynamics.NotSet;
-
-import java.util.*;
 
 /**
  * Class containing a static method used in the BEAUti template to tidy
@@ -23,9 +21,6 @@ import java.util.*;
 public class BEAUtiConnector {
 
     public static boolean customConnector(BeautiDoc doc) {
-
-
-
         for (BEASTInterface p : doc.getPartitions("tree")) {
             String pId = BeautiDoc.parsePartition(p.getID());
  
@@ -33,35 +28,12 @@ public class BEAUtiConnector {
 
             dummy.initAndValidate();
             
-            if (dummy.parametricFunctionInput.get().size()==dummy.getDimension()) {
-            	//update all the names of the Ne dynamics are correct
-                for (int i = 0; i < dummy.getDimension(); i++) {
-                	String idName = dummy.parametricFunctionInput.get().get(i).getID().substring(
-                			dummy.parametricFunctionInput.get().get(i).getID().indexOf(":") + 1,
-                			dummy.parametricFunctionInput.get().get(i).getID().length());
-                	if (!idName.contentEquals(dummy.getStringStateValue(i) + "."+pId)) {
-                		String newID = dummy.parametricFunctionInput.get().get(i).getID().substring(0,
-                				dummy.parametricFunctionInput.get().get(i).getID().indexOf(":") + 1);
-                		dummy.parametricFunctionInput.get().get(i).setID(newID + "" + dummy.getStringStateValue(i) + "." + pId);
-//                		 change all input id's
-                		System.out.println(dummy.parametricFunctionInput.get().get(i).getInputs());
-                		for (String s : dummy.parametricFunctionInput.get().get(i).getInputs().keySet()) {
-                			System.out.println(dummy.parametricFunctionInput.get().get(i).getInputs().get(s).get());
-                			if (dummy.parametricFunctionInput.get().get(i).getInputs().get(s).get()
-                				instanceof Parameter){
-                				BEASTObject obj = (BEASTObject) dummy.parametricFunctionInput.get().get(i).getInputs().get(s).get();
-                				System.out.println("id is " + obj.getID());
-                				
-                				BEASTInterface bi = doc.pluginmap.get(obj.getID());
-
-                				String old = bi.getID().substring(obj.getID().indexOf(":")+1,bi.getID().length());
-                				System.out.println(bi.getID().replace(old, dummy.getStringStateValue(i) + "." + pId));
-                				bi.setID(bi.getID().replace(old, dummy.getStringStateValue(i) + "." + pId));
-                				System.out.println("new id is " + bi.getID());
-
-            				}
-
-                		}
+            if (dummy.parametricFunctionInput.get().neDynamicsInput.get().size()==dummy.getDimension()) {
+            	// update all the names of the Ne dynamics are correct
+                for (int i = 0; i < dummy.getDimension(); i++) {                	
+                	if (!dummy.parametricFunctionInput.get().neDynamicsInput.get().get(i).getID().contentEquals(
+                			"NeDynamics." + dummy.getStringStateValue(i) + ".t:"+pId)) {                		
+                		dummy.parametricFunctionInput.get().neDynamicsInput.get().get(i).setID("NeDynamics." + dummy.getStringStateValue(i) + ".t:" + pId);
                 		
                 	}
                 }
@@ -72,18 +44,53 @@ public class BEAUtiConnector {
             
             System.out.println("reset parameter");
             
-            dummy.parametricFunctionInput.get().clear();
+            dummy.parametricFunctionInput.get().neDynamicsInput.get().clear();
             for (int i = 0; i < dummy.getDimension(); i++) {
             	NotSet notSet = new NotSet();
-            	notSet.setID("notset.t:" +dummy.getStringStateValue(i) + "."+pId);
-//            	notSet.setID("notset.t:" +pId);
-            	dummy.parametricFunctionInput.get().add(notSet);
+            	notSet.setID("NeDynamics." + dummy.getStringStateValue(i) + ".t:"+pId);
+            	dummy.parametricFunctionInput.get().neDynamicsInput.get().add(notSet);
             }
             dummy.initAndValidate();
-        }
-
-        
+        }       
 
         return false;
     }
+    
+    public static boolean customConnectorPriorCleaner(BeautiDoc doc) {
+    	CompoundDistribution prior = (CompoundDistribution) doc.pluginmap.get("prior");
+        for (Distribution p : prior.pDistributions.get()) {
+        	if (p instanceof Prior) {
+	        	Prior pri = (Prior) p;
+	        	
+	        	if (pri.m_x.get() instanceof RealParameter) {
+		        	RealParameter rp =  (RealParameter) pri.m_x.get();
+	
+	        		
+		        	if (!rp.isEstimatedInput.get()) {
+		        		System.out.println("----");
+		        		System.out.println(p.getID());
+		        		doc.disconnect(pri, "prior", "distribution");
+		        	}
+	        	}else if (pri.m_x.get() instanceof Difference) {
+		        	RealParameter rp =  (RealParameter) ((Difference)  pri.m_x.get()).functionInput.get();
+		        	if (!rp.isEstimatedInput.get()) {
+		        		System.out.println("----");
+		        		System.out.println(p.getID());
+		        		doc.disconnect(pri, "prior", "distribution");
+		        	}
+
+	        	}
+        	}
+        		
+        }   
+
+
+        return false;
+    }
+    
+    
+
+    
+    
+    
 }

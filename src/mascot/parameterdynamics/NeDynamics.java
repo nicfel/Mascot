@@ -1,30 +1,20 @@
 package mascot.parameterdynamics;
 
 import beast.base.inference.CalculationNode;
-import beast.base.core.Description;
-import beast.base.core.Input;
-import beast.base.core.Input.Validate;
 
-@Description("dummy class for Beauti")
-public class NeDynamics extends CalculationNode {
-	public Input<EffectivePopulationSizeDynamics> dynamicsInput = new Input<>("dyn", 
-			"input of effective populaiton size dynamics", Validate.REQUIRED);
+public abstract class NeDynamics extends CalculationNode {
 	
 	public boolean isTime;
 	
 	@Override
 	public void initAndValidate() {
-		dynamicsInput.get().initAndValidate();
 	}
 
 	
     /**
      * recalculate the dynamics
      */
-    public void recalculate() {
-		dynamicsInput.get().recalculate();
-
-    };
+    public void recalculate() {};
 
     /**
      * returns the effective population size at time t
@@ -32,7 +22,7 @@ public class NeDynamics extends CalculationNode {
      * @return
      */
     public double getNeTime(double t) {
-		return dynamicsInput.get().getNeTime(t);
+		throw new IllegalArgumentException("Function not implemented. Class of parametric function not correctly recognized");
     }
     
 
@@ -42,17 +32,15 @@ public class NeDynamics extends CalculationNode {
      * @return
      */
     public double getNeInterval(int i) {
-		return dynamicsInput.get().getNeInterval(i);
+		throw new IllegalArgumentException("Function not implemented. Class of parametric function not correctly recognized");
     }
     
-    public void setNrIntervals(int intervals) {
-    	dynamicsInput.get().setNrIntervals(intervals);
-    }
+    public void setNrIntervals(int intervals) {}
 
     
 	public boolean isDirty() {
-    	return dynamicsInput.get().isDirty();
+		return true;
 	};
     
-
+    
 }

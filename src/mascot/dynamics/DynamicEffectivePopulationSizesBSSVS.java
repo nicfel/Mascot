@@ -15,15 +15,15 @@ import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
 import mascot.dynamics.Dynamics;
 import mascot.dynamics.RateShifts;
-import mascot.parameterdynamics.EffectivePopulationSizeDynamics;
+import mascot.parameterdynamics.NeDynamicsList;
 
 
 @Description("Wrapper class that takes parametric and non parametric dynamics as input.")
 public class DynamicEffectivePopulationSizesBSSVS extends Dynamics implements Loggable {	
     
     
-    public Input<List<EffectivePopulationSizeDynamics>> parametricFunctionInput = new Input<>(
-    		"NeDynamics", "input of the log effective population sizes", new ArrayList<>());    
+    public Input<NeDynamicsList> parametricFunctionInput = new Input<>(
+    		"NeDynamics", "input of the log effective population sizes", Validate.REQUIRED);    
     
     public Input<RealParameter> f_mInput = new Input<>(
     		"forwardsMigration", "input of backwards in time migration rates", Validate.REQUIRED);  
@@ -46,7 +46,7 @@ public class DynamicEffectivePopulationSizesBSSVS extends Dynamics implements Lo
 	
 	RealParameter migration;
 	
-	List<EffectivePopulationSizeDynamics> parametricFunction;
+	NeDynamicsList parametricFunction;
 	
 	int[][] dirs;
 	

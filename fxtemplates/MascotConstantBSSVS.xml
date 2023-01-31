@@ -73,6 +73,7 @@
 
           <scale id="indicatorFlip.t:$(n)" spec="BitFlipOperator" parameter="@indicatorsConstantBSSVS.t:$(n)" weight="3"/>
 
+
       ]]>
 
       <plate fragment="MascotConstantBSSVSParameters" var="thisparam" range="relativeMigrationRates,migrationClock,Ne"/>
@@ -105,11 +106,15 @@
              and inposterior(indicatorsConstantBSSVS.t:$(n))
              and inposterior(ConstantBSSVS.t:$(n))
              and indicatorsConstantBSSVS.t:$(n)/estimate=true'/>
+             
+             
+     <connect srcID="ConstantBSSVS.t:$(n)" targetID="mascotEventsTreelog.t:$(n)" inputName="dynamics"
+     if="inposterior(Mascot.t:$(n))
+     and inposterior(Tree.t:$(n))
+     and Tree.t:$(n)/estimate=true
+     and inposterior(ConstantBSSVS.t:$(n))"/>
 
-
-
-
-
+             
 
     </subtemplate>
 

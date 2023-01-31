@@ -81,6 +81,14 @@
             <logger id="typedTreelogger.t:$(n)" fileName="$(filebase).$(tree).trees" logEvery="1000" mode="tree">
                 <log id="structuredTreelog.t:$(n)" spec="mascot.logger.StructuredTreeLogger" mascot="@Mascot.t:$(n)"/>
             </logger>
+            
+            <logger id="typedEventsTreelogger.t:$(n)" fileName="$(filebase).$(tree).events.trees" logEvery="1000" mode="tree">
+                <log id="mascotEventsTreelog.t:$(n)" spec="mascot.distribution.MappedMascot" tree="@Tree.t:$(n)" dynamics="@Constant.t:$(n)">
+                    <structuredTreeIntervals idref="StructuredTreeIntervals.t:$(n)"/>
+                </log>
+            </logger>
+            
+            <log id="nrEventslogger.t:$(n)" spec="mascot.logger.MigrationCountLogger" mappedMascot="@mascotEventsTreelog.t:$(n)"/>
 
         ]]>
 
@@ -93,17 +101,37 @@
 
         <plate fragment="MascotConstantParameters" var="thisparam" range="Ne,migration"/>
 
-        <connect srcID="typedTreelogger.t:$(n)" targetID="mcmc" inputName="logger" if="inposterior(Mascot.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true"/>
-
+        <connect srcID="typedTreelogger.t:$(n)" targetID="mcmc" inputName="logger"
+        if="inposterior(Mascot.t:$(n))
+        and inposterior(Tree.t:$(n))
+        and Tree.t:$(n)/estimate=true"/>
+        
         <connect srcID="Mascot.t:$(n)" targetID="tracelog" inputName="log"
                  if="inposterior(Mascot.t:$(n))
                  and inposterior(Tree.t:$(n))"/>
-
+                 
          <connect srcID="Constant.t:$(n)" targetID="tracelog" inputName="log"
                 if="inposterior(Mascot.t:$(n))
                 and inposterior(Constant.t:$(n))
                 and inposterior(Tree.t:$(n))"/>
+                
+        <connect srcID="typedEventsTreelogger.t:$(n)" targetID="mcmc" inputName="logger"
+        if="inposterior(Mascot.t:$(n))
+        and inposterior(Tree.t:$(n))
+        and Tree.t:$(n)/estimate=true"/>
+        
+        <connect srcID="nrEventslogger.t:$(n)" targetID="tracelog" inputName="log"
+        if="inposterior(Mascot.t:$(n))
+        and inposterior(Tree.t:$(n))
+        and Tree.t:$(n)/estimate=true"/>
+        
+        <connect srcID="Constant.t:$(n)" targetID="mascotEventsTreelog.t:$(n)" inputName="dynamics"
+        if="inposterior(Mascot.t:$(n))
+        and inposterior(Tree.t:$(n))
+        and Tree.t:$(n)/estimate=true
+        and inposterior(Constant.t:$(n))"/>
 
+        
 
 
     </subtemplate>

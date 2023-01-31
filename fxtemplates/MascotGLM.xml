@@ -166,8 +166,14 @@
       <plate fragment="MascotGLMScalerParameters" var="thisparam" range="migrationScaler,NeScaler"/>
       <plate fragment="MascotGLMIndicators" var="thisparam" range="migrationIndicator,NeIndicator"/>
 
-      <!-- <plate fragment="MascotClockParameters" var="thisparam" range="migrationClockGLM"/> -->
-
+      
+      
+      <connect srcID="GLM.t:$(n)" targetID="mascotEventsTreelog.t:$(n)" inputName="dynamics"
+      if="inposterior(Mascot.t:$(n))
+      and inposterior(Tree.t:$(n))
+      and Tree.t:$(n)/estimate=true
+      and inposterior(GLM.t:$(n))"/>
+      
     </subtemplate>
 
 

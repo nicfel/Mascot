@@ -1,4 +1,4 @@
-<package name='Mascot' version='3.0.0'>
+<package name='Mascot' version='3.1.0'>
   <depends on='BEAST.base' atleast='2.7.2'/>
   <depends on='BEAST.app' atleast='2.7.2'/>
 

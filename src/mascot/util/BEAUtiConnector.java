@@ -2,13 +2,9 @@ package mascot.util;
 
 import beastfx.app.inputeditor.BeautiDoc;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import beast.base.core.BEASTInterface;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
-import beast.base.inference.State;
 import beast.base.inference.distribution.Prior;
 import beast.base.inference.parameter.RealParameter;
 import mascot.dynamics.StructuredSkyline;
@@ -79,7 +75,16 @@ public class BEAUtiConnector {
 		        		doc.disconnect(pri, "prior", "distribution");
 		        	}
 
+	        	}else if (pri.m_x.get() instanceof First) {
+		        	RealParameter rp =  (RealParameter) ((First)  pri.m_x.get()).functionInput.get();
+		        	if (!rp.isEstimatedInput.get()) {
+		        		System.out.println("----");
+		        		System.out.println(p.getID());
+		        		doc.disconnect(pri, "prior", "distribution");
+		        	}
+
 	        	}
+
         	}
         		
         }   

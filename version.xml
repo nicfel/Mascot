@@ -7,10 +7,10 @@
     <service type="beastfx.app.inputeditor.InputEditor">
           <provider classname="mascot.app.beauti.CovariateListInputEditor"/>
           <provider classname="mascot.app.beauti.GLMInputEditor"/>
-<!--          <provider classname="mascot.app.beauti.NeDynamicsInputEditor"/>-->
-<!--          <provider classname="mascot.app.beauti.NeDynamicsListInputEditor"/>-->
+          <provider classname="mascot.app.beauti.NeDynamicsInputEditor"/>
+          <provider classname="mascot.app.beauti.NeDynamicsListInputEditor"/>
           <provider classname="mascot.app.beauti.RateShiftInputEditor"/>
-          <provider classname="beastfx.app.inputeditor.TypeTraitSetInputEditor"/>
+          <provider classname="mascot.app.beauti.TypeTraitSetInputEditor"/>
     </service>
 
 
@@ -63,8 +63,12 @@
         <provider classname="mascot.util.InitializedGlmModel"/>
         <provider classname="mascot.util.InitializedNeDynamicsList"/>
         <provider classname="mascot.util.InitializedRateShifts"/>
+        <provider classname="mascot.util.Difference"/>
         <provider classname="mascot.util.InitializedTraitSet"/>
-    </service>
+        <provider classname="mascot.util.Mean"/>
+        <provider classname="mascot.util.First"/>
+        <provider classname="mascot.util.Final"/>
+   </service>
 
 
 

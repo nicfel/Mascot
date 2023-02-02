@@ -19,7 +19,7 @@ public class RateShifts extends CalculationNode {
     		"tree", "input of tree to calculate the timings of the rates shifts relative to the tree height");       
     	
     boolean isRelative;
-    Double[] rateShifts;
+    public Double[] rateShifts;
     Tree tree;
     
     // first element which is larger than 0

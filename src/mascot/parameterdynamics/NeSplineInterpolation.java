@@ -2,6 +2,9 @@ package mascot.parameterdynamics;
 
 import java.util.List;
 
+import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
+import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.parameter.RealParameter;
@@ -13,7 +16,7 @@ import mascot.dynamics.RateShifts;
  * @author Nicola F. Mueller
  */
 @Description("Populaiton function with values at certain time points that are interpolated in between. Parameter has to be in log space")
-public class Skygrowth extends NeDynamics {
+public class NeSplineInterpolation extends NeDynamics {
 	
     final public Input<RealParameter> NeInput = new Input<>("logNe",
             "Nes over time in log space", Input.Validate.REQUIRED);
@@ -27,8 +30,8 @@ public class Skygrowth extends NeDynamics {
     RateShifts rateShifts;
     
     boolean NesKnown = false;
-    double[] growth;
-    double[] growth_stored;
+    PolynomialSplineFunction psf;
+    SplineInterpolator si;
 
 
     @Override
@@ -36,9 +39,10 @@ public class Skygrowth extends NeDynamics {
     	Ne = NeInput.get();    	    	
     	rateShifts = rateShiftsInput.get();
     	Ne.setDimension(rateShifts.getDimension()+1);
-    	growth = new double[rateShifts.getDimension()];
     	recalculateNe();
 		isTime = true;
+		si = new SplineInterpolator();
+	
 
     }
 
@@ -56,7 +60,7 @@ public class Skygrowth extends NeDynamics {
 		if (intervalnr>0)
 			timediff -= rateShifts.getValue(intervalnr-1);
 				
-		return Math.exp(Ne.getArrayValue(intervalnr)-growth[intervalnr]*timediff);
+		return 0;
 	}
 
 
@@ -74,12 +78,13 @@ public class Skygrowth extends NeDynamics {
 	
 	// computes the Ne's at the break points
 	private void recalculateNe() {
-		growth = new double[rateShifts.getDimension()];
-		double curr_time = 0.0;
-		for (int i = 1; i < Ne.getDimension(); i++) {
-			growth[i-1] = (Ne.getArrayValue(i-1)- Ne.getArrayValue(i))/(rateShifts.getValue(i-1)-curr_time);
-			curr_time = rateShifts.getValue(i-1);
+		double[] nes = Ne.getDoubleValues();
+		double[] rates = new double[nes.length];
+		for (int i = 0; i < rates.length; i++) {
+			rates[i] = rateShifts.rateShifts[i];
 		}
+
+		psf = si.interpolate(rates, nes);
 		NesKnown = true;
 	}
 
@@ -91,14 +96,14 @@ public class Skygrowth extends NeDynamics {
 	
 	@Override
 	public void store() {
-		growth_stored = new double[growth.length];
-		System.arraycopy(growth, 0, growth_stored, 0, growth.length);
+//		growth_stored = new double[growth.length];
+//		System.arraycopy(growth, 0, growth_stored, 0, growth.length);
 		super.store();
 	}
 	
 	@Override
 	public void restore() {
-		System.arraycopy(growth_stored, 0, growth, 0, growth_stored.length);
+//		System.arraycopy(growth_stored, 0, growth, 0, growth_stored.length);
 		super.restore();
 	}
 

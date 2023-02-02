@@ -11,8 +11,8 @@ public class ExponentialNe extends NeDynamics {
     public Input<RealParameter> growthRateInput = new Input<>(
     		"growthRate", "input of the growth rate", Validate.REQUIRED);    
 
-    public Input<Double> maxRateInput = new Input<>(
-    		"maxRate", "input of the maximal coalescent rate", Double.POSITIVE_INFINITY);    
+    public Input<Double> minNeInput = new Input<>(
+    		"minNe", "input of the minimal Ne", 0.0);    
 
     RealParameter NeNull;
     RealParameter growthRate;
@@ -33,7 +33,7 @@ public class ExponentialNe extends NeDynamics {
 	@Override
 	public double getNeTime(double t) {
 		
-		return Math.max(1/maxRateInput.get(), Math.exp(NeNull.getArrayValue()-t*growthRate.getArrayValue()));
+		return Math.max(minNeInput.get(), Math.exp(NeNull.getArrayValue()-t*growthRate.getArrayValue()));
 	}
 	
 	@Override

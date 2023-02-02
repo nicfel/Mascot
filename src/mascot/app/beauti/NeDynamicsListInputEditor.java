@@ -28,6 +28,7 @@ import mascot.parameterdynamics.NeDynamicsList;
 import mascot.parameterdynamics.NotSet;
 import mascot.parameterdynamics.Skygrowth;
 import mascot.util.Difference;
+import mascot.util.First;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -291,7 +292,6 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 	}
 	
 	private void setToLogistic(String state) {
-		
 		MCMC mcmc = (MCMC) doc.mcmc.get();
 		
 		int currentIndex=-1;
@@ -299,8 +299,38 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 			if (neDynamicsList.neDynamicsInput.get().get(i).getID().contentEquals(state))
 				currentIndex = i;
 		}
-
 		removeParameters(neDynamicsList.neDynamicsInput.get().get(currentIndex), mcmc);
+
+		
+		String id = neDynamicsList.neDynamicsInput.get().get(currentIndex).getID();
+		String pId = id.substring(id.indexOf(".t:")+3, id.length());
+		String location = id.substring(id.indexOf(".")+1, id.indexOf(".t:"));		
+	
+		LogisticNe logistic = new LogisticNe();
+		logistic.setID(id);
+		
+		RealParameter NeNull = new RealParameter();		
+		NeNull.setID("Capacity." +  location + ".t:"+pId);
+		NeNull.init(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, "0.0", 1);
+		
+		RealParameter GrowthRate = new RealParameter();		
+		GrowthRate.setID("GrowthRate."  + location + ".t:"+pId);
+		GrowthRate.init(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, "0.0", 1);
+		
+		
+		RealParameter CaryingProportion = new RealParameter();		
+		CaryingProportion.setID("CarryingProportion." +  location + ".t:"+pId);
+		CaryingProportion.init(1e-6, 1.0-1e-6, "0.5", 1);
+
+		
+		addParameter(NeNull, pId, "Capacity."+location, mcmc, false);
+		addParameter(GrowthRate, pId, "GrowthRate."+location, mcmc, false);
+		addParameter(CaryingProportion, pId, "CarryingProportion."+location, mcmc, false);
+
+		logistic.initByName("capacity", NeNull, "growthRate", GrowthRate, "carryingProportion", CaryingProportion);
+		
+    	neDynamicsList.neDynamicsInput.get().set(currentIndex, logistic);   
+
 	}
 
 	private void setRateShifts(String state, int intervals) {
@@ -368,17 +398,49 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 		Uniform uni = new Uniform();		
 		uni.setID("Uniform.");
 
-		uni.initByName("lower", Double.NEGATIVE_INFINITY, "upper", Double.POSITIVE_INFINITY);		
-		paramPrior.setID(dynamics + ".Prior.t:" + pId);
-
-		paramPrior.distInput.setValue(uni, paramPrior);
 		if (!isSkykline) {
+			uni.initByName("lower", Double.NEGATIVE_INFINITY, "upper", Double.POSITIVE_INFINITY);		
+			paramPrior.setID(dynamics + ".Prior.t:" + pId);
+
+			paramPrior.distInput.setValue(uni, paramPrior);
+
 			paramPrior.m_x.setValue(parameter, paramPrior);
 		}else {
+			if (parameter.getID().startsWith("CarryingProportion")) {
+				uni.initByName("lower", 0.0, "upper", 1.0);		
+
+			}
+			
+			uni.initByName("lower", Double.NEGATIVE_INFINITY, "upper", Double.POSITIVE_INFINITY);		
+			paramPrior.setID(dynamics + ".Prior.t:" + pId);
+
+			paramPrior.distInput.setValue(uni, paramPrior);
+
+			
 			Difference diff = new Difference();
 			diff.setID("diff." + parameter.getID());
 			diff.initByName("arg", parameter);
-			paramPrior.m_x.setValue(diff, paramPrior);
+			paramPrior.m_x.setValue(diff, paramPrior);			
+			
+			
+	    	Prior paramPrior2 = new Prior();
+	    	paramPrior2.setID(dynamics + ".FirstPrior.t:" + pId);	    	
+	    	First first = new First();
+	    	first.setID("first." + parameter.getID());
+	    	first.initByName("arg", parameter);
+	    	paramPrior2.m_x.setValue(first, paramPrior2);
+	    	
+			Uniform uni2 = new Uniform();		
+			uni2.setID("Uniform.");
+			uni2.initByName("lower", Double.NEGATIVE_INFINITY, "upper", Double.POSITIVE_INFINITY);		
+			uni2.initByName("lower", Double.NEGATIVE_INFINITY, "upper", Double.POSITIVE_INFINITY);		
+			paramPrior2.distInput.setValue(uni2, paramPrior2);
+
+
+
+			doc.registerPlugin(paramPrior2);
+			doc.connect(paramPrior2, "prior", "distribution");	
+
 		}
 		
 		doc.registerPlugin(ops);
@@ -395,6 +457,10 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 			removeParameter(((CompoundDistribution) mcmc.posteriorInput.get()), ((ExponentialNe) neDynamics).NeNullInput.get());			
 		}else if (neDynamics instanceof Skygrowth) {
 			removeParameter(((CompoundDistribution) mcmc.posteriorInput.get()), ((Skygrowth) neDynamics).NeInput.get());
+		}else if (neDynamics instanceof LogisticNe) {
+			removeParameter(((CompoundDistribution) mcmc.posteriorInput.get()), ((LogisticNe) neDynamics).capacityInput.get());
+			removeParameter(((CompoundDistribution) mcmc.posteriorInput.get()), ((LogisticNe) neDynamics).carryingProportionInput.get());
+			removeParameter(((CompoundDistribution) mcmc.posteriorInput.get()), ((LogisticNe) neDynamics).growthRateInput.get());
 		}
 	}
 
@@ -413,7 +479,7 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 		
 
 		// set the parameter to not estimated (will be removed by connector, not cleanest solution, but a working solution)
-				for (int i=0; i < prior.pDistributions.get().size(); i++) {
+		for (int i=0; i < prior.pDistributions.get().size(); i++) {
 			if (prior.pDistributions.get().get(i).getID().contentEquals(baseName + ".Prior.t:" + pId)) {
 				if (((Prior) prior.pDistributions.get().get(i)).m_x.get() instanceof RealParameter) {
 					RealParameter rp = ((RealParameter) ((Prior) prior.pDistributions.get().get(i)).m_x.get());
@@ -423,6 +489,11 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 					RealParameter rp  = (RealParameter) fun.functionInput.get();
 					rp.isEstimatedInput.setValue(false, rp);
 				}
+			}
+			if (prior.pDistributions.get().get(i).getID().contentEquals(baseName + ".FirstPrior.t:" + pId)) {
+				First fun = ((First) ((Prior) prior.pDistributions.get().get(i)).m_x.get());
+				RealParameter rp  = (RealParameter) fun.functionInput.get();
+				rp.isEstimatedInput.setValue(false, rp);
 			}
 		}
 		

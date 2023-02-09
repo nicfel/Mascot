@@ -1,4 +1,4 @@
-<package name='Mascot' version='3.1.0'>
+<package name='Mascot' version='3.1.1'>
   <depends on='BEAST.base' atleast='2.7.2'/>
   <depends on='BEAST.app' atleast='2.7.2'/>
 
@@ -42,6 +42,8 @@
         <provider classname="mascot.logger.RootStateLogger"/>
         <provider classname="mascot.logger.StructuredTreeLogger"/>
         <provider classname="mascot.mapped.MappedTreeIntervals"/>
+        <provider classname="mascot.mapped.AncestralMappedTreeSequenceLogger"/>
+        <provider classname="mascot.mapped.AncestralStateTreeLikelihood"/>
         <provider classname="mascot.operators.BooleanSwapOperator"/>
         <provider classname="mascot.operators.MultiRealRandomWalkOperator"/>
         <provider classname="mascot.operators.NeSwapper"/>

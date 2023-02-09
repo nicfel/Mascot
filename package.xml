@@ -1,6 +1,6 @@
 <packages>
-    <package name="Mascot" version="3.0.1"
-         url="https://github.com/nicfel/Mascot/releases/download/v3.0.1/Mascot.v3.1.0.zip"
+    <package name="Mascot" version="3.0.2"
+         url="https://github.com/nicfel/Mascot/releases/download/v3.0.2/Mascot.v3.0.2.zip"
 	   description="Marginal approximation of the structured coalescent"
 	   projectURL="https://taming-the-beast.org/tutorials/Mascot-Tutorial/">
        <depends on='BEAST.base' atleast='2.7.0' atmost='2.7.9'/>

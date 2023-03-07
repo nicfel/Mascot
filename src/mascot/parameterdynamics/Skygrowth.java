@@ -5,6 +5,7 @@ import java.util.List;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.parameter.RealParameter;
+import cern.colt.Arrays;
 import beast.base.evolution.tree.coalescent.PopulationFunction;
 import mascot.dynamics.RateShifts;
 

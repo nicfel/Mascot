@@ -480,6 +480,7 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         }
 
         Arrays.sort(indices, new Comparator<Integer>() {
+        	
         	public int compare(Integer a,Integer b) {
         	if (times[a] > times[b]) {
         		return 1;
@@ -651,6 +652,8 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
             childCounts[i] = node.isLeaf() ? 0 : 2;
         }
     }
+    
+    
           
     
     /**

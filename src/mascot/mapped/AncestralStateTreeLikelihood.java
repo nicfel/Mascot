@@ -1,25 +1,19 @@
 package mascot.mapped;
 
-
-
-
-
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.datatype.DataType;
-import beast.base.evolution.datatype.UserDataType;
+import beast.base.evolution.likelihood.ThreadedBeerLikelihoodCore;
 import beast.base.evolution.likelihood.TreeLikelihood;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.util.Randomizer;
+import cern.colt.Arrays;
 
 
 /**
@@ -32,16 +26,12 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood {
 
     public Input<Boolean> useMAPInput = new Input<Boolean>("useMAP","whether to use maximum aposteriori assignments or sample", false);
     public Input<Boolean> returnMLInput = new Input<Boolean>("returnML", "report integrate likelihood of tip data", true);
-    
-    public Input<Boolean> useJava = new Input<Boolean>("useJava", "prefer java, even if beagle is available", true);
+   
     
     public Input<Boolean> sampleTipsInput = new Input<Boolean>("sampleTips", "if tips have missing data/ambigous values sample them for logging (default true)", true);
     
 
 	int[][] storedTipStates;
-
-	/** parameters for each of the leafs **/
-	IntegerParameter[] parameters;
 
 	/** and node number associated with parameter **/
 	int[] leafNr;
@@ -77,23 +67,23 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood {
     	    	
     	
     	String sJavaOnly = null;
-    	if (useJava.get()) {
-    		sJavaOnly = System.getProperty("java.only");
-    		System.setProperty("java.only", "" + true);
-    	}
+		sJavaOnly = System.getProperty("java.only");
+		System.setProperty("java.only", "" + true);
+    	
     	super.initAndValidate();
-    	if (useJava.get()) {
-	    	if (sJavaOnly != null) {
-	    		System.setProperty("java.only", sJavaOnly);
-	    	} else {
-	    		System.clearProperty("java.only");
-	    	}
+    	if (sJavaOnly != null) {
+    		System.setProperty("java.only", sJavaOnly);
+    	} else {
+    		System.clearProperty("java.only");
     	}
+    	
     	
         TreeInterface treeModel = treeInput.get();
         patternCount = dataInput.get().getPatternCount();
         dataType = dataInput.get().getDataType();
         stateCount = dataType.getStateCount();
+        
+        
 
         reconstructedStates = new int[treeModel.getNodeCount()][patternCount];
         storedReconstructedStates = new int[treeModel.getNodeCount()][patternCount];
@@ -145,13 +135,9 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood {
 	                else
 	                    states[i] = code; // Causes ambiguous states to be ignored.
 	            }
-
             }
     	}
         
-
-
-
     }
 
     @Override
@@ -212,22 +198,6 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood {
     	
     	int hasDirt = Tree.IS_CLEAN;
 		
-		// check whether any of the leaf trait parameters changed
-		for (int i = 0; i < leafNr.length; i++) {
-			if (parameters[i].somethingIsDirty()) {
-				int k = leafNr[i];
-				for (int j = 0; j < traitDimension; j++) {
-					tipStates[k][j] = parameters[i].getValue(j);
-				}
-				likelihoodCore.setNodeStates(k, tipStates[k]);
-				isDirty = true;
-				// mark leaf's parent node as dirty
-				Node leaf = treeInput.get().getNode(k);
-				// leaf.makeDirty(Tree.IS_DIRTY);
-				leaf.getParent().makeDirty(Tree.IS_DIRTY);
-	            hasDirt = Tree.IS_DIRTY;
-			}
-		}
 		isDirty |= super.requiresRecalculation();
 		this.hasDirt |= hasDirt;
 
@@ -292,29 +262,6 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood {
     }
 
 
-    private static String formattedState(int[] state, DataType dataType) {
-        StringBuffer sb = new StringBuffer();
-        sb.append("\"");
-        if (dataType instanceof UserDataType) {
-            boolean first = true;
-            for (int i : state) {
-                if (!first) {
-                    sb.append(" ");
-                } else {
-                    first = false;
-                }
-
-                sb.append(dataType.getCode(i));
-            }
-
-        } else {
-            for (int i : state) {
-                sb.append(dataType.getChar(i));
-            }
-        }
-        sb.append("\"");
-        return sb.toString();
-    }
 
     private int drawChoice(double[] measure) {
         if (useMAP) {
@@ -365,7 +312,7 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood {
 
         double[] conditionalProbabilities = new double[stateCount];
         int[] state = new int[patternCount];
-        // keeps track of which category an
+        // keeps track of which category a site is in
         if (category==null)
         	category = new int[patternCount];
 
@@ -375,6 +322,9 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood {
             	
                 double[] partialLikelihood = new double[stateCount * patternCount * m_siteModel.getCategoryCount()];
                 likelihoodCore.getNodePartials(node.getNr(), partialLikelihood);
+                
+                System.out.println(Arrays.toString(partialLikelihood));
+                System.exit(0);
                 
                 final double[] proportions = m_siteModel.getCategoryProportions(node);
 
@@ -416,7 +366,6 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood {
                          state[j] = val % m_siteModel.getCategoryCount();
                     } catch (Error e) {
                         System.err.println(e.toString());
-                        System.err.println("Please report error to Marc");
                         state[j] = 0;
                     }
 
@@ -464,7 +413,6 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood {
                 for (int j = 0; j < patternCount; j++) {
 
                     int parentIndex = parentState[j] * stateCount;
-                    int childIndex = j * stateCount;
 
                     for (int i = 0; i < stateCount; i++) {
                         conditionalProbabilities[i] = partialLikelihood[category[j]*(stateCount * patternCount) + j * stateCount+i] * 
@@ -485,9 +433,6 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood {
 //                    	System.arraycopy(probabilities, parentIndex,  part, 0, 5);
 //                    	System.out.println(nodeNum + ": " + node.getLength() + " " +Arrays.toString(partialLikelihood) + " x "+parentState[j] + Arrays.toString(part) + " = " + state[j]+Arrays.toString(conditionalProbabilities));
 //                    }
-                    double contrib = probabilities[parentIndex + state[j]];
-                    //System.out.println("Pr(" + parentState[j] + ", " + state[j] +  ") = " + contrib);
-//                    jointLogLikelihood += Math.log(contrib);
                 }
             }
 
@@ -552,7 +497,6 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood {
     private int[][] reconstructedStates;
     private int[][] storedReconstructedStates;
 
-    private String tag;
     private boolean areStatesRedrawn = false;
     private boolean storedAreStatesRedrawn = false;
 

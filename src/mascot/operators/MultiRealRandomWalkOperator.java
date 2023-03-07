@@ -20,8 +20,6 @@ public class MultiRealRandomWalkOperator extends Operator {
             new Input<>("windowSize", "the size of the window both up and down when using uniform interval OR standard deviation when using Gaussian", Input.Validate.REQUIRED);
     final public Input<RealParameter> parameterInput =
             new Input<>("parameter", "the parameter to operate a random walk on.", Validate.REQUIRED);
-    final public Input<Boolean> useGaussianInput =
-            new Input<>("useGaussian", "Use Gaussian to move instead of uniform interval. Default false.", false);
     
     
 
@@ -31,7 +29,6 @@ public class MultiRealRandomWalkOperator extends Operator {
     @Override
 	public void initAndValidate() {
         windowSize = windowSizeInput.get();
-        useGaussian = useGaussianInput.get();
     }
 
     /**
@@ -42,26 +39,33 @@ public class MultiRealRandomWalkOperator extends Operator {
     public double proposal() {
 
         RealParameter param = parameterInput.get();
-
-        for (int i = 0; i < param.getDimension(); i++){
-	        double value = param.getValue(i);
-	        double newValue = value;
-	        if (useGaussian) {
-	            newValue += Randomizer.nextGaussian() * windowSize;
-	        } else {
-	            newValue += Randomizer.nextDouble() * 2 * windowSize - windowSize;
-	        }
-	
+        
+        
+		int nrSpots = Randomizer.nextInt(param.getDimension())+1;
+		double add = Randomizer.nextGaussian() * windowSize;
+		
+//		int nrSpots = 1;
+		
+		int startSpot = 0;
+		if (nrSpots!=param.getDimension()) {
+			startSpot= Randomizer.nextInt(param.getDimension()-nrSpots+1);
+		}
+        
+		for (int a = 0; a < nrSpots; a++) {
+			int index = a+startSpot;
+			double val = param.getArrayValue(index);
+			double newValue = val+add;
+			
+			
 	        if (newValue < param.getLower() || newValue > param.getUpper()) {
 	            return Double.NEGATIVE_INFINITY;
 	        }
-	        if (newValue == value) {
-	            // this saves calculating the posterior
-	            return Double.NEGATIVE_INFINITY;
-	        }
-	
-	        param.setValue(i, newValue);
-        }
+
+	        param.setValue(index, newValue);
+//			logNeInput.get().get(j).setValue(index, val);
+		}	
+
+
 
         return 0.0;
     }

@@ -133,7 +133,9 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 			
 			ObservableList<Integer> nrRateShiftsExamples = FXCollections.observableArrayList();
 			
-			nrRateShiftsExamples.addAll(List.of(2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20));
+			
+			for (int r = 2; r < 100; r++)
+				nrRateShiftsExamples.add(r);
 
 			
 	        ComboBox<Integer> rateShiftsComboBox = new ComboBox<>(nrRateShiftsExamples);
@@ -212,7 +214,7 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 		
 		rateShifts.setID("SkygrowthRateShifts." + tmp[1]);
 		List<Double> vals = new ArrayList<>();
-		vals.add(0.0);
+//		vals.add(0.5);
 		vals.add(1.0);
 		
 		rateShifts.initByName("value", vals, "tree", doc.pluginmap.get("Tree.t:"+pId));
@@ -345,8 +347,8 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 		List<Double> vals = new ArrayList<>();
 		double val = 0.0;
 		while(val<(1-stepsize/2)) {
-			vals.add(val);
 			val += stepsize;
+			vals.add(val);
 		}
 		vals.add(1.0);
 		

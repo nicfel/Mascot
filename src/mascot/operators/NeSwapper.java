@@ -14,7 +14,7 @@ public class NeSwapper extends Operator {
     public Input<List<RealParameter>> logNeInput = new Input<>(
     		"logNe", "input of the log effective population sizes", new ArrayList<>());
     public Input<RealParameter> migrationInput = new Input<>(
-    		"migration", "input of the log effective population sizes");
+    		"migration", "input of the migration rates");
 
     int length;
     int dim;
@@ -49,6 +49,8 @@ public class NeSwapper extends Operator {
 	@Override
 	public double proposal() {
 		int nrSpots = Randomizer.nextInt(length)+1;
+		double add = Randomizer.nextGaussian();
+		
 //		int nrSpots = 1;
 		
 		int startSpot = 0;
@@ -57,41 +59,58 @@ public class NeSwapper extends Operator {
 		}
 		
 		int i = Randomizer.nextInt(dim);
-		int j = Randomizer.nextInt(dim);
+//		int j = Randomizer.nextInt(dim);
 		
-		while (i == j)
-			j = Randomizer.nextInt(dim);	
-					
+//		while (i == j)
+//			j = Randomizer.nextInt(dim);	
+		
 		for (int a = 0; a < nrSpots; a++) {
 			int index = a+startSpot;
 			double val = logNeInput.get().get(i).getArrayValue(index);
-			logNeInput.get().get(i).setValue(index, logNeInput.get().get(j).getArrayValue(index));
-			logNeInput.get().get(j).setValue(index, val);
+			double newValue = val+add;
+			
+            if (newValue < logNeInput.get().get(i).getLower() || newValue > logNeInput.get().get(i).getUpper()) {
+                return Double.NEGATIVE_INFINITY;
+            }
+
+            logNeInput.get().get(i).setValue(index, newValue);
+
+			
+			logNeInput.get().get(i).setValue(index, logNeInput.get().get(i).getArrayValue(index)+add);
+//			logNeInput.get().get(j).setValue(index, val);
 		}	
+
+					
+//		for (int a = 0; a < nrSpots; a++) {
+//			int index = a+startSpot;
+//			double val = logNeInput.get().get(i).getArrayValue(index);
+//			logNeInput.get().get(i).setValue(index, logNeInput.get().get(j).getArrayValue(index));
+//			logNeInput.get().get(j).setValue(index, val);
+//		}	
 				
 		//
 //		List<Integer> froms = new ArrayList<>();
 //		List<Integer> tos = new ArrayList<>();
 		
-		for (int a = 0; a < dim; a++) {
-//			System.out.println(Arrays.toString(dirs[a]));
-			if (i!=a) {
-				if (j==a) {
-//					froms.add(dirs[i][a]);
-//					tos.add(dirs[j][i]);
-					if (Randomizer.nextBoolean()) {
-						mig.swap(dirs[i][a], dirs[j][i]);
-					}
-				}else {
-//					froms.add(dirs[i][a]);
-//					tos.add(dirs[j][a]);
-
-					if (Randomizer.nextBoolean()) {
-						mig.swap(dirs[i][a], dirs[j][a]);
-					}
-				}
-			}
-		}		
+//		for (int a = 0; a < dim; a++) {
+////			System.out.println(Arrays.toString(dirs[a]));
+//			if (i!=a) {
+//				if (j==a) {
+////					froms.add(dirs[i][a]);
+////					tos.add(dirs[j][i]);
+//					if (Randomizer.nextBoolean()) {
+//						mig.swap(dirs[i][a], dirs[j][i]);
+//					}
+//				}else {
+////					froms.add(dirs[i][a]);
+////					tos.add(dirs[j][a]);
+//
+//					if (Randomizer.nextBoolean()) {
+//						mig.swap(dirs[i][a], dirs[j][a]);
+//					}
+//				}
+//			}
+//		}		
 		
 		return 0;
 	}    

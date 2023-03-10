@@ -1,5 +1,6 @@
 package mascot.dynamics;
 
+import java.io.PrintStream;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,9 +9,10 @@ import java.util.List;
 import beast.base.core.BEASTObject;
 import beast.base.inference.CalculationNode;
 import beast.base.core.Input;
+import beast.base.core.Loggable;
 import beast.base.evolution.tree.Tree;
 
-public class RateShifts extends CalculationNode {
+public class RateShifts extends CalculationNode implements Loggable {
 
     final public Input<String> dateTimeFormatInput = new Input<>("dateFormat", "the date/time format to be parsed, (e.g., 'dd/M/yyyy')", "dd/M/yyyy");
 	public Input<List<Double>> valuesInput = new Input<>(
@@ -111,7 +113,43 @@ public class RateShifts extends CalculationNode {
     private Class<?>  getInputClass() {
    		return ((Double) 0.0).getClass();
     }
+
+
+	@Override
+	public void init(PrintStream out) {
+		for (int i = 0; i < rateShifts.length; i++) {
+			out.print("RateShift."+i + "\t");
+			
+		}
+		
+	}
+
+
+	@Override
+	public void log(long sample, PrintStream out) {
+		for (int i = 0; i < rateShifts.length; i++) {
+			double val = 0;
+			if (isRelative) {
+				val = tree.getRoot().getHeight()*rateShifts[i];
+			}else{
+				val= rateShifts[i];
+			}
+
+			out.print(val + "\t");
+			
+		}
+
+		
+	}
+
+
+	@Override
+	public void close(PrintStream out) {
+		// TODO Auto-generated method stub
+		
+	}
     
 	
 
 }
+

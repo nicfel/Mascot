@@ -35,10 +35,13 @@ public class StructuredSkyline extends Dynamics implements Loggable {
     
 
 	double[] intTimes;	
+	double[] storedIntTimes;	
 	 
 	int firstlargerzero;
 
 	boolean isForward = false;
+	
+	boolean intTimesKnown = false;
 	
 	RealParameter migration;
 	
@@ -81,16 +84,7 @@ public class StructuredSkyline extends Dynamics implements Loggable {
 				break;				
 			}
 		}
-		// initialize the intervals
-		intTimes = new double[rateShiftsInput.get().getDimension()-firstlargerzero];
-		for (int i=0; i < intTimes.length; i++) {
-			if (i==0) {
-				intTimes[i] = rateShiftsInput.get().getValue(i+firstlargerzero);						
-			}
-			else {
-				intTimes[i] = rateShiftsInput.get().getValue(i+firstlargerzero)-rateShiftsInput.get().getValue(i-1+firstlargerzero);
-			}
-		}
+		computeIntTimes();
 		
 		// set the Ne dimension for all skygrid dynamics.
 		for (int i = 0; i < parametricFunction.size(); i++)
@@ -116,11 +110,29 @@ public class StructuredSkyline extends Dynamics implements Loggable {
 
     }
 
-    /**
+    private void computeIntTimes() {
+		// initialize the intervals
+		intTimes = new double[rateShiftsInput.get().getDimension()-firstlargerzero];
+		for (int i=0; i < intTimes.length; i++) {
+			if (i==0) {
+				intTimes[i] = rateShiftsInput.get().getValue(i+firstlargerzero);						
+			}
+			else {
+				intTimes[i] = rateShiftsInput.get().getValue(i+firstlargerzero)-rateShiftsInput.get().getValue(i-1+firstlargerzero);
+			}
+		}
+		
+		intTimesKnown=true;
+	}
+
+	/**
      * Returns the time to the next interval.
      */
     @Override
     public double getInterval(int i) {
+		if (!intTimesKnown)
+			computeIntTimes();
+
     	if (i >= intTimes.length){
      		return Double.POSITIVE_INFINITY;
      	}else{
@@ -130,11 +142,17 @@ public class StructuredSkyline extends Dynamics implements Loggable {
 
     @Override
     public double[] getIntervals() {
+		if (!intTimesKnown)
+			computeIntTimes();
+
     	return intTimes;
     }
     
 	@Override
     public double[] getCoalescentRate(int i){
+		if (!intTimesKnown)
+			computeIntTimes();
+
 		int intervalNr;
     	if (i >= rateShiftsInput.get().getDimension()-firstlargerzero-1)
     		intervalNr = rateShiftsInput.get().getDimension()-2;
@@ -156,6 +174,10 @@ public class StructuredSkyline extends Dynamics implements Loggable {
     
 	@Override    
     public double[] getBackwardsMigration(int i){
+		if (!intTimesKnown)
+			computeIntTimes();
+		
+		
 		int intervalNr;
     	if (i >= rateShiftsInput.get().getDimension()-firstlargerzero-1)
     		intervalNr = rateShiftsInput.get().getDimension()-2;
@@ -351,8 +373,11 @@ public class StructuredSkyline extends Dynamics implements Loggable {
 			if(migration.isDirty(i))
 				return true;
 
-		if(rateShiftsInput.get().somethingIsDirty())
+		if(rateShiftsInput.get().somethingIsDirty()) {
+			intTimesKnown = false;
 			return true;
+		}
+			
 
 		return false;
 	}
@@ -420,5 +445,18 @@ public class StructuredSkyline extends Dynamics implements Loggable {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	public void store() {
+		storedIntTimes = new double[intTimes.length];
+		System.arraycopy(intTimes, 0, storedIntTimes, 0, intTimes.length);
+		super.store();
+	}
+	
+	@Override
+	public void restore() {
+		System.arraycopy(storedIntTimes, 0, intTimes, 0, storedIntTimes.length);
+		super.restore();
+	}
+	
 	
 }

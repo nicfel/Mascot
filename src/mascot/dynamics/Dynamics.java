@@ -1,17 +1,16 @@
 
 package mascot.dynamics;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-
-import beast.base.inference.CalculationNode;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.TraitSet;
+import beast.base.inference.CalculationNode;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 @Description("Class that is to be extended by other dynamic processes")
 public abstract class Dynamics extends CalculationNode  {

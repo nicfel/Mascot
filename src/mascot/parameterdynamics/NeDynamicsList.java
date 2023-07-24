@@ -1,14 +1,12 @@
 package mascot.parameterdynamics;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import beast.base.core.BEASTObject;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.CalculationNode;
-import beast.base.inference.parameter.BooleanParameter;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class NeDynamicsList extends CalculationNode {
     public Input<List<NeDynamics>> neDynamicsInput = new Input<>("neDynamics", "input of covariates", new ArrayList<>(), Validate.REQUIRED);

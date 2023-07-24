@@ -1,16 +1,13 @@
 package mascot.dynamics;
 
 
-import java.io.PrintStream;
-import java.util.Arrays;
-
-//import org.jblas.DoubleMatrix;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Loggable;
 import beast.base.inference.parameter.RealParameter;
+
+import java.io.PrintStream;
 
 
 @Description("Constant migration rates and effective population sizes over time.")

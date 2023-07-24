@@ -1,11 +1,7 @@
 package mascot.ode;
 
-import java.util.Arrays;
-
-import org.junit.Test;
-
 import junit.framework.Assert;
-import mascot.ode.Euler2ndOrder;
+import org.junit.Test;
 
 
 public class Euler2ndOrderTest  {

@@ -1,14 +1,12 @@
 package mascot.logger;
 
-import java.io.PrintStream;
-
-//import org.jblas.DoubleMatrix;
-
-import beast.base.inference.CalculationNode;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
+import beast.base.inference.CalculationNode;
 import mascot.distribution.Mascot;
+
+import java.io.PrintStream;
 
 /**
  * @author Nicola Felix Mueller

@@ -1,9 +1,6 @@
 package mascot.operators;
 
 
-
-import java.text.DecimalFormat;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
@@ -11,6 +8,8 @@ import beast.base.inference.operator.kernel.KernelOperator;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
+
+import java.text.DecimalFormat;
 
 
 @Description("A random walk operator that selects a random dimension of the real parameter and perturbs the value a " +

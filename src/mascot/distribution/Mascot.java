@@ -1,53 +1,19 @@
 package mascot.distribution;
 
 
-import java.util.ArrayList;
-
-//import org.jblas.DoubleMatrix;
-
-import beast.base.inference.CalculationNode;
 import beast.base.core.Citation;
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Input.Validate;
 import beast.base.core.Log;
+import beast.base.evolution.tree.IntervalType;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.TreeInterface;
-import beast.base.evolution.tree.IntervalType;
-import cern.colt.Arrays;
+import beast.base.inference.CalculationNode;
 import mascot.dynamics.Dynamics;
-import mascot.ode.Euler2ndOrder;
-import mascot.ode.Euler2ndOrder10;
-import mascot.ode.Euler2ndOrder11;
-import mascot.ode.Euler2ndOrder12;
-import mascot.ode.Euler2ndOrder13;
-import mascot.ode.Euler2ndOrder14;
-import mascot.ode.Euler2ndOrder15;
-import mascot.ode.Euler2ndOrder16;
-import mascot.ode.Euler2ndOrder17;
-import mascot.ode.Euler2ndOrder18;
-import mascot.ode.Euler2ndOrder19;
-import mascot.ode.Euler2ndOrder2;
-import mascot.ode.Euler2ndOrder20;
-import mascot.ode.Euler2ndOrder21;
-import mascot.ode.Euler2ndOrder22;
-import mascot.ode.Euler2ndOrder23;
-import mascot.ode.Euler2ndOrder24;
-import mascot.ode.Euler2ndOrder25;
-import mascot.ode.Euler2ndOrder26;
-import mascot.ode.Euler2ndOrder27;
-import mascot.ode.Euler2ndOrder28;
-import mascot.ode.Euler2ndOrder29;
-import mascot.ode.Euler2ndOrder3;
-import mascot.ode.Euler2ndOrder30;
-import mascot.ode.Euler2ndOrder4;
-import mascot.ode.Euler2ndOrder5;
-import mascot.ode.Euler2ndOrder6;
-import mascot.ode.Euler2ndOrder7;
-import mascot.ode.Euler2ndOrder8;
-import mascot.ode.Euler2ndOrder9;
-import mascot.ode.Euler2ndOrderBase;
-import mascot.ode.Euler2ndOrderNative;
+import mascot.ode.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * @author Nicola Felix Mueller

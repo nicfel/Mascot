@@ -1,13 +1,13 @@
 package mascot.glmmodel;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import beast.base.core.BEASTObject;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.parameter.BooleanParameter;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class CovariateList extends BEASTObject {
     public Input<List<Covariate>> covariatesInput = new Input<>("covariates", "input of covariates", new ArrayList<>(), Validate.REQUIRED);

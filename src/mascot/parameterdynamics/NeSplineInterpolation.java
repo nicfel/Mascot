@@ -1,15 +1,11 @@
 package mascot.parameterdynamics;
 
-import java.util.List;
-
-import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
-import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.parameter.RealParameter;
-import beast.base.evolution.tree.coalescent.PopulationFunction;
 import mascot.dynamics.RateShifts;
+import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
+import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 
 
 /**

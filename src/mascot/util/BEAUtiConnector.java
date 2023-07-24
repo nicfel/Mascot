@@ -1,12 +1,11 @@
 package mascot.util;
 
-import beastfx.app.inputeditor.BeautiDoc;
-
 import beast.base.core.BEASTInterface;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
 import beast.base.inference.distribution.Prior;
 import beast.base.inference.parameter.RealParameter;
+import beastfx.app.inputeditor.BeautiDoc;
 import mascot.dynamics.StructuredSkyline;
 import mascot.parameterdynamics.NotSet;
 

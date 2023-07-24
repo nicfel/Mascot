@@ -1,16 +1,14 @@
 package mascot.dynamics;
 
-import java.io.PrintStream;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import beast.base.core.BEASTObject;
-import beast.base.inference.CalculationNode;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.evolution.tree.Tree;
+import beast.base.inference.CalculationNode;
+
+import java.io.PrintStream;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RateShifts extends CalculationNode implements Loggable {
 

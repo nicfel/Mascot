@@ -20,6 +20,9 @@ import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.TraitSet;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.inputeditor.GuessPatternDialog;
+import beastfx.app.inputeditor.InputEditor;
 import beastfx.app.util.Alert;
 import beastfx.app.util.FXUtils;
 import javafx.collections.FXCollections;
@@ -32,10 +35,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import beastfx.app.inputeditor.BeautiDoc;
-import beastfx.app.inputeditor.GuessPatternDialog;
-import beastfx.app.inputeditor.InputEditor;
-import beastfx.app.inputeditor.TaxonSetInputEditor.TaxonMap;
 
 
 

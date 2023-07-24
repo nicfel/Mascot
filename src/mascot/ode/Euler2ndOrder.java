@@ -1,11 +1,10 @@
 package mascot.ode;
 
 
-import java.util.Arrays;
-
+import mascot.distribution.Mascot;
 import org.apache.commons.math3.util.FastMath;
 
-import mascot.distribution.Mascot;
+import java.util.Arrays;
 
 public class Euler2ndOrder implements Euler2ndOrderBase {
 

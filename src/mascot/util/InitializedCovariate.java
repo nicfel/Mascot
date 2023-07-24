@@ -2,17 +2,7 @@ package mascot.util;
 
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
-import beast.base.inference.parameter.BooleanParameter;
-import beast.base.inference.parameter.RealParameter;
-import beast.base.evolution.tree.TraitSet;
 import mascot.glmmodel.Covariate;
-import mascot.glmmodel.CovariateList;
-import mascot.glmmodel.GlmModel;
-
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Taken over from TIMOTHY VAUGHAN

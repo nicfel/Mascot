@@ -2,17 +2,14 @@
 package mascot.distribution;
 
 
-import java.util.List;
-import java.util.Random;
-
 import beast.base.core.Description;
-import beast.base.inference.Distribution;
 import beast.base.core.Input;
-import beast.base.inference.State;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.TreeDistribution;
-import beast.base.evolution.tree.TreeInterface;
-import beast.base.evolution.tree.TreeIntervals;
+import beast.base.inference.State;
+
+import java.util.List;
+import java.util.Random;
 
 // should be the same as the original tree distribution but allowing for Structured tree intervals 
 // additionally allows recalculation of which daughter lineages were involved in a coalescent event

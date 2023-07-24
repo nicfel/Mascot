@@ -2,8 +2,6 @@ package mascot.glmmodel;
 
 import java.io.PrintStream;
 
-import beast.base.core.Input;
-
 public class LogLinear extends GlmModel {
 
 	@Override

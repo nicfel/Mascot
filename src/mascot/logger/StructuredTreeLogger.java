@@ -1,33 +1,29 @@
 package mascot.logger;
 
+import beast.base.core.Citation;
+import beast.base.core.Function;
+import beast.base.core.Input;
+import beast.base.core.Loggable;
+import beast.base.evolution.branchratemodel.BranchRateModel;
+import beast.base.evolution.tree.IntervalType;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeInterface;
+import beast.base.inference.StateNode;
+import beast.base.inference.parameter.BooleanParameter;
+import mascot.distribution.Mascot;
+import mascot.ode.Euler2ndOrderTransitions;
+import mascot.ode.MascotODEUpDown;
+import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
+import org.apache.commons.math3.ode.FirstOrderIntegrator;
+import org.apache.commons.math3.ode.nonstiff.ClassicalRungeKuttaIntegrator;
+
 import java.io.PrintStream;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
-import org.apache.commons.math3.ode.FirstOrderIntegrator;
-import org.apache.commons.math3.ode.nonstiff.ClassicalRungeKuttaIntegrator;
-//import org.jblas.DoubleMatrix;
-
-import beast.base.core.Citation;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.core.Loggable;
-import beast.base.inference.StateNode;
-import beast.base.inference.parameter.BooleanParameter;
-
-import beast.base.evolution.branchratemodel.BranchRateModel;
-import beast.base.evolution.tree.Node;
-import beast.base.evolution.tree.Tree;
-import beast.base.evolution.tree.TreeInterface;
-import beast.base.evolution.tree.IntervalType;
-import cern.colt.Arrays;
-import mascot.distribution.Mascot;
-import mascot.ode.Euler2ndOrderTransitions;
-import mascot.ode.MascotODEUpDown;
 
 
 /**

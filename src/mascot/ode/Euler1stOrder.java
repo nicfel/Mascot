@@ -1,8 +1,6 @@
 package mascot.ode;
 
 
-import java.util.Arrays;
-
 import org.apache.commons.math3.util.FastMath;
 
 public class Euler1stOrder {

@@ -1,23 +1,18 @@
 package mascot.glmmodel;
 
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-import beast.base.core.BEASTInterface;
-import beast.base.core.BEASTObject;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
+import beast.base.core.*;
 import beast.base.core.Input.Validate;
-import beast.base.inference.parameter.IntegerParameter;
-import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
 import beast.base.inference.distribution.ParametricDistribution;
-
+import beast.base.inference.parameter.IntegerParameter;
+import beast.base.inference.parameter.RealParameter;
 import org.apache.commons.math.MathException;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 
 @Description("Produces prior (log) probability of value x." +

@@ -1,17 +1,13 @@
 package mascot.glmmodel;
 
+import beast.base.core.BEASTObject;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import javax.swing.JOptionPane;
-
-import beast.base.core.BEASTObject;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.core.Input.Validate;
-import cern.colt.Arrays;
 
 
 public class Covariate extends BEASTObject  {

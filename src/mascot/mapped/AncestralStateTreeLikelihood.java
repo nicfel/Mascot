@@ -1,24 +1,22 @@
 package mascot.mapped;
 
-import java.io.PrintStream;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.datatype.DataType;
-import beast.base.evolution.likelihood.ThreadedBeerLikelihoodCore;
 import beast.base.evolution.likelihood.TreeLikelihood;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeInterface;
-import beast.base.inference.parameter.IntegerParameter;
 import beast.base.util.Randomizer;
-import cern.colt.Arrays;
+
+import java.io.PrintStream;
 
 
 /**
  * @author Marc A. Suchard
  * @author Alexei Drummond
+ * adapted by Nicola F. Müller
  */
 @Description("Ancestral State Tree Likelihood, adapted for gamma rates by nfm")
 public class AncestralStateTreeLikelihood extends TreeLikelihood {
@@ -26,10 +24,7 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood {
 
     public Input<Boolean> useMAPInput = new Input<Boolean>("useMAP","whether to use maximum aposteriori assignments or sample", false);
     public Input<Boolean> returnMLInput = new Input<Boolean>("returnML", "report integrate likelihood of tip data", true);
-   
-    
     public Input<Boolean> sampleTipsInput = new Input<Boolean>("sampleTips", "if tips have missing data/ambigous values sample them for logging (default true)", true);
-    
 
 	int[][] storedTipStates;
 
@@ -322,10 +317,7 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood {
             	
                 double[] partialLikelihood = new double[stateCount * patternCount * m_siteModel.getCategoryCount()];
                 likelihoodCore.getNodePartials(node.getNr(), partialLikelihood);
-                
-                System.out.println(Arrays.toString(partialLikelihood));
-                System.exit(0);
-                
+
                 final double[] proportions = m_siteModel.getCategoryProportions(node);
 
                 double[] rootProbabilities = new double[stateCount * m_siteModel.getCategoryCount()];

@@ -1,8 +1,6 @@
 package mascot.dynamics;
 
 
-import java.io.PrintStream;
-
 import beast.base.core.Citation;
 import beast.base.core.Description;
 import beast.base.core.Input;
@@ -10,7 +8,8 @@ import beast.base.core.Input.Validate;
 import beast.base.core.Loggable;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
-import cern.colt.Arrays;
+
+import java.io.PrintStream;
 
 
 @Description("Allows to use indicators on the migration rates " +

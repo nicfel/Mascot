@@ -1,13 +1,9 @@
 package mascot.glmmodel;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import beast.base.inference.CalculationNode;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Loggable;
+import beast.base.inference.CalculationNode;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
 

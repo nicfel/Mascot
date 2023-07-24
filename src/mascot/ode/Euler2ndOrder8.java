@@ -1,11 +1,9 @@
 package mascot.ode;
 
 
-import java.util.Arrays;
-
 import org.apache.commons.math3.util.FastMath;
 
-import mascot.distribution.Mascot;
+import java.util.Arrays;
 
 public class Euler2ndOrder8 extends Euler2ndOrder {
 	double updateP (double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length){

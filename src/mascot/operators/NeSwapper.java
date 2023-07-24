@@ -1,14 +1,12 @@
 package mascot.operators;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import beast.base.core.Input;
 import beast.base.inference.Operator;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class NeSwapper extends Operator {
     public Input<List<RealParameter>> logNeInput = new Input<>(

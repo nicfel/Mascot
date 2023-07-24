@@ -1,13 +1,13 @@
 package mascot.app.beauti;
 
 
-import beastfx.app.inputeditor.BeautiDoc;
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.inference.StateNode;
-import beast.base.inference.StateNodeInitialiser;
 import beast.base.evolution.tree.TraitSet;
 import beast.base.evolution.tree.Tree;
+import beast.base.inference.StateNode;
+import beast.base.inference.StateNodeInitialiser;
+import beastfx.app.inputeditor.BeautiDoc;
 
 import java.util.ArrayList;
 import java.util.HashSet;

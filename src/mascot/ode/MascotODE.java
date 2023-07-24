@@ -1,9 +1,8 @@
 package mascot.ode;
 
 
-import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
-
 import beast.base.core.Description;
+import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 
 
 /**

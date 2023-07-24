@@ -1,35 +1,22 @@
 package mascot.distribution;
 
+import beast.base.core.*;
+import beast.base.evolution.branchratemodel.BranchRateModel;
+import beast.base.evolution.tree.IntervalType;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
+import beast.base.inference.StateNode;
+import beast.base.inference.parameter.BooleanParameter;
+import beast.base.util.Randomizer;
+import cern.colt.Arrays;
+
 import java.io.PrintStream;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-
-//import org.jblas.DoubleMatrix;
-
-import beast.base.inference.CalculationNode;
-import beast.base.core.Citation;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.inference.StateNode;
-import beast.base.core.Input.Validate;
-import beast.base.core.Loggable;
-import beast.base.inference.parameter.BooleanParameter;
-import beast.base.core.Log;
-import beast.base.evolution.branchratemodel.BranchRateModel;
-import beast.base.evolution.tree.Node;
-import beast.base.evolution.tree.Tree;
-import beast.base.evolution.tree.TreeInterface;
-import beast.base.evolution.tree.IntervalType;
-import beast.base.util.Randomizer;
-import cern.colt.Arrays;
-import mascot.distribution.Mascot.MascotImplementation;
-import mascot.dynamics.Dynamics;
 
 /**
  * @author Nicola Felix Mueller

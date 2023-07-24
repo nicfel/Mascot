@@ -1,13 +1,13 @@
 package mascot.util;
 
-import java.io.PrintStream;
-
-import beast.base.inference.CalculationNode;
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Loggable;
 import beast.base.core.Input.Validate;
+import beast.base.core.Loggable;
+import beast.base.inference.CalculationNode;
 import mascot.dynamics.GLM;
+
+import java.io.PrintStream;
 
 @Description("Logs Ne's and migration rates from a GLM model.")
 

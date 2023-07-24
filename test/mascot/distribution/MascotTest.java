@@ -1,26 +1,18 @@
 package mascot.distribution;
 
-import java.util.Arrays;
-
-import org.junit.Test;
-
-import beast.base.core.Input;
-import beast.base.inference.parameter.RealParameter;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.alignment.Sequence;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.TraitSet;
 import beast.base.evolution.tree.Tree;
-import beast.base.evolution.tree.coalescent.Coalescent;
-import beast.base.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.evolution.tree.TreeIntervals;
 import beast.base.evolution.tree.TreeParser;
+import beast.base.evolution.tree.coalescent.Coalescent;
+import beast.base.evolution.tree.coalescent.ConstantPopulation;
+import beast.base.inference.parameter.RealParameter;
 import junit.framework.Assert;
-import mascot.app.beauti.TreeWithTrait;
-import mascot.distribution.Mascot;
-import mascot.distribution.StructuredTreeIntervals;
 import mascot.dynamics.Constant;
-import mascot.ode.Euler2ndOrder;
+import org.junit.Test;
 
 
 public class MascotTest  {

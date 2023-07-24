@@ -1,23 +1,16 @@
 package mascot.mapped;
 
 
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import beast.base.inference.CalculationNode;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
-import beast.base.evolution.tree.IntervalList;
-import beast.base.evolution.tree.IntervalType;
+import beast.base.inference.CalculationNode;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Extracts the intervals from a beast.tree. *

@@ -1,19 +1,18 @@
 package mascot.distribution;
 
 
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+import beast.base.evolution.tree.IntervalList;
+import beast.base.evolution.tree.IntervalType;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
+import beast.base.inference.CalculationNode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-
-import beast.base.inference.CalculationNode;
-import beast.base.core.Description;
-import beast.base.core.Input;
-import beast.base.core.Input.Validate;
-import beast.base.evolution.tree.Node;
-import beast.base.evolution.tree.Tree;
-import beast.base.evolution.tree.IntervalList;
-import beast.base.evolution.tree.IntervalType;
 
 
 /*

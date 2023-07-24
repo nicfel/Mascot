@@ -1,13 +1,12 @@
 package mascot.logger;
 
-import java.io.PrintStream;
-
-import beast.base.inference.CalculationNode;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.evolution.tree.Node;
-import cern.colt.Arrays;
+import beast.base.inference.CalculationNode;
 import mascot.distribution.MappedMascot;
+
+import java.io.PrintStream;
 
 public class MigrationCountLogger extends CalculationNode implements Loggable {
 	public Input<MappedMascot> mappedInput = new Input<MappedMascot>(

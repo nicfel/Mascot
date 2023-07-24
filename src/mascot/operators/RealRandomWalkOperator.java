@@ -1,7 +1,5 @@
 package mascot.operators;
 
-import java.text.DecimalFormat;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
@@ -9,6 +7,8 @@ import beast.base.inference.Operator;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
+
+import java.text.DecimalFormat;
 
 
 

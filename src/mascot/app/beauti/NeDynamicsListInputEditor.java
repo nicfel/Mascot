@@ -20,13 +20,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import mascot.dynamics.RateShifts;
-import mascot.parameterdynamics.ConstantNe;
-import mascot.parameterdynamics.ExponentialNe;
-import mascot.parameterdynamics.LogisticNe;
-import mascot.parameterdynamics.NeDynamics;
-import mascot.parameterdynamics.NeDynamicsList;
-import mascot.parameterdynamics.NotSet;
-import mascot.parameterdynamics.Skygrowth;
+import mascot.parameterdynamics.*;
 import mascot.util.Difference;
 import mascot.util.First;
 

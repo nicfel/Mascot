@@ -1,16 +1,6 @@
 package mascot.mapped;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import beast.base.core.BEASTObject;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.core.Loggable;
+import beast.base.core.*;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.alignment.FilteredAlignment;
 import beast.base.evolution.branchratemodel.BranchRateModel;
@@ -19,6 +9,12 @@ import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.util.Randomizer;
 import mascot.distribution.MappedMascot;
+
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 @Description("Reconstructs sequences at internal nodes and logs them in NEXUS format")

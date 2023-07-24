@@ -1,16 +1,15 @@
 package mascot.skyline;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-
-import beast.base.inference.Distribution;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
+import beast.base.inference.Distribution;
 import beast.base.inference.State;
-import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.distribution.ParametricDistribution;
+import beast.base.inference.parameter.RealParameter;
 import mascot.dynamics.RateShifts;
+
+import java.util.List;
+import java.util.Random;
 
 public class GrowthRateSmoothingPrior extends Distribution {
 	

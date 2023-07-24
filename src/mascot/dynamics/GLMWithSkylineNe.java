@@ -1,19 +1,16 @@
 package mascot.dynamics;
 
-import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.HashMap;
-
-import org.apache.commons.math3.util.FastMath;
-
 import beast.base.core.Citation;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Loggable;
-import beast.base.inference.parameter.RealParameter;
 import mascot.glmmodel.GlmModel;
 import mascot.parameterdynamics.Skygrowth;
+import org.apache.commons.math3.util.FastMath;
+
+import java.io.PrintStream;
+import java.util.HashMap;
 
 
 @Description("Extracts the intervals from a tree. Points in the intervals " +

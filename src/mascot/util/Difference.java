@@ -1,20 +1,10 @@
 package mascot.util;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import beast.base.core.BEASTObject;
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
-import beast.base.core.Loggable;
 import beast.base.core.Input.Validate;
-import beast.base.evolution.tree.Tree;
 import beast.base.inference.CalculationNode;
-import beast.base.inference.parameter.BooleanParameter;
-import beast.base.inference.parameter.IntegerParameter;
 
 
 @Description("calculates the differences between the entries of a vector")

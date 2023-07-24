@@ -1,18 +1,14 @@
 package mascot.distribution;
 
 
+import beast.base.core.Description;
+import beast.base.evolution.tree.TreeInterface;
+import beast.base.inference.Distribution;
+import beast.base.inference.State;
+import mascot.dynamics.Dynamics;
 
 import java.util.List;
 import java.util.Random;
-
-//import org.jblas.DoubleMatrix;
-
-import beast.base.core.Description;
-import beast.base.inference.Distribution;
-import beast.base.inference.State;
-import beast.base.evolution.tree.TreeInterface;
-import mascot.dynamics.Dynamics;
-import mascot.ode.Euler2ndOrderNative;
 
 
 /**

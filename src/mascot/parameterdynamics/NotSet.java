@@ -1,8 +1,6 @@
 package mascot.parameterdynamics;
 
 import beast.base.core.Input;
-import beast.base.core.Input.Validate;
-import beast.base.inference.parameter.RealParameter;
 
 public class NotSet extends NeDynamics {
 	

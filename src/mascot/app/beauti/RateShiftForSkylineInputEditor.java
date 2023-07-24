@@ -12,7 +12,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import mascot.dynamics.GLM;
 import mascot.dynamics.RateShifts;
-import mascot.util.InitializedRateShifts;
 import mascot.util.InitializedRateShiftsForSkyline;
 
 import java.time.LocalDate;

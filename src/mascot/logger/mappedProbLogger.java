@@ -1,23 +1,20 @@
 package mascot.logger;
 
+import beast.base.core.Description;
+import beast.base.core.Function;
+import beast.base.core.Input;
+import beast.base.core.Loggable;
+import beast.base.evolution.branchratemodel.BranchRateModel;
+import beast.base.evolution.tree.Node;
+import beast.base.inference.CalculationNode;
+import beast.base.inference.parameter.BooleanParameter;
+import mascot.distribution.MappedMascot;
+
 import java.io.PrintStream;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-
-//import org.jblas.DoubleMatrix;
-
-import beast.base.inference.CalculationNode;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.core.Loggable;
-import beast.base.inference.parameter.BooleanParameter;
-import beast.base.evolution.branchratemodel.BranchRateModel;
-import beast.base.evolution.tree.Node;
-import mascot.distribution.MappedMascot;
-import mascot.distribution.Mascot;
 
 /**
  * @author Nicola Felix Mueller

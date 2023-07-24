@@ -1,18 +1,15 @@
 package mascot.dynamics;
 
 
-
-import java.io.PrintStream;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Loggable;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
-import mascot.dynamics.Dynamics;
-import mascot.dynamics.RateShifts;
 import mascot.parameterdynamics.NeDynamicsList;
+
+import java.io.PrintStream;
 
 
 @Description("Wrapper class that takes parametric and non parametric dynamics as input.")

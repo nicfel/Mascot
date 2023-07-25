@@ -11,23 +11,20 @@ import beast.base.util.Randomizer;
 import mascot.distribution.MappedMascot;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Description("Reconstructs sequences at internal nodes and logs them in NEXUS format")
 public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Function, Loggable {
 
-	public Input<String> tagInput = new Input<String>("tag", "label used to report trait", Input.Validate.REQUIRED);
+	public Input<String> tagInput = new Input<String>("tag", "label used to report trait", "mutations");
 
 	final public Input<Boolean> logMutationsOnlyInput = new Input<>("logMutationsOnly",
 			"if true, logs only mutations on edges instead of sequences on nodes", false);
 
 	final public Input<List<AncestralStateTreeLikelihood>> ancestralTreeLikelihoodInput = new Input<>(
 			"ancestralTreeLikelihood",
-			"ancestrsal tree likelihoods that," + "if more than one is inputted is assumed to be a filtered alignment",
+			"ancestral tree likelihoods that," + "if more than one is inputted is assumed to be a filtered alignment",
 			new ArrayList<>());
 
 	final public Input<Boolean> translateInput = new Input<>("translate", "if true, dna is translated to amino acids",
@@ -119,9 +116,6 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 				used[k] = true;
 			}
 		}
-//        System.out.println(Arrays.toString(map));
-//        System.exit(0);
-
 		Integer[] map = new Integer[redCount];
 		int c = 0;
 		for (int i = 0; i < used.length; i++) {
@@ -167,10 +161,11 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 		for (int i = 0; i < currSiteStates.length; i++)
 			currSiteStates[i] = -1;
 
+		// If the node has only one child, it is a migration event
 		if (node.getChildCount() == 1) {
 			List<Double> times = new ArrayList<>();
 
-			// gather child times until the next coal or leaf node
+			// gather child times until the next coal or leaf node, go to the next
 			double currtime = node.getParent().getHeight();
 			Node currNode = node;
 			while (currNode.getChildCount() == 1) {
@@ -180,18 +175,16 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 			}
 			times.add(currtime - currNode.getHeight());
 
-
 			// get the sequence at the currtime
 			for (int i = 0; i < ancestralTreeLikelihoodInput.get().size(); i++) {
-				int[] patternstates = ancestralTreeLikelihoodInput.get().get(i)
+				int[] siteStates = ancestralTreeLikelihoodInput.get().get(i)
 						.getStatesForNode(ancestralTreeLikelihoodInput.get().get(0).treeInput.get(), currNode);
 
 				for (int j = 0; j < mapping.get(i).length; j++) {
-					currSiteStates[mapping
-							.get(i)[j]] = patternstates[ancestralTreeLikelihoodInput.get().get(i).dataInput.get()
-									.getPatternIndex(j)];
+					currSiteStates[mapping.get(i)[j]] = siteStates[j];
 				}
 			}
+
 			// get all the mutations and assign them to intervals
 			double[] array = new double[times.size()];
 			for (int i = 0; i < times.size(); i++)
@@ -244,14 +237,13 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 				node.setMetaData(tagInput.get(), muts_string);
 
 		} else {
+			// node is leaf or coalescent event
 			for (int i = 0; i < ancestralTreeLikelihoodInput.get().size(); i++) {
-				int[] patternstates = ancestralTreeLikelihoodInput.get().get(i)
+				int[] siteStates = ancestralTreeLikelihoodInput.get().get(i)
 						.getStatesForNode(ancestralTreeLikelihoodInput.get().get(0).treeInput.get(), node);
 
 				for (int j = 0; j < mapping.get(i).length; j++) {
-					currSiteStates[mapping
-							.get(i)[j]] = patternstates[ancestralTreeLikelihoodInput.get().get(i).dataInput.get()
-									.getPatternIndex(j)];
+					currSiteStates[mapping.get(i)[j]] = siteStates[j];
 				}
 			}
 
@@ -302,9 +294,6 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 			buf.append(node.getNr() + 1);
 		}
 		if (!node.isLeaf()) {
-//			System.out.println(node.getMetaData("location"));;
-//			System.out.println(node.getHeight());
-//			System.out.println(lalala);
 
 			buf.append("[&");
 			buf.append(mappedMascotInput.get().dynamics.typeTraitInput.getName() + "="

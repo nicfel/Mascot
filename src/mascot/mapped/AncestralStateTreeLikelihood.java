@@ -25,7 +25,7 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood implements Logg
 
     public Input<Boolean> useMAPInput = new Input<Boolean>("useMAP","whether to use maximum aposteriori assignments or sample", false);
     public Input<Boolean> returnMLInput = new Input<Boolean>("returnML", "report integrate likelihood of tip data", true);
-    public Input<Boolean> sampleTipsInput = new Input<Boolean>("sampleTips", "if tips have missing data/ambigous values sample them for logging (default true)", false);
+    public Input<Boolean> sampleTipsInput = new Input<Boolean>("sampleTips", "if tips have missing data/ambigous values sample them for logging (default true)", true);
 
     int[][] storedTipStates;
 
@@ -124,7 +124,11 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood implements Logg
             }
             tipStates[node.getNr()] = new int[siteCount];
             if (!m_useAmbiguities.get()) {
-            	likelihoodCore.getNodeStates(node.getNr(), tipStates[node.getNr()]);
+                int[] tipPatterns = new int[patternCount];
+            	likelihoodCore.getNodeStates(node.getNr(), tipPatterns);
+                for (int i = 0; i < siteCount; i++) {
+                    tipStates[node.getNr()][i] = tipPatterns[data.getPatternIndex(i)];
+                }
             } else {
             	int [] states = tipStates[node.getNr()];
 	            for (int i = 0; i < siteCount; i++) {
@@ -137,7 +141,6 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood implements Logg
 	            }
             }
     	}
-
     }
 
     @Override
@@ -306,39 +309,17 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood implements Logg
                 likelihoodCore.getNodePartials(node.getNr(), partialLikelihood);
 
                 final double[] proportions = m_siteModel.getCategoryProportions(node);
-
-
                 double[] rootProbabilities = new double[stateCount * m_siteModel.getCategoryCount()];
-
-
-
                 double[] rootFrequencies = substitutionModel.getFrequencies();
-//                if (rootFrequenciesInput.get() != null) {
-//                    rootFrequencies = rootFrequenciesInput.get().getFreqs();
-//                }
 
                 // This is the root node
                 for (int j = 0; j < siteCount; j++) {
-//                	if (beagle != null) {
-//                		getPartials(node.getNr(), conditionalProbabilities);
-//                	} else {
-
+                    // calculate the root probabilities
                 	for (int a = 0; a < m_siteModel.getCategoryCount(); a++) {
                 		for (int b = 0; b < stateCount; b++) {
                 			rootProbabilities[a*stateCount+b] = rootFrequencies[b]*proportions[a] * partialLikelihood[a*(stateCount * patternCount) + data.getPatternIndex(j) * stateCount+b];
                 		}
                 	}
-
-//                	if (j==1) {
-//                		System.out.println(Arrays.toString(rootProbabilities));
-//                		System.exit(0);
-//                	}
-//                	}
-//
-//                    for (int i = 0; i < stateCount; i++) {
-//                        conditionalProbabilities[i] *= rootFrequencies[i];
-//                    }
-
                     try {
                          int val = drawChoice(rootProbabilities);
                          category[j] = val/m_siteModel.getCategoryCount();
@@ -347,13 +328,7 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood implements Logg
                         System.err.println(e.toString());
                         state[j] = 0;
                     }
-
-
-
                     reconstructedStates[nodeNum][j] = state[j];
-
-                    //System.out.println("Pr(j) = " + rootFrequencies[state[j]]);
-//                    jointLogLikelihood += Math.log(rootFrequencies[state[j]]);
                 }
 
             } else {
@@ -361,31 +336,11 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood implements Logg
                 // This is an internal node, but not the root
                 double[] partialLikelihood = new double[stateCount * patternCount * m_siteModel.getCategoryCount()];
 
-//				final double branchRate = branchRateModel.getBranchRate(tree, node);
-//
-//				            // Get the operational time of the branch
-//				final double branchTime = branchRate * ( tree.getNodeHeight(parent) - tree.getNodeHeight(node) );
-//
-//				for (int i = 0; i < categoryCount; i++) {
-//
-//				                siteModel.getTransitionProbabilitiesForCategory(i, branchTime, probabilities);
-//
-//				}
-//
-
                 double[][] matrix = new double[m_siteModel.getCategoryCount()][probabilities.length];
-//            	if (beagle != null) {
-//            		getPartials(node.getNr(), partialLikelihood);
-//            		getTransitionMatrix(nodeNum, probabilities);
-//            	} else {
-                    likelihoodCore.getNodePartials(node.getNr(), partialLikelihood);
-                    /*((AbstractLikelihoodCore)*/
+                likelihoodCore.getNodePartials(node.getNr(), partialLikelihood);
             	for (int a = 0; a < m_siteModel.getCategoryCount(); a++) {
                     likelihoodCore.getNodeMatrix(nodeNum, a, matrix[a]);
             	}
-//            	}
-
-
 
                 for (int j = 0; j < siteCount; j++) {
 
@@ -396,20 +351,8 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood implements Logg
                         		matrix[category[j]][parentIndex + i];
                     }
 
-//                    System.out.println(category[j]);
-//                    System.out.println(state[j]);
-//            		System.out.println(patternCount);
-//            		System.out.println(Arrays.toString(conditionalProbabilities));
-//            		System.exit(0);
-
-
                     state[j] = drawChoice(conditionalProbabilities);
                     reconstructedStates[nodeNum][j] = state[j];
-//                    if (node.getLeft().isLeaf() && node.getLeft().getID().equals("xd779") || node.getRight().isLeaf() && node.getRight().getID().equals("xd779")) {
-//                    	double [] part = new double[5];
-//                    	System.arraycopy(probabilities, parentIndex,  part, 0, 5);
-//                    	System.out.println(nodeNum + ": " + node.getLength() + " " +Arrays.toString(partialLikelihood) + " x "+parentState[j] + Arrays.toString(part) + " = " + state[j]+Arrays.toString(conditionalProbabilities));
-//                    }
                 }
             }
 
@@ -430,6 +373,7 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood implements Logg
 //            /*((AbstractLikelihoodCore)*/ likelihoodCore.getNodeStates(nodeNum, reconstructedStates[nodeNum]);
 //        		}
 //        	}
+
         	if (sampleTipsInput.get()) {
 
 	            // Check for ambiguity codes and sample them
@@ -456,7 +400,7 @@ public class AncestralStateTreeLikelihood extends TreeLikelihood implements Logg
 	                //System.out.println("Pr(" + parentState[j] + ", " + reconstructedStates[nodeNum][j] +  ") = " + contrib);
 	                jointLogLikelihood += Math.log(contrib);
 	            }
-                throw new IllegalArgumentException("sampling of tips not really tested, therefor not supported");
+//                throw new IllegalArgumentException("sampling of tips not really tested, therefor not supported");
         	}
 
         }

@@ -27,11 +27,18 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 			"ancestral tree likelihoods that," + "if more than one is inputted is assumed to be a filtered alignment",
 			new ArrayList<>());
 
-	final public Input<Boolean> translateInput = new Input<>("translate", "if true, dna is translated to amino acids",
-			false);
+	final public Input<Integer> startReadingFrame = new Input<>("startReadingFrame", "start position of the reading frame for translation");
+
+	final public Input<Integer> endReadingFrame = new Input<>("endReadingFrame", "end position of the reading frame" +
+			" if start is specified but not end, stop codons on the root are used for inference", Integer.MAX_VALUE);
 
 	public Input<MappedMascot> mappedMascotInput = new Input<MappedMascot>("mappedMascot", "list of leaf traits",
 			Input.Validate.REQUIRED);
+
+	public Input<Boolean> internalNodesOnlyInput = new Input<Boolean>("internalNodesOnly",
+			"If true, migration events are not logged default false",
+			true);
+
 
 //	int [] siteStates;
 
@@ -41,6 +48,10 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 	List<Integer[]> mapping;
 
 	Map<String, String> translationsTable;
+	String[] stopArray;
+	Tree mappedTree;
+
+	long lastSample = -1;
 
 	@Override
 	public void init(PrintStream out) {
@@ -70,7 +81,7 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 				mapping.add(newMap);
 			}
 		}
-		if (translateInput.get())
+		if (startReadingFrame.get()!=null)
 			initTable();
 	}
 
@@ -139,12 +150,13 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 
 	@Override
 	public void log(long sample, PrintStream out) {
-		for (int i = 0; i < ancestralTreeLikelihoodInput.get().size(); i++) {
-			ancestralTreeLikelihoodInput.get().get(i).calculateLogP();
-			ancestralTreeLikelihoodInput.get().get(i).redrawAncestralStates();
-		}
-		mappedMascotInput.get().calculateLogP();
-		Node mappedRoot = mappedMascotInput.get().getRoot();
+
+		reMapTree(sample);
+		Tree mt = mappedTree.copy();
+		pruneSingleChildNodes(mt);
+
+		Node mappedRoot = mt.getRoot();
+
 		mappedRoot.sort();
 		// compute mutations for mapped tree
 		mapMuts(mappedRoot, null);
@@ -155,7 +167,66 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 		out.print(";");
 	}
 
+	public void reMapTree(long sample){
+		if (sample != lastSample) {
+			lastSample = sample;
+			mappedTree = mappedMascotInput.get().mappedTree.copy();
+
+			for (int i = 0; i < ancestralTreeLikelihoodInput.get().size(); i++) {
+				ancestralTreeLikelihoodInput.get().get(i).calculateLogP();
+				ancestralTreeLikelihoodInput.get().get(i).redrawAncestralStates();
+			}
+			mappedMascotInput.get().calculateLogP();
+		}
+	}
+
+	public void pruneSingleChildNodes(Tree tree){
+		if (internalNodesOnlyInput.get()){
+			pruneSingleChildNodes(tree.getRoot());
+			singleChildCheck(tree.getRoot());
+		}
+	}
+
+	//  method to check that there are no singlechild nodes left in the tree
+	private void singleChildCheck(Node n){
+		if (n.getChildCount()==2){
+			singleChildCheck(n.getChild(0));
+			singleChildCheck(n.getChild(1));
+		}else if (n.getChildCount()==1) {
+			throw new IllegalArgumentException("single child node left");
+		}
+	}
+
+	private void pruneSingleChildNodes(Node node) {
+		// if the node has only one child, pass down to the next and next until it has more than one child or 0 children
+		if (node.getChildCount()==2){
+			// keeps track of which child is left or right as that may be changed by the pruning
+			Node leftChild = node.getChild(0);
+			Node rightChild = node.getChild(1);
+			pruneSingleChildNodes(leftChild);
+			pruneSingleChildNodes(rightChild);
+		} else if (node.getChildCount()==1){
+			Node nextNode = getNextNonSingleChildNode(node);
+			Node parent = node.getParent();
+			nextNode.setParent(parent);
+			parent.removeChild(node);
+			parent.addChild(nextNode);
+			pruneSingleChildNodes(nextNode);
+		}
+	}
+
+	private Node getNextNonSingleChildNode(Node node){
+		if (node.getChildCount()==1) {
+			return getNextNonSingleChildNode(node.getChild(0));
+		} else {
+			return node;
+		}
+	}
+
 	private void mapMuts(Node node, int[] parentSiteStates) {
+		if (node==null)
+			return;
+
 		int[] currSiteStates = new int[totalLength];
 
 		for (int i = 0; i < currSiteStates.length; i++)
@@ -176,14 +247,15 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 			times.add(currtime - currNode.getHeight());
 
 			// get the sequence at the currtime
-			for (int i = 0; i < ancestralTreeLikelihoodInput.get().size(); i++) {
-				int[] siteStates = ancestralTreeLikelihoodInput.get().get(i)
-						.getStatesForNode(ancestralTreeLikelihoodInput.get().get(0).treeInput.get(), currNode);
-
-				for (int j = 0; j < mapping.get(i).length; j++) {
-					currSiteStates[mapping.get(i)[j]] = siteStates[j];
-				}
-			}
+//			for (int i = 0; i < ancestralTreeLikelihoodInput.get().size(); i++) {
+//				int[] siteStates = ancestralTreeLikelihoodInput.get().get(i)
+//						.getStatesForNode(ancestralTreeLikelihoodInput.get().get(0).treeInput.get(), currNode);
+//
+//				for (int j = 0; j < mapping.get(i).length; j++) {
+//					currSiteStates[mapping.get(i)[j]] = siteStates[j];
+//				}
+//			}
+			currSiteStates = getNodeSequence(node);
 
 			// get all the mutations and assign them to intervals
 			double[] array = new double[times.size()];
@@ -236,16 +308,20 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 			if (print)
 				node.setMetaData(tagInput.get(), muts_string);
 
-		} else {
-			// node is leaf or coalescent event
-			for (int i = 0; i < ancestralTreeLikelihoodInput.get().size(); i++) {
-				int[] siteStates = ancestralTreeLikelihoodInput.get().get(i)
-						.getStatesForNode(ancestralTreeLikelihoodInput.get().get(0).treeInput.get(), node);
+			if (internalNodesOnlyInput.get())
+				System.err.println("internalNodesOnlyInput not null, but single child nodes are left at height "+node.getHeight());
 
-				for (int j = 0; j < mapping.get(i).length; j++) {
-					currSiteStates[mapping.get(i)[j]] = siteStates[j];
-				}
-			}
+		} else {
+			currSiteStates = getNodeSequence(node);
+//			// node is leaf or coalescent event
+//			for (int i = 0; i < ancestralTreeLikelihoodInput.get().size(); i++) {
+//				int[] siteStates = ancestralTreeLikelihoodInput.get().get(i)
+//						.getStatesForNode(ancestralTreeLikelihoodInput.get().get(0).treeInput.get(), node);
+//
+//				for (int j = 0; j < mapping.get(i).length; j++) {
+//					currSiteStates[mapping.get(i)[j]] = siteStates[j];
+//				}
+//			}
 
 			if (!node.isRoot()) {
 				List<String> muts = new ArrayList<>();
@@ -267,13 +343,51 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 				muts_string=muts_string.replace("\",", "\"");
 				if (print)
 					node.setMetaData(tagInput.get(), muts_string);
+			}else{
+				if (startReadingFrame.get()!=null) {
+					if (!getAminoAcid(startReadingFrame.get() - 1, currSiteStates).toString().equals("M"))
+						System.err.println("AA sequence at root doesn't start with M + but with " + getAminoAcid(startReadingFrame.get() - 1, currSiteStates));
+
+					if (endReadingFrame.get()==Integer.MAX_VALUE){
+						// look for the first stop codon
+						int i = startReadingFrame.get()-1;
+						while (i<currSiteStates.length-2 && !isStopCodon(i, currSiteStates)){
+							i=i+3;
+						}
+
+						// reading frame is inferred from the first stop codon
+						endReadingFrame.set(i+1);
+						System.err.println("the reading from is inferred to be from "+startReadingFrame.get()+" to "+ endReadingFrame.get() +
+								", with " + (i+1) + " being the index of the stop codon");
+
+					}
+				}
+
 			}
 		}
 
 		if (!node.isLeaf()) {
+			if (node.getLeft()==null || node.getRight()==null)
+				System.err.println("Node " + node.getHeight() + " has one child that is null");
 			mapMuts(node.getLeft(), currSiteStates);
 			mapMuts(node.getRight(), currSiteStates);
 		}
+	}
+
+	protected int[] getNodeSequence(Node node){
+		int[] currSiteStates = new int[totalLength];
+		for (int i = 0; i < ancestralTreeLikelihoodInput.get().size(); i++) {
+//			System.out.println(node);
+//			System.out.println("node height "+ node.getHeight());
+//			System.out.println("node " + node.getID() + " node number " + node.getNr());
+			int[] siteStates = ancestralTreeLikelihoodInput.get().get(i)
+					.getStatesForNode(ancestralTreeLikelihoodInput.get().get(0).treeInput.get(), node);
+
+			for (int j = 0; j < mapping.get(i).length; j++) {
+				currSiteStates[mapping.get(i)[j]] = siteStates[j];
+			}
+		}
+		return currSiteStates;
 	}
 
 	private void appendDouble(StringBuffer buf, double d) {
@@ -364,8 +478,6 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 
 	@Override
 	public void initAndValidate() {
-		// TODO Auto-generated method stub
-
 	}
 
 	private void initTable() {
@@ -378,5 +490,60 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 		for (int i = 0; i < dnaarray.length; i++)
 			translationsTable.put(dnaarray[i], aaarray[i]);
 
+		String stop = "TAG TAA TGA";
+		stopArray = dna.split(" ");
+
+
+
 	}
+
+	public String getMutation(int i, int p, int c) {
+		return dataType.getCharacter(p) + "" + (i + 1) + ""	+ dataType.getCharacter(c);
+	}
+
+	public String getAAchange(int i, int[] parent, int[] child){
+		if (i<startReadingFrame.get()-1 || i>endReadingFrame.get()-2){
+			return "nan";
+		}
+
+		int codonPosition = (i-startReadingFrame.get()+1) % 3;
+
+		int aaPosition = (i-startReadingFrame.get()+1) / 3;
+
+
+		String codon_p = "";
+		String codon_c = "";
+		for (int j = 0; j < 3; j++) {
+			codon_p = codon_p + dataType.getCharacter(parent[i+j-codonPosition]);
+			codon_c = codon_c + dataType.getCharacter(child[i+j-codonPosition]);
+		}
+		return translationsTable.get(codon_p) + (aaPosition+1) + translationsTable.get(codon_c);
+	}
+
+	public String getAminoAcid(int i, int[] seq){
+		if (i<startReadingFrame.get()-1 || i>endReadingFrame.get()-2){
+			return "nan";
+		}
+
+		int codonPosition = (i-startReadingFrame.get()+1) % 3;
+		String codon = "";
+		for (int j = 0; j < 3; j++) {
+			codon = codon + dataType.getCharacter(seq[i+j-codonPosition]);
+		}
+		return translationsTable.get(codon);
+	}
+
+	public boolean isStopCodon(int i, int[] seq){
+		String codon = "";
+		for (int j = 0; j < 3; j++) {
+			codon = codon + dataType.getCharacter(seq[i+j]);
+		}
+		return !Arrays.asList(stopArray).contains(codon);
+	}
+
+	public String getBranchType(Node n){
+		return mappedMascotInput.get().dynamics.getStringStateValue((int) n.getParent().getMetaData("location"))
+				+ "->" + mappedMascotInput.get().dynamics.getStringStateValue((int) n.getMetaData("location"));
+	}
+
 }

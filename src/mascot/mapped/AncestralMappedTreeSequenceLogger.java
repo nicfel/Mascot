@@ -12,6 +12,7 @@ import mascot.distribution.MappedMascot;
 
 import java.io.PrintStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Description("Reconstructs sequences at internal nodes and logs them in NEXUS format")
@@ -48,10 +49,14 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 	List<Integer[]> mapping;
 
 	Map<String, String> translationsTable;
-	String[] stopArray;
+	String stopCodons;
 	Tree mappedTree;
 
 	long lastSample = -1;
+
+	String dna = "AAA AAC AAG AAT ACA ACC ACG ACT AGA AGC AGG AGT ATA ATC ATG ATT CAA CAC CAG CAT CCA CCC CCG CCT CGA CGC CGG CGT CTA CTC CTG CTT GAA GAC GAG GAT GCA GCC GCG GCT GGA GGC GGG GGT GTA GTC GTG GTT TAA TAC TAG TAT TCA TCC TCG TCT TGA TGC TGG TGT TTA TTC TTG TTT";
+	String aa = "K N K N T T T T R S R S I I M I Q H Q H P P P P R R R R L L L L E D E D A A A A G G G G V V V V O Y O Y S S S S O C W C L F L F";
+	List<String> aaList;
 
 	@Override
 	public void init(PrintStream out) {
@@ -215,7 +220,7 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 		}
 	}
 
-	private Node getNextNonSingleChildNode(Node node){
+	protected Node getNextNonSingleChildNode(Node node){
 		if (node.getChildCount()==1) {
 			return getNextNonSingleChildNode(node.getChild(0));
 		} else {
@@ -377,9 +382,6 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 	protected int[] getNodeSequence(Node node){
 		int[] currSiteStates = new int[totalLength];
 		for (int i = 0; i < ancestralTreeLikelihoodInput.get().size(); i++) {
-//			System.out.println(node);
-//			System.out.println("node height "+ node.getHeight());
-//			System.out.println("node " + node.getID() + " node number " + node.getNr());
 			int[] siteStates = ancestralTreeLikelihoodInput.get().get(i)
 					.getStatesForNode(ancestralTreeLikelihoodInput.get().get(0).treeInput.get(), node);
 
@@ -389,6 +391,34 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 		}
 		return currSiteStates;
 	}
+
+	protected int[] getTranslatedNodeSequence(Node node){
+		int[] currSiteStates = new int[totalLength];
+		for (int i = 0; i < ancestralTreeLikelihoodInput.get().size(); i++) {
+			int[] siteStates = ancestralTreeLikelihoodInput.get().get(i)
+					.getStatesForNode(ancestralTreeLikelihoodInput.get().get(0).treeInput.get(), node);
+
+			for (int j = 0; j < mapping.get(i).length; j++) {
+				currSiteStates[mapping.get(i)[j]] = siteStates[j];
+			}
+		}
+
+		int[] currTranslatedSites = new int[(endReadingFrame.get()-startReadingFrame.get())/3];
+
+		for (int i = 0; i < currTranslatedSites.length; i++) {
+			// get the index of the amino acid in the array aaaray
+			currTranslatedSites[i] = aaList.indexOf(getAminoAcid(startReadingFrame.get()+i*3 - 1, currSiteStates));
+		}
+
+//		for (int j = 0; j < currTranslatedSites.length; j++){
+//			System.out.print(aaList.get(currTranslatedSites[j]));
+//		}
+//		System.out.println();
+
+
+		return currTranslatedSites;
+	}
+
 
 	private void appendDouble(StringBuffer buf, double d) {
 		buf.append(d);
@@ -481,8 +511,6 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 	}
 
 	private void initTable() {
-		String dna = "AAA AAC AAG AAT ACA ACC ACG ACT AGA AGC AGG AGT ATA ATC ATG ATT CAA CAC CAG CAT CCA CCC CCG CCT CGA CGC CGG CGT CTA CTC CTG CTT GAA GAC GAG GAT GCA GCC GCG GCT GGA GGC GGG GGT GTA GTC GTG GTT TAA TAC TAG TAT TCA TCC TCG TCT TGA TGC TGG TGT TTA TTC TTG TTT";
-		String aa = "K N K N T T T T R S R S I I M I Q H Q H P P P P R R R R L L L L E D E D A A A A G G G G V V V V O Y O Y S S S S O C W C L F L F";
 
 		translationsTable = new HashMap<>();
 		String[] dnaarray = dna.split(" ");
@@ -490,10 +518,9 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 		for (int i = 0; i < dnaarray.length; i++)
 			translationsTable.put(dnaarray[i], aaarray[i]);
 
-		String stop = "TAG TAA TGA";
-		stopArray = dna.split(" ");
-
-
+		// make a list with the keys of translationTable
+		aaList = Arrays.asList(aaarray).stream().distinct().collect(Collectors.toList());
+		stopCodons = "TAG TAA TGA";
 
 	}
 
@@ -534,11 +561,12 @@ public class AncestralMappedTreeSequenceLogger extends BEASTObject implements Fu
 	}
 
 	public boolean isStopCodon(int i, int[] seq){
+
 		String codon = "";
 		for (int j = 0; j < 3; j++) {
 			codon = codon + dataType.getCharacter(seq[i+j]);
 		}
-		return !Arrays.asList(stopArray).contains(codon);
+		return stopCodons.contains(codon);
 	}
 
 	public String getBranchType(Node n){

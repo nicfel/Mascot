@@ -15,7 +15,7 @@ public class MutationTableLogger extends BEASTObject implements Loggable {
 
 
 	AncestralMappedTreeSequenceLogger amts;
-
+	boolean first;
 
 	@Override
 	public void initAndValidate() {
@@ -24,7 +24,7 @@ public class MutationTableLogger extends BEASTObject implements Loggable {
 
 	@Override
 	public void init(PrintStream out) {
-		out.print("Sample\tMutation\tAA\tBranchType\tBranchLength\tBranchMutations");
+		out.print("Mutation\tAA\tBranchType\tBranchLength\tBranchMutations");
 	}
 
 	@Override
@@ -33,7 +33,7 @@ public class MutationTableLogger extends BEASTObject implements Loggable {
 
 		Tree mt = amts.mappedTree.copy();
 		amts.pruneSingleChildNodes(mt);
-
+		first = true;
 		getBranchMutations(sample, out, mt.getRoot());
 	}
 
@@ -54,9 +54,13 @@ public class MutationTableLogger extends BEASTObject implements Loggable {
 			}
 			for (int i = 0; i < parentSequence.length; i++) {
 				if (parentSequence[i] != childSequence[i]) {
+					if (!first)
+						out.println(sample + "\t");
+					first = false;
 					String mut = amts.getMutation(i, parentSequence[i], childSequence[i]);
-					out.print("\n" + sample + "\t" + mut + "\t" +
-							amts.getAAchange(i, parentSequence, childSequence) + "\t" + amts.getBranchType(node)  + "\t" + node.getLeft() + "\t" + totMutations);
+					out.print(mut + "\t" +
+							amts.getAAchange(i, parentSequence, childSequence) + "\t" + amts.getBranchType(node)  + "\t" + node.getLength() + "\t" + totMutations);
+					out.print("\n");
 				}
 			}
 		}

@@ -32,6 +32,8 @@
         <provider classname="mascot.dynamics.GLMWithSkylineNe"/>
         <provider classname="mascot.dynamics.RateShifts"/>
         <provider classname="mascot.dynamics.StructuredSkyline"/>
+        <provider classname="mascot.dynamics.mascot.dynamics.StructuredMigrationSkyline"/>
+        
         <provider classname="mascot.glmmodel.Covariate"/>
         <provider classname="mascot.glmmodel.CovariateList"/>
         <provider classname="mascot.glmmodel.ErrorSmoothing"/>

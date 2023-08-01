@@ -59,7 +59,7 @@ public class StructuredMigrationSkyline extends Dynamics implements Loggable {
 		isForward = true;
 
     	// check the dimension of the migration rates
-    	if (dimensionInput.get()*(dimensionInput.get()-1)!=migration.size() || fromBeautiInput.get()){
+    	if (dimensionInput.get()*(dimensionInput.get()-1)!=migration.size()){
     		throw new IllegalArgumentException("the dimension of " + migration.getID() + " is set to " + (dimensionInput.get()*(dimensionInput.get()-1)) + " from " + migration.size());
     	}
     	

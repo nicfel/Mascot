@@ -383,13 +383,13 @@ public class StructuredMigrationSkyline extends Dynamics implements Loggable {
 				for (int b = 0; b < intTimes.length; b++) {
 					out.print(String.format("Ne_%s.%d\t", getStringStateValue(a), b));
 				}
-			}			
+			}
+			for (int a = 0; a < dimensionInput.get(); a++)
+				for (int b = 0; b < dimensionInput.get(); b++)
+					if (a!=b)
+						for (int i = 0; i < intTimes.length; i++)
+							out.print(String.format("f_%s.%s_to_%s.%d\t", migration.get(dirs[a][b]).getID(), getStringStateValue(a), getStringStateValue(b), i));
 
-			
-//			for (int a = 0; a < dimensionInput.get(); a++)
-//				for (int b = 0; b < dimensionInput.get(); b++)
-//					if (a!=b)
-//						out.print(String.format("f_%s.%s_to_%s\t", f_mInput.get().getID(), getStringStateValue(a), getStringStateValue(b)));
 			}
 	}
 	
@@ -411,18 +411,21 @@ public class StructuredMigrationSkyline extends Dynamics implements Loggable {
 			}
 			
 			
-//			for (int a = 0; a < dimensionInput.get(); a++) {
-//				for (int b = 0; b < dimensionInput.get(); b++) {
-//					if (a!=b) {
-//						if (indicatorInput.get().getArrayValue(dirs[a][b])>0.5)
-//							out.print(f_mInput.get().getArrayValue(dirs[a][b]) + "\t");
-//						else
-//							out.print(0.0 + "\t");
-//
-//						c++;
-//					}
-//				}
-//			}
+			for (int a = 0; a < dimensionInput.get(); a++) {
+				for (int b = 0; b < dimensionInput.get(); b++) {
+					if (a!=b) {
+						for (int i = 0; i < intTimes.length; i++) {
+							double t = rateShiftsInput.get().getIntervalMidpoint(i);
+							if (indicatorInput.get().getArrayValue(dirs[a][b]) > 0.5)
+								out.print(migration.get(dirs[a][b]).getNeTime(t) + "\t");
+							else
+								out.print(0.0 + "\t");
+						}
+
+						c++;
+					}
+				}
+			}
 		}			
 		
 	}

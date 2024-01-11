@@ -418,4 +418,26 @@
 
     </target>
 
+ 	<condition property="isWindows"><os family="windows" /></condition>
+	<condition property="isLinux"><and><os family="unix"/><not><os family="mac"/></not></and></condition>
+	<condition property="isMac"><os family="mac" /></condition>
+
+	<target name="installLinux" depends="build" if="isLinux">
+	        <mkdir dir="${user.home}/.beast/2.7/${projName}"/>
+			<unzip src="${dist}/${fullName}.zip" dest="${user.home}/.beast/2.7/${projName}"/>
+	</target>
+
+	<target name="installMac" depends="build" if="isMac">
+	        <mkdir dir="${user.home}/.beast/2.7/${projName}"/>
+			<unzip src="${dist}/${fullName}.zip" dest="${user.home}/Library/Application Support/BEAST/2.7/${projName}"/>
+	</target>
+
+	<target name="installWindows" depends="build" if="isWindows">
+	        <mkdir dir="${user.home}/BEAST/2.7/${projName}"/>
+			<unzip src="${dist}/${fullName}.zip" dest="${user.home}/BEAST/2.7/${projName}"/>
+	</target>
+
+	<target name="install" depends="installWindows,installMac,installLinux">
+	</target>
+
 </project>

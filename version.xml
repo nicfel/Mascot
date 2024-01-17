@@ -17,7 +17,9 @@
 
     <service type="beast.base.core.BEASTInterface">
         <provider classname="mascot.distribution.MappedMascot"/>
+        <provider classname="mascot.distribution.MappedMascotWithTipSampling"/>
         <provider classname="mascot.distribution.Mascot"/>
+        <provider classname="mascot.distribution.MascotWithTipSampling"/>
         <provider classname="mascot.distribution.MascotNative"/>
         <provider classname="mascot.distribution.MascotNative2"/>
         <provider classname="mascot.distribution.StructuredTreeDistribution"/>
@@ -41,6 +43,7 @@
         <provider classname="mascot.glmmodel.MaxRate"/>
         <provider classname="mascot.logger.mappedProbLogger"/>
         <provider classname="mascot.logger.MigrationCountLogger"/>
+        <provider classname="mascot.logger.MigrationCountLoggerWithTipSampling"/>
         <provider classname="mascot.logger.RootStateLogger"/>
         <provider classname="mascot.logger.StructuredTreeLogger"/>
         <provider classname="mascot.mapped.MappedTreeIntervals"/>

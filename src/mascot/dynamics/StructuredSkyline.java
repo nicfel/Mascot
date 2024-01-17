@@ -382,11 +382,11 @@ public class StructuredSkyline extends Dynamics implements Loggable {
 	@Override
 	public void init(PrintStream out) {
 		if (isForward){
-			for (int a = 0; a < dimensionInput.get(); a++) {
-				for (int b = 0; b < intTimes.length; b++) {
-					out.print(String.format("Ne_%s.%d\t", getStringStateValue(a), b));
-				}
-			}			
+//			for (int a = 0; a < dimensionInput.get(); a++) {
+//				for (int b = 0; b < intTimes.length; b++) {
+//					out.print(String.format("Ne_%s.%d\t", getStringStateValue(a), b));
+//				}
+//			}
 
 			
 			for (int a = 0; a < dimensionInput.get(); a++)
@@ -400,18 +400,18 @@ public class StructuredSkyline extends Dynamics implements Loggable {
 	public void log(long sample, PrintStream out) {
 		int c=0;
 		if (isForward){
-			for (int a = 0; a < dimensionInput.get(); a++) {
-				for (int b = 0; b < intTimes.length; b++) {
-					double t = rateShiftsInput.get().getIntervalMidpoint(b);
-					double ne;
-					if (parametricFunction.get(a).isTime)
-						ne = parametricFunction.get(a).getNeTime(t);
-					else
-						ne = parametricFunction.get(a).getNeInterval(b);
-
-					out.print(Math.log(ne) + "\t");
-				}
-			}
+//			for (int a = 0; a < dimensionInput.get(); a++) {
+//				for (int b = 0; b < intTimes.length; b++) {
+//					double t = rateShiftsInput.get().getIntervalMidpoint(b);
+//					double ne;
+//					if (parametricFunction.get(a).isTime)
+//						ne = parametricFunction.get(a).getNeTime(t);
+//					else
+//						ne = parametricFunction.get(a).getNeInterval(b);
+//
+//					out.print(Math.log(ne) + "\t");
+//				}
+//			}
 			
 			
 			for (int a = 0; a < dimensionInput.get(); a++) {

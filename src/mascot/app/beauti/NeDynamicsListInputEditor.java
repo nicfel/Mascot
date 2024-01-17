@@ -9,6 +9,7 @@ import beast.base.inference.MCMC;
 import beast.base.inference.Operator;
 import beast.base.inference.distribution.Prior;
 import beast.base.inference.distribution.Uniform;
+import beast.base.inference.operator.kernel.BactrianRandomWalkOperator;
 import beast.base.inference.parameter.RealParameter;
 import beastfx.app.inputeditor.BeautiDoc;
 import beastfx.app.inputeditor.BeautiSubTemplate;
@@ -66,8 +67,7 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 					"NotSet",
 					"Skyline",
 					"Constant",
-					"Exponential",
-					"Logistic"));
+					"Exponential"));
 
 			
 	        ComboBox<String> dynamicsComboBox = new ComboBox<>(skylineExamples);
@@ -83,9 +83,7 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
         		dynamicsComboBox.getSelectionModel().select(2);
         	}else if (neDynamicsList.neDynamicsInput.get().get(i) instanceof ExponentialNe) {
         		dynamicsComboBox.getSelectionModel().select(3);
-        	}else if (neDynamicsList.neDynamicsInput.get().get(i) instanceof LogisticNe) {
-        		dynamicsComboBox.getSelectionModel().select(4);
-        	}			
+        	}
 
         	
 			
@@ -103,9 +101,6 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 	        		case "Exponential" :
 	        			setToExponential(state);
 	        			break;
-	        		case "Logistic" :
-	        			setToLogistic(state);
-	        			break;	        			
 	        	}
 	        	refreshPanel();
 	        	sync();
@@ -347,12 +342,9 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 		vals.add(1.0);
 		
 		RateShifts rateShifts =  ((Skygrowth) neDynamicsList.neDynamicsInput.get().get(currentIndex)).rateShiftsInput.get();
-		System.out.println("dasdasadsadsadssadasdsadsdasadsad");
 		rateShifts.valuesInput = new Input("value", "input of timings of rate shifts relative to the most recent sample", vals);
 //		rateShifts.initByName("value", vals, "tree", rateShifts.treeInput.get());
-		System.out.println("dasdasadsadsadssadasdsadsdasadsad");
-		System.out.println("dasdasadsadsadssadasdsadsdasadsad");
-    	
+
 	}
 	
 	private void addParameter(RealParameter parameter, String pId, String dynamics, MCMC mcmc, boolean isSkykline) {
@@ -370,12 +362,17 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 		ops.paramInput.setValue(parameter, ops);
 		ops.m_pWeight.setValue(1.0, ops);
 		
-		BactrianScaleOperator bso = new BactrianScaleOperator();
+//		BactrianScaleOperator bso = new BactrianScaleOperator();
+//		bso.setID(dynamics + ".ScalerX.t:" + pId);
+//		bso.parameterInput.setValue(parameter, bso);
+//		bso.scaleFactorInput.setValue(0.5, bso);
+//		bso.scaleUpperLimit.setValue(10.0, bso);
+//		bso.m_pWeight.setValue(1.0, bso);
+
+		BactrianRandomWalkOperator bso = new BactrianRandomWalkOperator();
 		bso.setID(dynamics + ".ScalerX.t:" + pId);
 		bso.parameterInput.setValue(parameter, bso);
-		
 		bso.scaleFactorInput.setValue(0.5, bso);
-		bso.scaleUpperLimit.setValue(10.0, bso);
 		bso.m_pWeight.setValue(1.0, bso);
 		
 		// add the bactrian to the adaptable		

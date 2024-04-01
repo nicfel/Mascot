@@ -56,10 +56,16 @@ public class MappedMascot extends Mascot implements Loggable {
 	protected DecimalFormat df;
 	protected boolean someMetaDataNeedsLogging;
 	protected boolean substitutions = false;
+	
+	private enum EventType {
+		SAMPLE, COALESCENT, RATESHIFT
+	}
 
 	public Tree mappedTree;
 
 	List<Integer> activeStates;
+	List<List<Double>> usedTimes; // keeps track of the timings used for the intermediate results
+	List<EventType> usedTypes; // keeps track of the timings used for the intermediate results	
 	double[] migrationRates;
 	
 	long lastLog=-1;
@@ -107,6 +113,7 @@ public class MappedMascot extends Mascot implements Loggable {
 
 	@Override
 	public double calculateLogP() {
+		
 //		System.out.println(treeIntervals.treeInput.get());
 		// newly calculate tree intervals (already done by swap() below)
 		treeIntervals.calculateIntervals();
@@ -114,12 +121,18 @@ public class MappedMascot extends Mascot implements Loggable {
 		// bifurcation or in case two nodes are at the same height
 		treeIntervals.swap();
 		
+		// initialize a new Mapped tree that inclused single child nodes for migration events		
 		mappedTree = new Tree(tree.getRoot().copy());
 		mappedTree.getRoot().sort();
-
+		
+		// Maps that keep track of the state probabilities and times that fall onto an edge
 		intermediateStateProbs = new HashMap<>();
 		intermediateTimes = new HashMap<>();
+		// reset the usedTimes
+		usedTimes = new ArrayList<>();
+		usedTypes = new ArrayList<>();
 
+		// The maximum step size for storing intermediate results
 		double maxStepSize = treeIntervals.treeInput.get().getRoot().getHeight() * maxIntegrationStepMappingInput.get();
 		
 		// Set up ArrayLists for the indices of active lineages and the lineage state
@@ -129,7 +142,7 @@ public class MappedMascot extends Mascot implements Loggable {
 		nrLineages = 0;
 		// linProbs = new double[0];// initialize the tree and rates interval counter
 		linProbsLength = 0;
-		int treeInterval = 0, ratesInterval = 0;
+		int treeInterval = 0, ratesInterval = 0, anyInterval = 0;
 		double nextEventTime = 0.0;
 
 		// Time to the next rate shift or event on the tree
@@ -144,7 +157,6 @@ public class MappedMascot extends Mascot implements Loggable {
 		}
 		
 //		if (first == 0 || !dynamics.areDynamicsKnown()) {
-//			System.out.println("lalal");
 			setUpDynamics();
 //		}
 
@@ -157,11 +169,16 @@ public class MappedMascot extends Mascot implements Loggable {
 		double currTime = 0;
 
 		double lastRateShift = currTime;
+		
+		usedTimes.add(new ArrayList<>());
+		
+		double maxFloatError = treeIntervals.treeInput.get().getRoot().getHeight()*maxDiffInput.get();
+
 
 		// Calculate the likelihood
 		do {
 			nextEventTime = Math.min(nextTreeEvent, nextRateShift);
-			if (nextEventTime > 0) { // if true, calculate the interval contribution
+			if (nextEventTime > maxFloatError) { // if true, calculate the interval contribution
 				if (recalculateLogP) {
 					System.err.println("ode calculation stuck, reducing tolerance, new tolerance= " + maxTolerance);
 					maxTolerance *= 0.9;
@@ -170,9 +187,13 @@ public class MappedMascot extends Mascot implements Loggable {
 					return calculateLogP();
 				}
 				
+				// calculate the intermediate state probabilities until the next event, either a coal, sample or rate shift
 				if (nextEventTime < maxStepSize) {
 					logP += doEuler(nextEventTime, ratesInterval);
 					currTime += nextEventTime;
+					// add the current time to the used times
+					usedTimes.get(anyInterval).add(currTime);
+					// store the intermediate results
 					storeIntermediateResults(currTime);
 				} else {
 					int nrIntermediates = (int) (nextEventTime / maxStepSize);
@@ -183,15 +204,23 @@ public class MappedMascot extends Mascot implements Loggable {
 						if (i == nrIntermediates)
 							currTime = oldCurrTime + nextEventTime;
 
+						// add the current time to the used times
+						usedTimes.get(anyInterval).add(currTime);
+						// store the intermediate results
 						storeIntermediateResults(currTime);
 					}
 				}
 			}
 
+			usedTimes.add(new ArrayList<>());
+			anyInterval++;
+
 			if (nextTreeEvent <= nextRateShift) {
 				if (treeIntervals.getIntervalType(treeInterval) == IntervalType.COALESCENT) {
 					nrLineages--; // coalescent event reduces the number of lineages by one
 					logP += coalesce(treeInterval, ratesInterval, nextTreeEvent, nextRateShift, currTime); // calculate
+					usedTimes.get(anyInterval).add(currTime);
+					usedTypes.add(EventType.COALESCENT);
 																											// the
 					// likelihood of the
 					// coalescent event
@@ -202,7 +231,9 @@ public class MappedMascot extends Mascot implements Loggable {
 					// logP += normalizeLineages(linProbs); // normalize all lineages before event
 					nrLineages++; // sampling event increases the number of lineages by one
 					sample(treeInterval, ratesInterval, nextTreeEvent, nextRateShift, currTime); // calculate the
-																									// likelihood of
+					usedTimes.get(anyInterval).add(currTime);
+					usedTypes.add(EventType.SAMPLE);
+
 					// the sampling event if
 					// sampling rate is given
 				}
@@ -222,6 +253,8 @@ public class MappedMascot extends Mascot implements Loggable {
 				nextTreeEvent -= nextRateShift;
 				nextRateShift = dynamics.getInterval(ratesInterval);
 				lastRateShift = currTime;
+				usedTimes.get(anyInterval).add(currTime);
+				usedTypes.add(EventType.RATESHIFT);
 			}
 			if (logP == Double.NEGATIVE_INFINITY) {
 				return logP;
@@ -232,10 +265,9 @@ public class MappedMascot extends Mascot implements Loggable {
 		} while (nextTreeEvent <= Double.POSITIVE_INFINITY);
 
 		first++;
-
+		
 		resample(treeInterval, ratesInterval, lastRateShift);
-//		System.out.println(treeIntervals.treeInput.get());
-//		System.out.println("");
+		
 		return logP;
 	}
 	
@@ -254,7 +286,6 @@ public class MappedMascot extends Mascot implements Loggable {
 //    	dynamics.setDynamicsKnown();
 		euler.setUpDynamics(coalescentRates, migrationRates, indicators, nextRateShift);
 	}
-
 
 	protected double coalesce(int currTreeInterval, int currRatesInterval, double nextTreeEvent, double nextRateShift,
 			double currTime) {
@@ -287,50 +318,53 @@ public class MappedMascot extends Mascot implements Loggable {
 		intermediateTimes.get(nr).add(time);
 	}
 
+	
 	private void resample(int treeInterval, int ratesInterval, double lastRateShift) {
 		treeInterval--;
 		// start by resampling the root
 		int rootNr = treeIntervals.getLineagesAdded(treeInterval);
-
-//		System.out.println(tree);
-		
+		// the number of lineages at the root is always 1
 		nrLineages = 1;
+		// the active lineages are the ones that are present at the root
 		activeStates = new ArrayList<>();
-
-		// sample rootState
+		// sample rootState from the state probabilities at the root
 		int rootState = Randomizer.randomChoicePDF(intermediateStateProbs.get(rootNr).get(0));
-
+		// add the rootState to the active states
 		activeStates.add(rootState);
+		// keep track of the active lineages
 		activeLineages.clear();
 		activeLineages.add(rootNr);
         linProbsLength = 0;
-
+        // index to keep track of the used times, start with the last one
 
 		mappedTree.getRoot().setMetaData("location", rootState);
 		coalesceDown(treeInterval);
 
-		double currTime = treeIntervals.treeInput.get().getRoot().getHeight();
-
-		double nextTreeEvent = treeIntervals.getInterval(treeInterval);
+		int anyInterval = usedTimes.size() - 2; // start with the series of times saved in the last interval before the coalescent event
+		double currTime = usedTimes.get(anyInterval+1).get(0); // get the time of the root as the time of the coalescent interval of the last usedTimes
+		double maxFloatError = currTime*maxDiffInput.get();
+		
+		// get the time until the next tree event and the next rate shift
+		double nextTreeEvent = treeIntervals.getInterval(treeInterval);		
 		double nextRateShift = currTime - lastRateShift;
-
+				
 		double nextEventTime;
 		// Calculate the likelihood
 		do {
 			nextEventTime = Math.min(nextTreeEvent, nextRateShift);
-			if (nextEventTime > 0) { // if true, calculate the interval contribution
-//				System.out.println("currentTime " + currTime);
-				sampleMigrationEvents(currTime, currTime - nextEventTime);
+			if (nextEventTime > maxFloatError) { // if true, calculate the interval contribution
+				// sample the migration events that occurred between now and the next event time (sample, coal, or rate shift)			
+				sampleMigrationEvents(usedTimes.get(anyInterval));
 				currTime -= nextEventTime;
 			}
-
-			if (nextTreeEvent <= nextRateShift) {
-				if (treeIntervals.getIntervalType(treeInterval - 1) == IntervalType.COALESCENT) {
+			anyInterval--;
+			if (usedTypes.get(anyInterval) != EventType.RATESHIFT) {
+				if (usedTypes.get(anyInterval) == EventType.COALESCENT) {
 					nrLineages++; // coalescent event reduces the number of lineages by one
 					coalesceDown(treeInterval - 1); // calculate the
 				}
 
-				if (treeIntervals.getIntervalType(treeInterval - 1) == IntervalType.SAMPLE) {
+				if (usedTypes.get(anyInterval) == EventType.SAMPLE) {
 					// if (linProbsLength > 0)
 					// logP += normalizeLineages(linProbs); // normalize all lineages before event
 					nrLineages--; // sampling event increases the number of lineages by one
@@ -357,42 +391,25 @@ public class MappedMascot extends Mascot implements Loggable {
 				// indicators = dynamics.getIndicators(ratesInterval);
 			}
 		} while (treeInterval > 0);
-
-		first++;
-
 	}
 	
 
-	private void sampleMigrationEvents(double startTime, double endTime) {
+	private void sampleMigrationEvents(List<Double> timesInInterval) {
 		for (int i = 0; i < activeLineages.size(); i++) {
-			sampleMigrationEventsLineage(activeLineages.get(i), i, startTime, endTime);
+			sampleMigrationEventsLineage(activeLineages.get(i), i, timesInInterval);
 		}
 	}
 
-	private void sampleMigrationEventsLineage(Integer nodeNr, int index, double startTime, double endTime) {
+	private void sampleMigrationEventsLineage(Integer nodeNr, int index, List<Double> timesInInterval) {
 		double K = -Math.log(Randomizer.nextDouble());
 		double I = 0.0;
+		double startTime = timesInInterval.get(timesInInterval.size() - 1);
+		double endTime = timesInInterval.get(0);
 		double currentTime = startTime;
-		
+
 		int currTimeInterval = intermediateTimes.get(nodeNr).indexOf(startTime);
 		if (currTimeInterval == -1) {
-			boolean cont = false;
-			for (int i = 0; i < intermediateTimes.get(nodeNr).size(); i++)
-				if (Math.abs(intermediateTimes.get(nodeNr).get(i) - startTime) < maxDiffInput.get()) {
-					currTimeInterval = i;
-					cont = true;
-					break;
-				}
-
-			if (!cont) {
-				for (int i = 0; i < intermediateTimes.get(nodeNr).size(); i++)
-					System.err.println(intermediateTimes.get(nodeNr).get(i) - startTime);
-				
-//				System.out.println(mappedTree);
-				
-
-				throw new IllegalArgumentException("timing not found");
-			}
+			throw new IllegalArgumentException("timing not found");
 		}
 
 		double[] prob_start = intermediateStateProbs.get(nodeNr).get(currTimeInterval);

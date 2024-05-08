@@ -6,7 +6,7 @@ import beast.base.inference.parameter.RealParameter;
 
 public class ExponentialNe extends NeDynamics {
 	
-    public Input<RealParameter> NeNullInput = new Input<>(
+    public Input<RealParameter> logNeNullInput = new Input<>(
     		"NeNull", "input of the Ne at the time of the most recent sampled ancestor", Validate.REQUIRED);    
     public Input<RealParameter> growthRateInput = new Input<>(
     		"growthRate", "input of the growth rate", Validate.REQUIRED);    
@@ -14,7 +14,7 @@ public class ExponentialNe extends NeDynamics {
     public Input<Double> minNeInput = new Input<>(
     		"minNe", "input of the minimal Ne", 0.0);    
 
-    RealParameter NeNull;
+    RealParameter logNeNull;
     RealParameter growthRate;
     
 	@Override
@@ -22,7 +22,7 @@ public class ExponentialNe extends NeDynamics {
 		// should be called by a time
 		isTime = true;
 		
-		NeNull = NeNullInput.get();
+		logNeNull = logNeNullInput.get();
 		growthRate = growthRateInput.get();
 	}
 
@@ -33,12 +33,12 @@ public class ExponentialNe extends NeDynamics {
 	@Override
 	public double getNeTime(double t) {
 		
-		return Math.max(minNeInput.get(), Math.exp(NeNull.getArrayValue()-t*growthRate.getArrayValue()));
+		return Math.max(minNeInput.get(), Math.exp(logNeNull.getArrayValue()-t*growthRate.getArrayValue()));
 	}
 	
 	@Override
 	public boolean isDirty() {
-		if (NeNull.isDirty(0))
+		if (logNeNull.isDirty(0))
 			return true;
 		
 		if (growthRate.isDirty(0))

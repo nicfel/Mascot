@@ -267,18 +267,18 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 		ExponentialNe exponential = new ExponentialNe();
 		exponential.setID(id);
 		
-		RealParameter NeNull = new RealParameter();		
-		NeNull.setID("NeNull." +  location + ".t:"+pId);
-		NeNull.init(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, "0.0", 1);
+		RealParameter logNeNull = new RealParameter();		
+		logNeNull.setID("logNeNull." +  location + ".t:"+pId);
+		logNeNull.init(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, "0.0", 1);
 		
 		RealParameter GrowthRate = new RealParameter();		
 		GrowthRate.setID("GrowthRate."  + location + ".t:"+pId);
 		GrowthRate.init(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, "0.0", 1);
 		
-		addParameter(NeNull, pId, "NeNull."+location, mcmc, false);
+		addParameter(logNeNull, pId, "logNeNull."+location, mcmc, false);
 		addParameter(GrowthRate, pId, "GrowthRate."+location, mcmc, false);
 		
-		exponential.initByName("NeNull", NeNull, "growthRate", GrowthRate);
+		exponential.initByName("NeNull", logNeNull, "growthRate", GrowthRate);
     	neDynamicsList.neDynamicsInput.get().set(currentIndex, exponential);   
 	}
 	
@@ -447,7 +447,7 @@ public class NeDynamicsListInputEditor extends InputEditor.Base {
 			removeParameter(((CompoundDistribution) mcmc.posteriorInput.get()), ((ConstantNe) neDynamics).NeInput.get());
 		}else if (neDynamics instanceof ExponentialNe) {
 			removeParameter(((CompoundDistribution) mcmc.posteriorInput.get()), ((ExponentialNe) neDynamics).growthRateInput.get());
-			removeParameter(((CompoundDistribution) mcmc.posteriorInput.get()), ((ExponentialNe) neDynamics).NeNullInput.get());			
+			removeParameter(((CompoundDistribution) mcmc.posteriorInput.get()), ((ExponentialNe) neDynamics).logNeNullInput.get());			
 		}else if (neDynamics instanceof Skygrowth) {
 			removeParameter(((CompoundDistribution) mcmc.posteriorInput.get()), ((Skygrowth) neDynamics).NeInput.get());
 		}else if (neDynamics instanceof LogisticNe) {

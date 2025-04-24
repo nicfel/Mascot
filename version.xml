@@ -77,6 +77,7 @@
         <provider classname="mascot.util.Mean"/>
         <provider classname="mascot.util.First"/>
         <provider classname="mascot.util.Final"/>
+        <provider classname="mascot.util.LargerThan"/>
    </service>
 
 

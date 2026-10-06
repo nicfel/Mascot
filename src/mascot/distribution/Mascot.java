@@ -10,6 +10,7 @@ import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.CalculationNode;
 import mascot.dynamics.Dynamics;
+import mascot.dynamics.StructuredSkyline;
 import mascot.ode.*;
 
 import java.util.ArrayList;
@@ -29,6 +30,15 @@ public class Mascot extends StructuredTreeDistribution {
 	public Input<Double> maxStepInput = new Input<>("maxStep", "step size for the RK4 integration", Double.POSITIVE_INFINITY);
 	
 	public Input<Boolean> cacheInput = new Input<>("useCache", "use cache to speed things up (may be fragile)", false);
+	public Input<Boolean> eventBasedRatesInput = new Input<>("eventBasedRates", "if true, rates only change at tree events and at most every rate shift spacing, "
+			+ "using the rates at the midpoint of each piece, instead of on the rate shift grid. "
+			+ "Requires StructuredSkyline dynamics with time continuous Ne, otherwise the rate shift grid is used.", false);
+	public Input<Boolean> useSIMDInput = new Input<>("useSIMD", "if true, use the SIMD (Vector API) ODE solver for 3 states, "
+			+ "which requires the JVM option --add-modules jdk.incubator.vector. Results agree up to floating point rounding.", false);
+	public Input<Boolean> singlePrecisionInput = new Input<>("singlePrecision", "if true and useSIMD is used, the lineage state probabilities "
+			+ "are integrated in single precision (about 1.2-1.6 times faster, logP differs by about 1e-8 relative).", false);
+	public Input<Boolean> checkpointCacheInput = new Input<>("checkpointCache", "if true and eventBasedRates is used, restart the calculation after the "
+			+ "unchanged part of the tree instead of recalculating everything", true);
 
 	enum MascotImplementation {java, indicators, allnative};
 	public Input<MascotImplementation> implementationInput = new Input<>("implementation", "implementation, one of " + MascotImplementation.values().toString(),
@@ -170,7 +180,7 @@ public class Mascot extends StructuredTreeDistribution {
     	case java:
     		switch (states) {
     		case 2: euler = new Euler2ndOrder2(); break;
-    		case 3: euler = new Euler2ndOrder3(); break;
+    		case 3: euler = new Euler2ndOrderFused3(); break;
     		case 4: euler = new Euler2ndOrder4(); break;
     		case 5: euler = new Euler2ndOrder5(); break;
     		case 6: euler = new Euler2ndOrder6(); break;
@@ -201,9 +211,34 @@ public class Mascot extends StructuredTreeDistribution {
     		default: euler = new Euler2ndOrder(); break;
     		}
 
+        	if (states == 3 && useSIMDInput.get()) {
+        		if (ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent()) {
+        			try {
+        				// loaded by reflection, so that the class is only resolved when the vector module is available
+        				String solver = singlePrecisionInput.get() ? "mascot.ode.Euler2ndOrderVec3F" : "mascot.ode.Euler2ndOrderVec3";
+        				euler = (Euler2ndOrderBase) Class.forName(solver, true, Mascot.class.getClassLoader())
+        						.getDeclaredConstructor().newInstance();
+        			} catch (ReflectiveOperationException | LinkageError e) {
+        				Log.warning("Could not load the SIMD solver (" + e + "), using the scalar solver");
+        			}
+        		} else {
+        			Log.warning("useSIMD requires the JVM option --add-modules jdk.incubator.vector, using the scalar solver");
+        		}
+        	}
+        	if (singlePrecisionInput.get() && !useSIMDInput.get()) {
+        		Log.warning("singlePrecision is only used together with useSIMD, ignoring it");
+        	}
         	euler.setup(MAX_SIZE, states, epsilonInput.get(), maxStepInput.get());
         	Log.warning("Using " + euler.getClass().getSimpleName());
     	}
+
+    	eventBasedRates = eventBasedRatesInput.get();
+    	if (eventBasedRates && (mascotImpl != null || !(euler instanceof Euler2ndOrderFused) || useCache
+    			|| !(dynamics instanceof StructuredSkyline) || !((StructuredSkyline) dynamics).hasContinuousNe())) {
+    		Log.warning("eventBasedRates requires the java implementation without useCache and StructuredSkyline dynamics with time continuous Ne, using the rate shift grid instead");
+    		eventBasedRates = false;
+    	}
+    	useCheckpoints = eventBasedRates && checkpointCacheInput.get();
     	
     	
     }
@@ -213,8 +248,7 @@ public class Mascot extends StructuredTreeDistribution {
     int [] parents;
 
     public double calculateLogP() {
-    	// newly calculate tree intervals (already done by swap() below)
-    	treeIntervals.calculateIntervals();
+    	// newly calculate tree intervals (done by swap() below)
     	// correctly calculate the daughter nodes at coalescent intervals in the case of
     	// bifurcation or in case two nodes are at the same height
     	treeIntervals.swap();    	
@@ -240,6 +274,10 @@ public class Mascot extends StructuredTreeDistribution {
     	}
         // Set up ArrayLists for the indices of active lineages and the lineage state probabilities
         activeLineages.clear();
+        // without the cache, active lineages are tracked in an int array (actNr) instead of activeLineages
+        fastLineages = !useCache;
+        if (actNr == null || actNr.length < tree.getNodeCount()) actNr = new int[tree.getNodeCount()];
+        nAct = 0;
         logP = 0;
         nrLineages = 0;
         //linProbs = new double[0];// initialize the tree and rates interval counter
@@ -357,12 +395,15 @@ public class Mascot extends StructuredTreeDistribution {
     }
 
 
+		if (eventBasedRates) {
+			return calculateLogPEventRates((StructuredSkyline) dynamics);
+		}
 		coalescentRates = dynamics.getCoalescentRate(ratesInterval);  
         //migrationRates = dynamics.getBackwardsMigration(ratesInterval);
 		//indicators = dynamics.getIndicators(ratesInterval);
 		nrLineages = activeLineages.size();
 		linProbsLength = nrLineages * states;
-
+		
         // Calculate the likelihood
         do {       
         	nextEventTime = Math.min(nextTreeEvent, nextRateShift);       	
@@ -441,6 +482,12 @@ public class Mascot extends StructuredTreeDistribution {
     int storedNrLineages = -1;
     
 	public double doEuler(double nextEventTime, int ratesInterval) {
+		if (euler instanceof Euler2ndOrderFused) {
+			// integrate in place, linProbs has room for the extra logP slot
+			linProbs[linProbsLength] = 0;
+			euler.initAndcalculateValues(ratesInterval, nrLineages, nextEventTime, linProbs, linProbsLength + 1);
+			return linProbs[linProbsLength];
+		}
 		//for (int i = 0; i < linProbs.length; i++) linProbs_tmp[i] = linProbs[i];
 		if (linProbs_tmp.length != linProbsLength + 1) {
 			linProbs_tmp= new double[linProbsLength + 1];
@@ -524,6 +571,7 @@ public class Mascot extends StructuredTreeDistribution {
 		 */
 		if (dynamics.typeTraitInput.get()!=null){
 			Integer l = incomingLines; {
+				if (fastLineages) actNr[nAct++] = incomingLines; else
 				activeLineages.add(l);//.getNr());
 				int sampleState = nodeType[l];//dynamics.getValue(tree.getNode(l).getID());
 				
@@ -543,6 +591,7 @@ public class Mascot extends StructuredTreeDistribution {
 			}				
 		}else{
 			Integer l = incomingLines; {
+				if (fastLineages) actNr[nAct++] = incomingLines; else
 				activeLineages.add(l);//.getNr());
 				String sampleID = tree.getNode(l).getID();
 				int sampleState = 0;
@@ -572,8 +621,8 @@ public class Mascot extends StructuredTreeDistribution {
     		System.err.println("coalesce activeLineages " + currTreeInterval + " " + coalLines0 + " " + coalLines1 + " = " + activeLineages);
     	}
 		
-    	final int daughterIndex1 = activeLineages.indexOf(coalLines0);//.getNr());
-		final int daughterIndex2 = activeLineages.indexOf(coalLines1);//.getNr());
+    	final int daughterIndex1 = fastLineages ? indexOfLineage(coalLines0) : activeLineages.indexOf(coalLines0);//.getNr());
+		final int daughterIndex2 = fastLineages ? indexOfLineage(coalLines1) : activeLineages.indexOf(coalLines1);//.getNr());
 		if (daughterIndex1 == -1 || daughterIndex2 == -1) {
 			System.out.println(coalLines0/*.getNr()*/ + " " + coalLines1/*.getNr()*/ + " " + activeLineages);
 			System.out.println("daughter lineages at coalescent event not found");
@@ -603,6 +652,7 @@ public class Mascot extends StructuredTreeDistribution {
         }
         
         int lineageToAdd = tree.getNode(coalLines0).getParent().getNr();
+        if (!fastLineages)
         activeLineages.add(lineageToAdd);        
         
         // get the node state probabilities
@@ -615,6 +665,18 @@ public class Mascot extends StructuredTreeDistribution {
 		//double[] linProbsNew  = new double[linProbsLength - states];
 		
 		int linCount = 0;		
+		if (fastLineages) {
+			// same compaction as below (in place, since linProbs and linProbsNew alias after the first coalescence), using block copies
+			final int lo = Math.min(daughterIndex1, daughterIndex2), hi = Math.max(daughterIndex1, daughterIndex2);
+			if (linProbsNew != linProbs) System.arraycopy(linProbs, 0, linProbsNew, 0, lo * states);
+			System.arraycopy(linProbs, (lo + 1) * states, linProbsNew, lo * states, (hi - lo - 1) * states);
+			System.arraycopy(linProbs, (hi + 1) * states, linProbsNew, (hi - 1) * states, (nrLineages - hi) * states);
+			linCount = nrLineages - 1;
+			System.arraycopy(actNr, lo + 1, actNr, lo, hi - lo - 1);
+			System.arraycopy(actNr, hi + 1, actNr, hi - 1, nAct - hi - 1);
+			nAct -= 2;
+			actNr[nAct++] = lineageToAdd;
+		} else
 		// add all lineages execpt the daughter lineage to the new p array
 		for (int i = 0; i <= nrLineages; i++){
 			if (i != daughterIndex1 && i != daughterIndex2){
@@ -636,7 +698,9 @@ public class Mascot extends StructuredTreeDistribution {
 		
 		
 		//Remove daughter lineages from the line state probs
-		if (daughterIndex1>daughterIndex2){
+		if (fastLineages) {
+			// already done above
+		} else if (daughterIndex1>daughterIndex2){
 			// remove the daughter lineages from the active lineages
 			activeLineages.remove(daughterIndex1);
 			activeLineages.remove(daughterIndex2);			
@@ -661,6 +725,150 @@ public class Mascot extends StructuredTreeDistribution {
     }
      
   
+	boolean eventBasedRates;
+	double [] evCoal, evMig, evNe;
+
+	// active lineages (node nrs) in the order of linProbs, used instead of activeLineages when the old cache is off
+	boolean fastLineages = false;
+	int [] actNr;
+	int nAct;
+
+	private int indexOfLineage(int nr) {
+		final int [] a = actNr;
+		for (int i = 0; i < nAct; i++) if (a[i] == nr) return i;
+		return -1;
+	}
+
+	// ---- checkpoint cache, double buffered like the partials in TreeLikelihood ----
+	// slot i holds the state after processing tree interval i, in buffer cpIdx[i] (0 or 1);
+	// a calculation only writes into the buffer that is not the stored one, so store/restore only copy indices
+	boolean useCheckpoints;
+	int [] cpIdx, storedCpIdx;
+	int cpCount, storedCpCount;
+	double cpMaxGap = -1, storedCpMaxGap = -1;
+	double [][] cpLogP, cpTime, cpDur;
+	int [][] cpLen, cpNLin, cpNAct, cpType, cpAdd, cpR0, cpR1;
+	double [][][] cpProbs;
+	int [][][] cpAct;
+
+	private void ensureCache(int n) {
+		if (cpIdx != null && cpIdx.length >= n) return;
+		cpIdx = new int[n]; storedCpIdx = new int[n];
+		cpLogP = new double[2][n]; cpTime = new double[2][n]; cpDur = new double[2][n];
+		cpLen = new int[2][n]; cpNLin = new int[2][n]; cpNAct = new int[2][n];
+		cpType = new int[2][n]; cpAdd = new int[2][n]; cpR0 = new int[2][n]; cpR1 = new int[2][n];
+		cpProbs = new double[2][n][]; cpAct = new int[2][n][];
+		cpCount = 0; storedCpCount = 0;
+	}
+
+	private int intervalType(int i) {
+		return treeIntervals.getIntervalType(i) == IntervalType.COALESCENT ? 1 :
+			(treeIntervals.getIntervalType(i) == IntervalType.SAMPLE ? 0 : 2);
+	}
+
+	/** true if tree interval i is identical to the one cached in slot i */
+	private boolean sameInterval(int i) {
+		final int b = cpIdx[i];
+		if (cpDur[b][i] != treeIntervals.getInterval(i)) return false;
+		int type = intervalType(i);
+		if (cpType[b][i] != type) return false;
+		if (cpAdd[b][i] != treeIntervals.getLineagesAdded(i)) return false;
+		if (type == 1) {
+			return cpR0[b][i] == treeIntervals.getLineagesRemoved(i, 0) && cpR1[b][i] == treeIntervals.getLineagesRemoved(i, 1);
+		}
+		return true;
+	}
+
+	private void writeSlot(int i, double time) {
+		final int b = 1 - storedCpIdx[i];
+		cpIdx[i] = b;
+		cpLogP[b][i] = logP; cpTime[b][i] = time; cpDur[b][i] = treeIntervals.getInterval(i);
+		int type = intervalType(i);
+		cpType[b][i] = type; cpAdd[b][i] = treeIntervals.getLineagesAdded(i);
+		cpR0[b][i] = type == 1 ? treeIntervals.getLineagesRemoved(i, 0) : -1;
+		cpR1[b][i] = type == 1 ? treeIntervals.getLineagesRemoved(i, 1) : -1;
+		cpLen[b][i] = linProbsLength; cpNLin[b][i] = nrLineages; cpNAct[b][i] = nAct;
+		if (cpProbs[b][i] == null || cpProbs[b][i].length < linProbsLength) cpProbs[b][i] = new double[Math.max(linProbsLength, 3)];
+		System.arraycopy(linProbs, 0, cpProbs[b][i], 0, linProbsLength);
+		if (cpAct[b][i] == null || cpAct[b][i].length < nAct) cpAct[b][i] = new int[Math.max(nAct, 1)];
+		System.arraycopy(actNr, 0, cpAct[b][i], 0, nAct);
+	}
+
+	private double readSlot(int i) {
+		final int b = cpIdx[i];
+		logP = cpLogP[b][i]; linProbsLength = cpLen[b][i]; nrLineages = cpNLin[b][i]; nAct = cpNAct[b][i];
+		System.arraycopy(cpProbs[b][i], 0, linProbs, 0, linProbsLength);
+		System.arraycopy(cpAct[b][i], 0, actNr, 0, nAct);
+		return cpTime[b][i];
+	}
+
+	/**
+	 * Likelihood with rates that only change at tree events: every tree interval is split into
+	 * ceil(duration/maxGap) equal pieces, each using the rates at its midpoint, where maxGap is the
+	 * spacing of the rate shifts. Coalescent events use the rates at the event time.
+	 * With the checkpoint cache, the calculation restarts after the longest unchanged prefix of tree intervals.
+	 */
+	protected double calculateLogPEventRates(StructuredSkyline sky) {
+		if (evCoal == null) {
+			evCoal = new double[states]; evMig = new double[states * states]; evNe = new double[states];
+		}
+		final double maxGap = sky.getMaxRateShiftSpacing(tree.getRoot().getHeight());
+		final int [] ind = dynamics.getIndicators(0);
+		final int n = treeIntervals.intervalCount;
+		ensureCache(n);
+		fastLineages = true;
+
+		int start = 0;
+		if (useCheckpoints && first > 0 && maxGap == cpMaxGap && !sky.rateParametersDirty()) {
+			final int lim = Math.min(cpCount, n);
+			while (start < lim && sameInterval(start)) start++;
+		}
+		double time;
+		if (start > 0) {
+			time = readSlot(start - 1);
+		} else {
+			time = 0.0; nrLineages = 0; linProbsLength = 0; nAct = 0; logP = 0;
+		}
+
+		int treeInterval = start;
+		while (treeInterval < n) {
+			double duration = treeIntervals.getInterval(treeInterval);
+			if (duration > 0 && nrLineages > 0) {
+				int pieces = maxGap > 0 ? (int) Math.ceil(duration / maxGap) : 1;
+				double dt = duration / pieces;
+				for (int q = 0; q < pieces; q++) {
+					sky.getRatesAtTime(time + (q + 0.5) * dt, evCoal, evMig, evNe);
+					linProbs[linProbsLength] = 0;
+					if (ind != null) euler.initWithIndicators(evMig, ind, evCoal, nrLineages);
+					else euler.init(evMig, evCoal, nrLineages);
+					euler.calculateValues(dt, linProbs, linProbsLength + 1);
+					logP += linProbs[linProbsLength];
+				}
+			}
+			time += duration;
+			if (treeIntervals.getIntervalType(treeInterval) == IntervalType.COALESCENT) {
+				sky.getRatesAtTime(time, evCoal, evMig, evNe);
+				coalescentRates = evCoal;
+				nrLineages--;
+				logP += coalesce(treeInterval, 0, 0, 0);
+			}
+			if (treeIntervals.getIntervalType(treeInterval) == IntervalType.SAMPLE) {
+				nrLineages++;
+				sample(treeInterval, 0, 0, 0);
+			}
+			if (useCheckpoints) writeSlot(treeInterval, time);
+			if (logP == Double.NEGATIVE_INFINITY) {
+				if (useCheckpoints) { cpCount = treeInterval + 1; cpMaxGap = maxGap; }
+				first++;
+				return logP;
+			}
+			treeInterval++;
+		}
+		if (useCheckpoints) { cpCount = n; cpMaxGap = maxGap; }
+		first++;
+		return logP;
+	}
+
     public double[] getStateProb(int nr){
     	if (mascotImpl != null) {
     		return mascotImpl.getStateProb(nr);
@@ -713,6 +921,10 @@ public class Mascot extends StructuredTreeDistribution {
     
     @Override
 	public void store() {
+    	if (cpIdx != null) {
+    		System.arraycopy(cpIdx, 0, storedCpIdx, 0, cpIdx.length);
+    		storedCpCount = cpCount; storedCpMaxGap = cpMaxGap;
+    	}
     	if (!useCache) {
     		super.store();
     		return;
@@ -753,6 +965,10 @@ public class Mascot extends StructuredTreeDistribution {
 
 	@Override
 	public void restore(){
+    	if (cpIdx != null) {
+    		System.arraycopy(storedCpIdx, 0, cpIdx, 0, cpIdx.length);
+    		cpCount = storedCpCount; cpMaxGap = storedCpMaxGap;
+    	}
     	if (!useCache) {
     		super.restore();
     		return;

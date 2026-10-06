@@ -169,6 +169,53 @@ public class StructuredSkyline extends Dynamics implements Loggable {
 		return coal;
     }
     
+	/** true if Ne of all demes is defined in continuous time (needed for event based rate updates) */
+	public boolean hasContinuousNe() {
+		for (int j = 0; j < parametricFunction.size(); j++)
+			if (!parametricFunction.get(j).isTime) return false;
+		return true;
+	}
+
+	/** true if any parameter that determines the rates (Ne dynamics, migration, indicators) changed; tree changes are not included */
+	public boolean rateParametersDirty() {
+		for (int j = 0; j < parametricFunction.size(); j++)
+			if (parametricFunction.get(j).isDirtyCalculation()) return true;
+		return migration.somethingIsDirty() || indicatorInput.get().somethingIsDirty();
+	}
+
+	/** largest spacing between rate shifts (in absolute time) among shifts that start before maxTime */
+	public double getMaxRateShiftSpacing(double maxTime) {
+		double prev = 0, max = 0;
+		for (int i = 0; i < rateShiftsInput.get().getDimension(); i++) {
+			double v = rateShiftsInput.get().getValue(i);
+			if (prev >= maxTime) break;
+			max = Math.max(max, v - prev);
+			prev = v;
+		}
+		return max;
+	}
+
+	/** coalescent and backwards migration rates at time t, same formulas as getCoalescentRate/getBackwardsMigration */
+	public void getRatesAtTime(double t, double[] coal, double[] m, double[] NeInt) {
+		int dim = dimensionInput.get();
+		for (int j = 0; j < dim; j++) {
+			NeInt[j] = parametricFunction.get(j).getNeTime(t);
+			coal[j] = Math.min(maxRateInput.get(), 1/NeInt[j]);
+		}
+		for (int a = 0; a < dim; a++){
+			for (int b = 0; b < dim; b++){
+				if (a!=b){
+    				if (indicatorInput.get().getArrayValue(dirs[b][a])>0.5)
+						m[a * dim + b] = Math.min(maxRateInput.get(), NeInt[b]*migration.getArrayValue(dirs[b][a])/NeInt[a]);
+    				else
+						m[a * dim + b] = 0.0;
+				} else {
+					m[a * dim + b] = 0.0;
+				}
+			}
+		}
+	}
+
 	@Override    
     public double[] getBackwardsMigration(int i){
 		if (!intTimesKnown)

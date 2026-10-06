@@ -191,6 +191,8 @@
       <javac target="${targetVersion}" source="${sourceVersion}"
              srcdir="${src}" destdir="${build}"
              includeantruntime="false" fork="yes" encoding="UTF-8">
+            <!-- needed for the SIMD ODE solver mascot.ode.Euler2ndOrderVec3 -->
+            <compilerarg line="--add-modules jdk.incubator.vector"/>
             <classpath>
                 <pathelement path="${classpath}"/>
                 <fileset dir="${lib}" includes="**/*.jar"/>

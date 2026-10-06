@@ -473,21 +473,21 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
 
         collectTimes(tree, times, childCounts);
 
-        Integer [] indices = new Integer[nodeCount];        
-        for (int i = 0; i < nodeCount; i++) {
-        	indices[i] = i;
+        // sort the nodes by time, then by node nr; insertion sort starting from the previous order,
+        // which is nearly sorted after a typical MCMC move. The order is total, so this equals a full sort.
+        if (sortedIndices == null || sortedIndices.length != nodeCount) {
+        	sortedIndices = new int[nodeCount];
+        	for (int i = 0; i < nodeCount; i++) sortedIndices[i] = i;
         }
-
-        Arrays.sort(indices, new Comparator<Integer>() {
-        	
-        	public int compare(Integer a,Integer b) {
-        	if (times[a] > times[b]) {
-        		return 1;
-        	} else if (times[a] < times[b]) {
-        		return -1;
+        final int [] indices = sortedIndices;
+        for (int i = 1; i < nodeCount; i++) {
+        	int x = indices[i]; double tx = times[x];
+        	int j = i - 1;
+        	while (j >= 0 && (times[indices[j]] > tx || (times[indices[j]] == tx && indices[j] > x))) {
+        		indices[j + 1] = indices[j]; j--;
         	}
-        	return a.compareTo(b);
-        }});
+        	indices[j + 1] = x;
+        }
         
 
         Arrays.fill(intervalIsDirty, false);
@@ -724,50 +724,37 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
      */
     public void swap() {
     	calculateIntervals();
-    	ArrayList<Integer> activeLineages = new ArrayList<Integer>();
+    	// only membership of the active lineages matters here, so track it per node nr
+    	int nodeCount = tree.getNodeCount();
+    	if (isActive == null || isActive.length != nodeCount) isActive = new boolean[nodeCount];
+    	else Arrays.fill(isActive, false);
         
         for (int i = 0; i < intervalCount; i++){
         	if (IntervalType.SAMPLE == getIntervalType(i)) {
-        		int incomingLines = getLineagesAdded(i);
-        		activeLineages.add(incomingLines);
-//        		for (Integer l : incomingLines) {
-//        			activeLineages.add(l);//.getNr());
-//        		}
+        		isActive[getLineagesAdded(i)] = true;
         	}
 
        	
         	if (IntervalType.COALESCENT == getIntervalType(i)){
-        		//List<Integer> daughter = getLineagesRemoved(i);
-            	
-//            	if (daughter.size() > 2) {
-//            		System.err.println("Multifurcation");
-//        		}
-        		int d1 = activeLineages.indexOf(getLineagesRemoved(i,0));
-        		int d2 = activeLineages.indexOf(getLineagesRemoved(i,1));
+        		boolean d1 = isActive(getLineagesRemoved(i,0));
+        		boolean d2 = isActive(getLineagesRemoved(i,1));
         		int j = i;
         		boolean swap = false;
         		
-        		while (d1 == -1 || d2 == -1 && j < intervalCount){										// If true the nodes are in the wrong order
+        		while (!d1 || !d2 && j < intervalCount){										// If true the nodes are in the wrong order
         			// Go to next event
         			j++;
                 	if(IntervalType.COALESCENT == getIntervalType(j)){
-                		d1 = activeLineages.indexOf(getLineagesRemoved(j, 0));
-                		d2 = activeLineages.indexOf(getLineagesRemoved(j, 1));
+                		d1 = isActive(getLineagesRemoved(j, 0));
+                		d2 = isActive(getLineagesRemoved(j, 1));
                 	}
             		swap = true;
         		} 
         		
         		if(!swap){
-	        		if (d1 > d2){
-	        			activeLineages.remove(d1);
-	        			activeLineages.remove(d2);
-	        		}
-	        		else{
-	        			activeLineages.remove(d2);
-	        			activeLineages.remove(d1);
-	        		}
-	        		int incomingLines = getLineagesAdded(i);
-	        		activeLineages.add(incomingLines);//.getNr());
+        			isActive[getLineagesRemoved(i,0)] = false;
+        			isActive[getLineagesRemoved(i,1)] = false;
+	        		isActive[getLineagesAdded(i)] = true;
         		}
         		// Add parent
         		if (j == intervalCount){
@@ -803,4 +790,11 @@ public class StructuredTreeIntervals extends CalculationNode implements Interval
         }
     }
 
+
+    int [] sortedIndices;
+    boolean [] isActive;
+
+    private boolean isActive(int nr) {
+    	return nr >= 0 && nr < isActive.length && isActive[nr];
+    }
 }

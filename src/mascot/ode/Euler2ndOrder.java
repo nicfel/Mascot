@@ -212,6 +212,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		    	iterations++;
 				//pDot = new double[length];
 				clearArray(pDot, length);
+				pDotDot[length-1] = 0;
 				computeDerivativesWithMultiplicator(p, pDot, pDotDot, pDotDotDot, length);
 				computeSecondDerivateWithMultiplicator(p, pDot, pDotDot, length);
 				approximateThirdDerivate(pDotDot, pDotDotDot, length);
@@ -230,6 +231,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		    	iterations++;
 				//pDot = new double[length];
 				clearArray(pDot, length);
+				pDotDot[length-1] = 0;
 				computeDerivatives(p, pDot, pDotDot, pDotDotDot, length);
 				computeSecondDerivate(p, pDot, pDotDot, length);
 				approximateThirdDerivate(pDotDot, pDotDotDot, length);

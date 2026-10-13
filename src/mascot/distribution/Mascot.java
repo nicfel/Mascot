@@ -33,7 +33,7 @@ public class Mascot extends StructuredTreeDistribution {
 	public Input<Boolean> eventBasedRatesInput = new Input<>("eventBasedRates", "if true, rates only change at tree events and at most every rate shift spacing, "
 			+ "using the rates at the midpoint of each piece, instead of on the rate shift grid. "
 			+ "Requires StructuredSkyline dynamics with time continuous Ne, otherwise the rate shift grid is used.", false);
-	public Input<Boolean> useSIMDInput = new Input<>("useSIMD", "if true, use the SIMD (Vector API) ODE solver for 3 states, "
+	public Input<Boolean> useSIMDInput = new Input<>("useSIMD", "if true, use the SIMD (Vector API) ODE solver for 2 to 15 states, "
 			+ "which requires the JVM option --add-modules jdk.incubator.vector. Results agree up to floating point rounding.", false);
 	public Input<Boolean> singlePrecisionInput = new Input<>("singlePrecision", "if true and useSIMD is used, the lineage state probabilities "
 			+ "are integrated in single precision (about 1.2-1.6 times faster, logP differs by about 1e-8 relative).", false);
@@ -211,11 +211,11 @@ public class Mascot extends StructuredTreeDistribution {
     		default: euler = new Euler2ndOrder(); break;
     		}
 
-        	if (states == 3 && useSIMDInput.get()) {
+        	if (states >= 2 && states <= 15 && useSIMDInput.get()) {
         		if (ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent()) {
         			try {
         				// loaded by reflection, so that the class is only resolved when the vector module is available
-        				String solver = singlePrecisionInput.get() ? "mascot.ode.Euler2ndOrderVec3F" : "mascot.ode.Euler2ndOrderVec3";
+        				String solver = "mascot.ode.Euler2ndOrderVec" + states + (singlePrecisionInput.get() ? "F" : "");
         				euler = (Euler2ndOrderBase) Class.forName(solver, true, Mascot.class.getClassLoader())
         						.getDeclaredConstructor().newInstance();
         			} catch (ReflectiveOperationException | LinkageError e) {
